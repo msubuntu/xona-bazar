@@ -26,7 +26,6 @@ import ProtectedRoute from './components/ProtectedRoute'
 import NotFound from './components/NotFound'
 import BottomNav from './components/BottomNav'
 import BookingListener from './components/BookingListener'
-import productsData from './data/products'
 
 function HomePage() {
   const [searchParams] = useSearchParams()
@@ -70,7 +69,7 @@ function HomePage() {
     } catch (err) {
       console.error('API products load error:', err)
       setApiError(err.message)
-      setApiProducts(productsData)
+      setApiProducts([])
     } finally {
       setLoading(false)
     }

@@ -5,7 +5,7 @@ import { useSeller } from '../context/SellerContext.jsx'
 import { api } from '../services/api'
 import Header from './header'
 import Footer from './Footer'
-import craftsmenStatic, { SERVICE_TYPES, DISTRICTS } from '../data/craftsmen'
+import { SERVICE_TYPES, DISTRICTS } from '../data/craftsmen'
 import '../components_css/craftsmen.css'
 
 const AVATAR_COLORS = ['#10b981','#f59e0b','#3b82f6','#8b5cf6','#ef4444','#ec4899','#06b6d4','#84cc16','#f97316','#14b8a6']
@@ -79,13 +79,13 @@ function CraftsmenPage() {
       .catch(err => {
         if (cancelled) return
         setApiError(err.message)
-        setApiCraftsmen(craftsmenStatic)
+        setApiCraftsmen([])
       })
       .finally(() => { if (!cancelled) setLoading(false) })
     return () => { cancelled = true }
   }, [])
 
-  const allCraftsmen = apiCraftsmen.length > 0 ? apiCraftsmen : craftsmenStatic
+  const allCraftsmen = apiCraftsmen
 
   const filtered = useMemo(() => {
     let result = [...allCraftsmen]

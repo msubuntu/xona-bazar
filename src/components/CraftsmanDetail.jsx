@@ -7,7 +7,6 @@ import { api } from '../services/api'
 import Header from './header'
 import Footer from './Footer'
 import LoginPrompt from './LoginPrompt'
-import craftsmenStatic from '../data/craftsmen'
 import { SERVICE_TYPES } from '../data/craftsmen'
 import '../components_css/craftsmen.css'
 
@@ -83,10 +82,7 @@ function CraftsmanDetail() {
     }
   }, [id, isMongoId])
 
-  const urlCraftsman = !selectedCraftsman && !apiCraftsman && !isMongoId
-    ? craftsmenStatic.find(c => c.id === id)
-    : null
-  const c = apiCraftsman || selectedCraftsman || urlCraftsman
+  const c = apiCraftsman || selectedCraftsman
 
   useEffect(() => {
     if (activeTab === 'reviews' && c?._id) {
