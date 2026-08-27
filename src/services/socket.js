@@ -5,8 +5,9 @@ let lastJoinedUserId = null
 
 export function getSocket() {
   if (!socket) {
-    const isDev = window.location.port === '5173' || window.location.port === '3000'
-    const url = isDev ? window.location.origin : window.location.protocol + '//' + window.location.hostname + ':5000'
+    const url = import.meta.env.VITE_API_URL
+      ? import.meta.env.VITE_API_URL.replace(/\/api\/?$/, '')
+      : 'https://xona-bazar-production.up.railway.app'
     socket = io(url, { autoConnect: false, reconnection: true, reconnectionDelay: 1000, reconnectionAttempts: 20 })
   }
   return socket

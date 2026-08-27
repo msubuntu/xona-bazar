@@ -1,4 +1,4 @@
-const API_URL = '/api'
+const API_URL = import.meta.env.VITE_API_URL || 'https://xona-bazar-production.up.railway.app/api'
 
 async function request(endpoint, options = {}) {
   const token = localStorage.getItem('xona-token')
