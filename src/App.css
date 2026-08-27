@@ -1,0 +1,25 @@
+.container {
+  width: 94%;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding-bottom: 70px;
+  }
+}
+
+/* Savatga qo'shish tugmasi — desktop: hover'da, mobil/planshet: doimiy */
+.cart-add-mobile {
+  display: none;
+}
+
+@media (max-width: 1024px) {
+  .cart-add-mobile {
+    display: flex;
+  }
+  .cart-add-desktop {
+    display: none !important;
+  }
+}

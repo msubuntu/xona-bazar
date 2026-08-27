@@ -1,0 +1,305 @@
+.store-map-wrapper {
+  width: 100%;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  position: relative;
+  z-index: 1;
+}
+.store-map {
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+}
+.store-map-wrapper .leaflet-container {
+  overflow: hidden;
+  width: 100% !important;
+}
+.store-map-wrapper .leaflet-control-zoom {
+  z-index: 10 !important;
+}
+
+/* ── Center Button ── */
+.store-map-center-btn {
+  position: absolute;
+  bottom: 12px;
+  right: 12px;
+  z-index: 10;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: var(--shadow-md);
+  transition: all 0.2s;
+}
+.store-map-center-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-bg);
+}
+
+/* ── Marker Container ── */
+.marker-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+}
+
+.marker-pin {
+  width: 42px;
+  height: 42px;
+  border-radius: 50% 50% 50% 4px;
+  transform: rotate(-45deg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-weight: 800;
+  font-size: 15px;
+  border: 3px solid #fff;
+  box-shadow: 0 3px 14px rgba(0, 0, 0, 0.45), 0 0 0 2px rgba(0,0,0,0.08);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  animation: markerBounceIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes markerBounceIn {
+  0% { transform: rotate(-45deg) scale(0); opacity: 0; }
+  100% { transform: rotate(-45deg) scale(1); opacity: 1; }
+}
+.marker-pin.small {
+  width: 30px;
+  height: 30px;
+  font-size: 12px;
+  border-width: 2px;
+}
+.marker-pin.selected {
+  transform: rotate(-45deg) scale(1.3);
+  box-shadow: 0 4px 22px rgba(0, 0, 0, 0.5), 0 0 0 3px rgba(43, 195, 43, 0.4);
+  z-index: 20 !important;
+}
+
+.marker-avatar {
+  transform: rotate(45deg);
+  line-height: 1;
+}
+.marker-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+  border: 2px solid #fff;
+}
+
+/* ── Marker Label ── */
+.marker-label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 6px;
+  padding: 4px 10px;
+  background: var(--bg-card, #fff);
+  border: 1.5px solid var(--border, #d1d5db);
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+  white-space: nowrap;
+  pointer-events: none;
+  transition: all 0.2s;
+}
+.marker-label.selected {
+  border-color: var(--accent, #16a34a);
+  box-shadow: 0 2px 10px rgba(22, 163, 74, 0.3);
+}
+
+.marker-name {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text, #1f2937);
+  line-height: 1.2;
+}
+
+.marker-price {
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--accent);
+  line-height: 1.2;
+}
+
+/* ── User Marker ── */
+.user-marker-container {
+  position: relative;
+  width: 20px;
+  height: 20px;
+}
+
+.user-marker-ring {
+  position: absolute;
+  inset: -8px;
+  border-radius: 50%;
+  border: 2px solid rgba(59, 130, 246, 0.3);
+  animation: markerPulse 2s ease-out infinite;
+}
+
+.user-marker-dot {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 16px;
+  height: 16px;
+  background: #3b82f6;
+  border: 3px solid #fff;
+  border-radius: 50%;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.4);
+}
+
+@keyframes markerPulse {
+  0% { transform: scale(1); opacity: 1; }
+  100% { transform: scale(2.2); opacity: 0; }
+}
+
+/* ── Popup ── */
+.store-popup-wrapper .leaflet-popup-content-wrapper {
+  border-radius: 14px;
+  padding: 0;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+
+.store-popup-wrapper .leaflet-popup-content {
+  margin: 0;
+  min-width: 220px;
+}
+
+.store-popup-wrapper .leaflet-popup-tip {
+  border-top-color: var(--bg-card);
+}
+
+.map-popup-card {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: var(--bg-card);
+}
+
+.popup-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.popup-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-weight: 800;
+  font-size: 15px;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.popup-header-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.popup-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.popup-location {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.popup-stats {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.popup-stat {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.popup-review-count {
+  color: var(--text-muted);
+  font-weight: 400;
+}
+
+.popup-distance {
+  color: #3b82f6;
+}
+
+.popup-price-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 10px;
+  background: var(--accent-bg);
+  border-radius: 8px;
+  border: 1px solid rgba(43, 195, 43, 0.15);
+}
+
+.popup-price-label {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.popup-price-value {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--accent);
+}
+
+.popup-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  padding: 9px 0;
+  border: none;
+  border-radius: 8px;
+  background: linear-gradient(135deg, var(--accent), var(--accent-hover));
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.2s, transform 0.15s;
+}
+.popup-btn:hover { opacity: 0.9; transform: translateY(-1px); }
+.popup-btn:active { transform: translateY(0); }
+
+/* ── Responsive ── */
+@media (max-width: 480px) {
+  .marker-label { display: none; }
+  .store-map-center-btn { width: 34px; height: 34px; }
+}

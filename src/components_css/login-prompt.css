@@ -1,0 +1,125 @@
+.lp_overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  z-index: 1100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  animation: lpFadeIn 0.2s ease;
+}
+
+@keyframes lpFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.lp_modal {
+  width: 100%;
+  max-width: 380px;
+  background: var(--bg-card, #fff);
+  border-radius: 20px;
+  padding: 32px;
+  position: relative;
+  text-align: center;
+  animation: lpSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes lpSlideUp {
+  from { opacity: 0; transform: translateY(24px) scale(0.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.lp_close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 50%;
+  background: var(--bg-secondary, #f3f4f6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--text-secondary, #6b7280);
+  transition: all 0.2s;
+}
+.lp_close:hover { background: var(--danger-bg, #fee2e2); color: var(--danger, #ef4444); }
+
+.lp_icon {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent-bg, #f0fdf4), var(--bg-secondary, #f3f4f6));
+  color: var(--accent, #2bc32b);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 20px;
+  animation: lpBounce 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes lpBounce {
+  0% { transform: scale(0.5); opacity: 0; }
+  60% { transform: scale(1.1); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.lp_modal h3 {
+  margin: 0 0 8px;
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--text, #1a1a2e);
+}
+
+.lp_modal p {
+  margin: 0 0 24px;
+  font-size: 14px;
+  color: var(--text-secondary, #6b7280);
+  line-height: 1.6;
+}
+
+.lp_actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.lp_login_btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px;
+  border: none;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--accent, #2bc32b), var(--accent-hover, #1fa31f));
+  color: #fff;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.2s, transform 0.2s;
+}
+.lp_login_btn:hover { opacity: 0.9; transform: translateY(-1px); }
+
+.lp_cancel {
+  width: 100%;
+  padding: 12px;
+  border: 1.5px solid var(--border, #e5e7eb);
+  border-radius: 12px;
+  background: transparent;
+  color: var(--text-secondary, #6b7280);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.lp_cancel:hover {
+  border-color: var(--text-secondary, #9ca3af);
+  color: var(--text, #1a1a2e);
+}

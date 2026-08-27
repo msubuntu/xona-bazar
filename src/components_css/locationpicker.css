@@ -1,0 +1,58 @@
+.lp { display: flex; flex-direction: column; gap: 10px; }
+
+.lp_gps {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border: 1px solid var(--border, #e5e7eb);
+  border-radius: 10px;
+  background: var(--bg-card, #fff);
+  color: var(--text, #374151);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color .2s, background .2s;
+  width: fit-content;
+}
+.lp_gps:hover { border-color: var(--accent, #2bc32b); background: var(--accent-bg, #f0fdf4); }
+.lp_gps:disabled { opacity: .6; cursor: not-allowed; }
+
+.lp_error {
+  font-size: 13px;
+  color: var(--danger, #ef4444);
+  margin: 0;
+}
+
+.lp_map_wrap {
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--border, #e5e7eb);
+  position: relative;
+  z-index: 1;
+}
+
+.lp_map { height: 280px; width: 100%; }
+
+.lp_coords {
+  display: flex;
+  justify-content: center;
+}
+.lp_coords span {
+  font-size: 12px;
+  font-family: monospace;
+  color: var(--text-muted, #9ca3af);
+  background: var(--bg-secondary, #f3f4f6);
+  padding: 4px 12px;
+  border-radius: 6px;
+}
+
+.lp_hint {
+  font-size: 12px;
+  color: var(--text-muted, #9ca3af);
+  margin: 0;
+  text-align: center;
+}
+
+/* fix Leaflet default marker icon path issue */
+.lp .leaflet-default-icon-path { background-image: none; }

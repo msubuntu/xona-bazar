@@ -1,0 +1,317 @@
+{
+  "communities": {
+    "0": [
+      "src_app",
+      "src_app_app",
+      "src_components_cartpage",
+      "src_components_cartpage_cartpage",
+      "src_components_cartpanel",
+      "src_components_cartpanel_cartpanel",
+      "src_components_chatpanel",
+      "src_components_chatpanel_chatpanel",
+      "src_components_footer",
+      "src_components_footer_footer",
+      "src_components_productdetail",
+      "src_components_productdetail_productdetail",
+      "src_components_productskeleton",
+      "src_components_productskeleton_productskeleton",
+      "src_components_sellerdashboard",
+      "src_components_sellerdashboard_initial_my_products",
+      "src_components_sellerdashboard_stats",
+      "src_components_sellerprofile",
+      "src_components_sellerprofile_sellerprofile",
+      "src_context_cartcontext",
+      "src_context_cartcontext_cartcontext",
+      "src_context_cartcontext_cartprovider",
+      "src_context_cartcontext_usecart",
+      "src_context_sellercontext",
+      "src_context_sellercontext_sellercontext",
+      "src_context_sellercontext_useseller",
+      "src_data_products",
+      "src_data_products_products",
+      "src_data_sellers",
+      "src_data_sellers_sellers"
+    ],
+    "1": [
+      "ref_react",
+      "src_components_banner",
+      "src_components_banner_banner",
+      "src_components_banner_banners",
+      "src_components_kategories",
+      "src_components_kategories_categories",
+      "src_components_kategories_kategories",
+      "src_components_main",
+      "src_components_main_main",
+      "src_context_authcontext",
+      "src_context_authcontext_authcontext",
+      "src_context_authcontext_authprovider",
+      "src_context_favoritescontext",
+      "src_context_favoritescontext_favoritescontext",
+      "src_context_favoritescontext_favoritesprovider",
+      "src_context_favoritescontext_loadfavorites",
+      "src_context_sellercontext_sellerprovider",
+      "src_context_themecontext",
+      "src_context_themecontext_themecontext",
+      "src_context_themecontext_themeprovider",
+      "src_context_themecontext_usetheme",
+      "src_main"
+    ],
+    "2": [
+      "package",
+      "package_dependencies",
+      "package_dependencies_react",
+      "package_dependencies_react_dom",
+      "package_dependencies_tailwindcss",
+      "package_dependencies_tailwindcss_vite",
+      "package_name",
+      "package_private",
+      "package_scripts",
+      "package_scripts_build",
+      "package_scripts_dev",
+      "package_scripts_lint",
+      "package_scripts_preview",
+      "package_type",
+      "package_version",
+      "react",
+      "react_dom",
+      "tailwindcss",
+      "tailwindcss_vite"
+    ],
+    "3": [
+      "src_components_customselect",
+      "src_components_customselect_customselect",
+      "src_components_settingsmodals",
+      "src_components_settingsmodals_deleteaccountmodal",
+      "src_components_settingsmodals_passwordmodal",
+      "src_components_settingsmodals_twofactormodal",
+      "src_components_userpage",
+      "src_components_userpage_addresses",
+      "src_components_userpage_addresses_title",
+      "src_components_userpage_currency_options",
+      "src_components_userpage_favorites",
+      "src_components_userpage_lang_options",
+      "src_components_userpage_orders",
+      "src_components_userpage_status_labels",
+      "src_components_userpage_status_map"
+    ],
+    "4": [
+      "src_app_homepage",
+      "src_components_authmodal",
+      "src_components_authmodal_authmodal",
+      "src_components_loginprompt",
+      "src_components_loginprompt_loginprompt",
+      "src_components_productcard",
+      "src_components_productcard_productcard",
+      "src_components_reviewform",
+      "src_components_reviewform_reviewform",
+      "src_components_sellerdashboard_sellerdashboard",
+      "src_components_userpage_userpage",
+      "src_context_authcontext_useauth",
+      "src_context_favoritescontext_usefavorites",
+      "src_context_settingscontext_usesettings"
+    ],
+    "5": [
+      "oxlint",
+      "package_devdependencies",
+      "package_devdependencies_oxlint",
+      "package_devdependencies_types_react",
+      "package_devdependencies_types_react_dom",
+      "package_devdependencies_vite",
+      "package_devdependencies_vitejs_plugin_react",
+      "types_react",
+      "types_react_dom",
+      "vite",
+      "vitejs_plugin_react"
+    ],
+    "6": [
+      "src_components_filterpanel",
+      "src_components_filterpanel_filterpanel",
+      "src_components_filterpanel_sort_options",
+      "src_context_settingscontext",
+      "src_context_settingscontext_defaults",
+      "src_context_settingscontext_loadsettings",
+      "src_context_settingscontext_rates",
+      "src_context_settingscontext_settingscontext",
+      "src_context_settingscontext_settingsprovider",
+      "src_data_translations",
+      "src_data_translations_translations"
+    ],
+    "7": [
+      "src_components_header",
+      "src_components_header_header",
+      "src_components_messagespage",
+      "src_components_messagespage_messagespage",
+      "src_context_messagescontext",
+      "src_context_messagescontext_initial_conversations",
+      "src_context_messagescontext_messagescontext",
+      "src_context_messagescontext_messagesprovider",
+      "src_context_messagescontext_usemessages"
+    ],
+    "8": [
+      "oxlintrc",
+      "oxlintrc_plugins",
+      "oxlintrc_rules",
+      "oxlintrc_rules_react_only_export_components",
+      "oxlintrc_rules_react_rules_of_hooks",
+      "oxlintrc_schema",
+      "ref_oxc",
+      "ref_warn"
+    ],
+    "9": [
+      "vite_config"
+    ]
+  },
+  "cohesion": {
+    "0": 0.17701149425287357,
+    "1": 0.12121212121212122,
+    "2": 0.10526315789473684,
+    "3": 0.17142857142857143,
+    "4": 0.32967032967032966,
+    "5": 0.18181818181818182,
+    "6": 0.21818181818181817,
+    "7": 0.3888888888888889,
+    "8": 0.25,
+    "9": 1.0
+  },
+  "gods": [
+    {
+      "id": "src_context_settingscontext_usesettings",
+      "label": "useSettings()",
+      "degree": 31
+    },
+    {
+      "id": "ref_react",
+      "label": "react",
+      "degree": 27
+    },
+    {
+      "id": "src_context_authcontext_useauth",
+      "label": "useAuth()",
+      "degree": 21
+    },
+    {
+      "id": "src_context_cartcontext_usecart",
+      "label": "useCart()",
+      "degree": 21
+    },
+    {
+      "id": "src_components_header_header",
+      "label": "Header()",
+      "degree": 13
+    },
+    {
+      "id": "src_components_footer_footer",
+      "label": "Footer()",
+      "degree": 9
+    },
+    {
+      "id": "src_context_sellercontext_useseller",
+      "label": "useSeller()",
+      "degree": 9
+    },
+    {
+      "id": "src_components_userpage_userpage",
+      "label": "UserPage()",
+      "degree": 8
+    },
+    {
+      "id": "src_components_loginprompt_loginprompt",
+      "label": "LoginPrompt()",
+      "degree": 7
+    },
+    {
+      "id": "src_components_productcard_productcard",
+      "label": "ProductCard()",
+      "degree": 7
+    }
+  ],
+  "surprises": [
+    {
+      "source": "HomePage()",
+      "target": "useSettings()",
+      "source_files": [
+        "src/App.jsx",
+        "src/context/SettingsContext.jsx"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "calls",
+      "why": "peripheral node `HomePage()` unexpectedly reaches hub `useSettings()`"
+    },
+    {
+      "source": "CartPage()",
+      "target": "useSettings()",
+      "source_files": [
+        "src/components/CartPage.jsx",
+        "src/context/SettingsContext.jsx"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "calls",
+      "why": "bridges separate communities"
+    },
+    {
+      "source": "CartPanel()",
+      "target": "useCart()",
+      "source_files": [
+        "src/components/CartPanel.jsx",
+        "src/context/CartContext.jsx"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "calls",
+      "why": "peripheral node `CartPanel()` unexpectedly reaches hub `useCart()`"
+    },
+    {
+      "source": "ChatPanel()",
+      "target": "useAuth()",
+      "source_files": [
+        "src/components/ChatPanel.jsx",
+        "src/context/AuthContext.jsx"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "calls",
+      "why": "bridges separate communities"
+    },
+    {
+      "source": "ChatPanel()",
+      "target": "useSettings()",
+      "source_files": [
+        "src/components/ChatPanel.jsx",
+        "src/context/SettingsContext.jsx"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "calls",
+      "why": "bridges separate communities"
+    }
+  ],
+  "questions": [
+    {
+      "type": "bridge_node",
+      "question": "Why does `react` connect `react` to `App.jsx`, `UserPage.jsx`, `useSettings`, `SettingsContext.jsx`, `header.jsx`, `.oxlintrc.json`?",
+      "why": "High betweenness centrality (0.160) - this node is a cross-community bridge."
+    },
+    {
+      "type": "bridge_node",
+      "question": "Why does `plugins` connect `.oxlintrc.json` to `react`?",
+      "why": "High betweenness centrality (0.074) - this node is a cross-community bridge."
+    },
+    {
+      "type": "bridge_node",
+      "question": "Why does `useSettings()` connect `useSettings` to `App.jsx`, `UserPage.jsx`, `SettingsContext.jsx`, `header.jsx`?",
+      "why": "High betweenness centrality (0.033) - this node is a cross-community bridge."
+    },
+    {
+      "type": "isolated_nodes",
+      "question": "What connects `$schema`, `oxc`, `react/rules-of-hooks` to the rest of the system?",
+      "why": "44 weakly-connected nodes found - possible documentation gaps or missing edges."
+    },
+    {
+      "type": "low_cohesion",
+      "question": "Should `react` be split into smaller, more focused modules?",
+      "why": "Cohesion score 0.12121212121212122 - nodes in this community are weakly interconnected."
+    },
+    {
+      "type": "low_cohesion",
+      "question": "Should `package.json` be split into smaller, more focused modules?",
+      "why": "Cohesion score 0.10526315789473684 - nodes in this community are weakly interconnected."
+    }
+  ]
+}

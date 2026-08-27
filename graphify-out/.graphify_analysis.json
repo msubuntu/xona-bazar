@@ -1,0 +1,447 @@
+{
+  "communities": {
+    "0": [
+      "src_app",
+      "src_app_homepage",
+      "src_components_authmodal_authmodal",
+      "src_components_banner",
+      "src_components_banner_banner",
+      "src_components_banner_banners",
+      "src_components_bottomnav",
+      "src_components_bottomnav_bottomnav",
+      "src_components_cartpage",
+      "src_components_cartpage_cartpage",
+      "src_components_chatpanel_chatpanel",
+      "src_components_filterpanel",
+      "src_components_filterpanel_filterpanel",
+      "src_components_filterpanel_sort_options",
+      "src_components_header",
+      "src_components_header_header",
+      "src_components_header_search_suggestions",
+      "src_components_loginprompt",
+      "src_components_loginprompt_loginprompt",
+      "src_components_messagespage",
+      "src_components_messagespage_messagespage",
+      "src_components_notfound",
+      "src_components_notfound_notfound",
+      "src_components_productcard",
+      "src_components_productcard_productcard",
+      "src_components_productdetail_productdetail",
+      "src_components_productskeleton",
+      "src_components_productskeleton_productskeleton",
+      "src_components_protectedroute",
+      "src_components_protectedroute_protectedroute",
+      "src_components_sellerprofile_sellerprofile",
+      "src_components_storesmappage_storesmappage",
+      "src_components_userpage_userpage",
+      "src_context_authcontext_useauth",
+      "src_context_cartcontext_usecart",
+      "src_context_favoritescontext_usefavorites",
+      "src_context_messagescontext_usemessages",
+      "src_context_settingscontext_usesettings",
+      "src_data_products",
+      "src_data_products_products"
+    ],
+    "1": [
+      "src_components_chatpanel",
+      "src_components_nearbystores",
+      "src_components_nearbystores_estimatetime",
+      "src_components_nearbystores_formatdistance",
+      "src_components_nearbystores_getdistance",
+      "src_components_nearbystores_nearbystores",
+      "src_components_productdetail",
+      "src_components_reviewform",
+      "src_components_reviewform_reviewform",
+      "src_context_authcontext",
+      "src_context_authcontext_authcontext",
+      "src_context_authcontext_authprovider",
+      "src_context_messagescontext",
+      "src_context_messagescontext_messagescontext",
+      "src_context_messagescontext_messagesprovider",
+      "src_services_api",
+      "src_services_api_api",
+      "src_services_api_gettoken",
+      "src_services_api_request",
+      "src_services_api_settoken",
+      "src_services_socket",
+      "src_services_socket_connectsocket",
+      "src_services_socket_disconnectsocket",
+      "src_services_socket_getsocket"
+    ],
+    "2": [
+      "leaflet",
+      "package_dependencies",
+      "package_dependencies_leaflet",
+      "package_dependencies_react",
+      "package_dependencies_react_dom",
+      "package_dependencies_react_leaflet",
+      "package_dependencies_react_router_dom",
+      "package_dependencies_socket_io_client",
+      "package_dependencies_tailwindcss",
+      "package_dependencies_tailwindcss_vite",
+      "react",
+      "react_dom",
+      "react_leaflet",
+      "react_router_dom",
+      "socket_io_client",
+      "tailwindcss",
+      "tailwindcss_vite"
+    ],
+    "3": [
+      "src_app_app",
+      "src_components_cartpanel",
+      "src_components_cartpanel_cartpanel",
+      "src_components_customselect",
+      "src_components_customselect_customselect",
+      "src_components_settingsmodals",
+      "src_components_settingsmodals_deleteaccountmodal",
+      "src_components_settingsmodals_passwordmodal",
+      "src_components_settingsmodals_twofactormodal",
+      "src_components_userpage",
+      "src_components_userpage_addresses",
+      "src_components_userpage_addresses_title",
+      "src_components_userpage_currency_options",
+      "src_components_userpage_lang_options",
+      "src_components_userpage_status_labels",
+      "src_components_userpage_status_map",
+      "src_context_cartcontext",
+      "src_context_cartcontext_cartcontext",
+      "src_context_cartcontext_cartprovider",
+      "src_context_favoritescontext",
+      "src_context_favoritescontext_favoritescontext",
+      "src_context_favoritescontext_favoritesprovider",
+      "src_context_favoritescontext_loadfavorites",
+      "src_context_sellercontext_sellerprovider",
+      "src_context_themecontext",
+      "src_context_themecontext_themecontext",
+      "src_context_themecontext_themeprovider",
+      "src_context_themecontext_usetheme",
+      "src_main"
+    ],
+    "4": [
+      "ref_react",
+      "src_components_authmodal",
+      "src_components_craftsmandetail",
+      "src_components_craftsmandetail_craftsmandetail",
+      "src_components_craftsmenpage",
+      "src_components_craftsmenpage_craftsmenpage",
+      "src_components_footer",
+      "src_components_footer_footer",
+      "src_components_main",
+      "src_components_main_main",
+      "src_components_sellerprofile",
+      "src_components_storemap",
+      "src_components_storemap_storemap",
+      "src_components_storesmappage",
+      "src_context_sellercontext",
+      "src_context_sellercontext_sellercontext",
+      "src_context_sellercontext_useseller",
+      "src_data_craftsmen",
+      "src_data_craftsmen_craftsmen",
+      "src_data_craftsmen_districts",
+      "src_data_craftsmen_service_types"
+    ],
+    "5": [
+      "oxlint",
+      "package",
+      "package_devdependencies",
+      "package_devdependencies_oxlint",
+      "package_devdependencies_types_react",
+      "package_devdependencies_types_react_dom",
+      "package_devdependencies_vite",
+      "package_devdependencies_vitejs_plugin_react",
+      "package_name",
+      "package_private",
+      "package_scripts",
+      "package_scripts_build",
+      "package_scripts_dev",
+      "package_scripts_lint",
+      "package_scripts_preview",
+      "package_type",
+      "package_version",
+      "types_react",
+      "types_react_dom",
+      "vite",
+      "vitejs_plugin_react"
+    ],
+    "6": [
+      "src_context_settingscontext",
+      "src_context_settingscontext_defaults",
+      "src_context_settingscontext_loadsettings",
+      "src_context_settingscontext_rates",
+      "src_context_settingscontext_settingscontext",
+      "src_context_settingscontext_settingsprovider",
+      "src_data_translations",
+      "src_data_translations_translations"
+    ],
+    "7": [
+      "server_config_db",
+      "server_config_db_connectdb",
+      "server_middleware_auth",
+      "server_middleware_auth_authorize",
+      "server_middleware_auth_generatetoken",
+      "server_middleware_auth_protect",
+      "server_models_conversation",
+      "server_models_conversation_conversationschema",
+      "server_models_conversation_messageschema",
+      "server_models_order",
+      "server_models_order_orderitemschema",
+      "server_models_order_orderschema",
+      "server_models_product",
+      "server_models_product_productschema",
+      "server_models_product_reviewschema",
+      "server_models_user",
+      "server_models_user_userschema",
+      "server_routes_auth",
+      "server_routes_auth_router",
+      "server_routes_conversations",
+      "server_routes_conversations_router",
+      "server_routes_orders",
+      "server_routes_orders_router",
+      "server_routes_products",
+      "server_routes_products_effectiveprice",
+      "server_routes_products_parsevariants",
+      "server_routes_products_router",
+      "server_routes_products_storage",
+      "server_routes_products_upload",
+      "server_routes_sellers",
+      "server_routes_sellers_router",
+      "server_server",
+      "server_server_app",
+      "server_server_io",
+      "server_server_onlineusers",
+      "server_server_server"
+    ],
+    "8": [
+      "oxlintrc",
+      "oxlintrc_plugins",
+      "oxlintrc_rules",
+      "oxlintrc_rules_react_only_export_components",
+      "oxlintrc_rules_react_rules_of_hooks",
+      "oxlintrc_schema",
+      "ref_oxc",
+      "ref_warn"
+    ],
+    "9": [
+      "vite_config"
+    ],
+    "10": [
+      "bcryptjs",
+      "cors",
+      "dotenv",
+      "express",
+      "jsonwebtoken",
+      "mongoose",
+      "multer",
+      "server_package",
+      "server_package_dependencies",
+      "server_package_dependencies_bcryptjs",
+      "server_package_dependencies_cors",
+      "server_package_dependencies_dotenv",
+      "server_package_dependencies_express",
+      "server_package_dependencies_jsonwebtoken",
+      "server_package_dependencies_mongoose",
+      "server_package_dependencies_multer",
+      "server_package_dependencies_socket_io",
+      "server_package_name",
+      "server_package_scripts",
+      "server_package_scripts_dev",
+      "server_package_scripts_start",
+      "server_package_type",
+      "server_package_version",
+      "socket_io"
+    ],
+    "11": [
+      "src_components_locationpicker",
+      "src_components_locationpicker_locationpicker",
+      "src_components_locationpicker_tashkent",
+      "src_components_sellerdashboard",
+      "src_components_sellerdashboard_categories",
+      "src_components_sellerdashboard_initial_form",
+      "src_components_sellerdashboard_sections",
+      "src_components_sellerdashboard_sellerdashboard"
+    ],
+    "12": [
+      "readme",
+      "readme_expanding_the_oxlint_configuration",
+      "readme_react_compiler",
+      "readme_react_vite"
+    ],
+    "13": [
+      "src_components_kategories",
+      "src_components_kategories_categories",
+      "src_components_kategories_kategories"
+    ],
+    "14": [
+      "src_data_sellers",
+      "src_data_sellers_sellers"
+    ],
+    "15": [
+      "pentesting"
+    ]
+  },
+  "cohesion": {
+    "0": 0.15897435897435896,
+    "1": 0.18840579710144928,
+    "2": 0.11764705882352941,
+    "3": 0.0960591133004926,
+    "4": 0.2523809523809524,
+    "5": 0.09523809523809523,
+    "6": 0.32142857142857145,
+    "7": 0.09523809523809523,
+    "8": 0.25,
+    "9": 1.0,
+    "10": 0.08333333333333333,
+    "11": 0.32142857142857145,
+    "12": 0.5,
+    "13": 0.6666666666666666,
+    "14": 1.0,
+    "15": 1.0
+  },
+  "gods": [
+    {
+      "id": "src_context_settingscontext_usesettings",
+      "label": "useSettings()",
+      "degree": 41
+    },
+    {
+      "id": "ref_react",
+      "label": "react",
+      "degree": 35
+    },
+    {
+      "id": "src_context_authcontext_useauth",
+      "label": "useAuth()",
+      "degree": 29
+    },
+    {
+      "id": "src_context_cartcontext_usecart",
+      "label": "useCart()",
+      "degree": 19
+    },
+    {
+      "id": "src_components_header_header",
+      "label": "Header()",
+      "degree": 18
+    },
+    {
+      "id": "src_context_sellercontext_useseller",
+      "label": "useSeller()",
+      "degree": 17
+    },
+    {
+      "id": "src_components_footer_footer",
+      "label": "Footer()",
+      "degree": 13
+    },
+    {
+      "id": "src_services_api_api",
+      "label": "api",
+      "degree": 13
+    },
+    {
+      "id": "src_context_favoritescontext_usefavorites",
+      "label": "useFavorites()",
+      "degree": 11
+    },
+    {
+      "id": "src_context_messagescontext_usemessages",
+      "label": "useMessages()",
+      "degree": 11
+    }
+  ],
+  "surprises": [
+    {
+      "source": "CartPanel()",
+      "target": "useCart()",
+      "source_files": [
+        "src/components/CartPanel.jsx",
+        "src/context/CartContext.jsx"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "calls",
+      "why": "bridges separate communities; peripheral node `CartPanel()` unexpectedly reaches hub `useCart()`"
+    },
+    {
+      "source": "HomePage()",
+      "target": "useSettings()",
+      "source_files": [
+        "src/App.jsx",
+        "src/context/SettingsContext.jsx"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "calls",
+      "why": "peripheral node `HomePage()` unexpectedly reaches hub `useSettings()`"
+    },
+    {
+      "source": "ChatPanel()",
+      "target": "useSeller()",
+      "source_files": [
+        "src/components/ChatPanel.jsx",
+        "src/context/SellerContext.jsx"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "calls",
+      "why": "bridges separate communities"
+    },
+    {
+      "source": "ChatPanel()",
+      "target": "getSocket()",
+      "source_files": [
+        "src/components/ChatPanel.jsx",
+        "src/services/socket.js"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "calls",
+      "why": "bridges separate communities"
+    },
+    {
+      "source": "CraftsmanDetail()",
+      "target": "useAuth()",
+      "source_files": [
+        "src/components/CraftsmanDetail.jsx",
+        "src/context/AuthContext.jsx"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "calls",
+      "why": "bridges separate communities"
+    }
+  ],
+  "questions": [
+    {
+      "type": "bridge_node",
+      "question": "Why does `react` connect `react` to `App.jsx`, `ProductDetail.jsx`, `UserPage.jsx`, `SettingsContext.jsx`, `.oxlintrc.json`, `SellerDashboard.jsx`, `kategories.jsx`?",
+      "why": "High betweenness centrality (0.079) - this node is a cross-community bridge."
+    },
+    {
+      "type": "bridge_node",
+      "question": "Why does `plugins` connect `.oxlintrc.json` to `react`?",
+      "why": "High betweenness centrality (0.031) - this node is a cross-community bridge."
+    },
+    {
+      "type": "bridge_node",
+      "question": "Why does `useSettings()` connect `App.jsx` to `ProductDetail.jsx`, `UserPage.jsx`, `react`, `SettingsContext.jsx`, `SellerDashboard.jsx`?",
+      "why": "High betweenness centrality (0.024) - this node is a cross-community bridge."
+    },
+    {
+      "type": "isolated_nodes",
+      "question": "What connects `$schema`, `oxc`, `react/rules-of-hooks` to the rest of the system?",
+      "why": "76 weakly-connected nodes found - possible documentation gaps or missing edges."
+    },
+    {
+      "type": "low_cohesion",
+      "question": "Should `dependencies` be split into smaller, more focused modules?",
+      "why": "Cohesion score 0.11764705882352941 - nodes in this community are weakly interconnected."
+    },
+    {
+      "type": "low_cohesion",
+      "question": "Should `UserPage.jsx` be split into smaller, more focused modules?",
+      "why": "Cohesion score 0.0960591133004926 - nodes in this community are weakly interconnected."
+    },
+    {
+      "type": "low_cohesion",
+      "question": "Should `package.json` be split into smaller, more focused modules?",
+      "why": "Cohesion score 0.09523809523809523 - nodes in this community are weakly interconnected."
+    }
+  ]
+}

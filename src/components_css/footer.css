@@ -1,0 +1,449 @@
+.footer {
+  position: relative;
+  margin-top: 40px;
+}
+
+/* ── Wave ── */
+.footer_wave {
+  width: 100%;
+  line-height: 0;
+  margin-bottom: -2px;
+}
+
+.footer_wave svg {
+  width: 100%;
+  height: 60px;
+  display: block;
+}
+
+.footer_wave .wave_fill { fill: var(--bg-secondary, #f5f7f5); transition: fill 0.3s; }
+
+/* ── Body ── */
+.footer_body {
+  background: var(--bg-secondary, #f5f7f5);
+  padding: 50px 0 0;
+  transition: background 0.3s;
+}
+
+.footer_container {
+  width: 94%;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* ── Top Section ── */
+.footer_top {
+  display: flex;
+  justify-content: space-between;
+  gap: 40px;
+  padding-bottom: 40px;
+  border-bottom: 1px solid var(--border, #e0e3e0);
+}
+
+/* ── Brand ── */
+.footer_brand {
+  max-width: 300px;
+  flex-shrink: 0;
+}
+
+.footer_logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.logo_icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--accent) 0%, var(--accent-hover) 100%);
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.logo_text {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.logo_xona {
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--accent, #2bc32b);
+}
+
+.logo_bazar {
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--text, #1a1a2e);
+}
+
+.footer_desc {
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--text-secondary, #6b7280);
+  margin-bottom: 24px;
+}
+
+/* ── Newsletter ── */
+.newsletter_title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary, #4b5563);
+  margin-bottom: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.newsletter_form {
+  display: flex;
+  background: var(--bg-card, #fff);
+  border-radius: 10px;
+  border: 1px solid var(--border, #d1d5db);
+  overflow: hidden;
+  transition: border-color 0.3s, box-shadow 0.3s, background 0.3s;
+}
+
+.newsletter_form:focus-within {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-glow);
+}
+
+.newsletter_form input {
+  flex: 1;
+  padding: 12px 16px;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--text, #1a1a2e);
+  font-size: 14px;
+}
+
+.newsletter_form input::placeholder {
+  color: var(--text-muted, #9ca3af);
+}
+
+.newsletter_form button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  background: linear-gradient(135deg, var(--accent) 0%, var(--accent-hover) 100%);
+  border: none;
+  cursor: pointer;
+  color: #fff;
+  transition: opacity 0.2s;
+}
+
+.newsletter_form button:hover {
+  opacity: 0.85;
+}
+
+/* ── Links ── */
+.footer_links {
+  display: flex;
+  gap: 48px;
+  flex-wrap: wrap;
+}
+
+.footer_col {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 140px;
+}
+
+.footer_col h4 {
+  color: var(--text, #1a1a2e);
+  font-size: 15px;
+  font-weight: 700;
+  margin: 0 0 4px;
+  position: relative;
+  padding-bottom: 8px;
+}
+
+.footer_col h4::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 24px;
+  height: 2px;
+  background: var(--accent, #2bc32b);
+  border-radius: 2px;
+}
+
+.footer_col a {
+  color: var(--text-secondary, #6b7280);
+  text-decoration: none;
+  font-size: 14px;
+  transition: color 0.2s, padding-left 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.footer_col a svg {
+  flex-shrink: 0;
+  opacity: 0.6;
+}
+
+.footer_col a:hover {
+  color: var(--accent, #2bc32b);
+  padding-left: 4px;
+}
+
+/* ── Middle Section ── */
+.footer_middle {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 40px;
+  padding: 36px 0;
+  border-bottom: 1px solid var(--border, #e0e3e0);
+}
+
+.app_title,
+.cert_title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary, #4b5563);
+  margin-bottom: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.app_badges {
+  display: flex;
+  gap: 12px;
+}
+
+.app_badge {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 18px;
+  background: var(--bg-card, #fff);
+  border: 1px solid var(--border, #d1d5db);
+  border-radius: 10px;
+  text-decoration: none;
+  color: var(--text-secondary, #374151);
+  transition: border-color 0.3s, background 0.3s, transform 0.2s, box-shadow 0.3s;
+}
+
+.app_badge:hover {
+  border-color: var(--accent);
+  box-shadow: 0 4px 12px var(--accent-glow);
+  transform: translateY(-2px);
+}
+
+.app_badge small {
+  display: block;
+  font-size: 10px;
+  color: var(--text-muted, #9ca3af);
+  line-height: 1;
+}
+
+.app_badge strong {
+  display: block;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text, #1a1a2e);
+  line-height: 1.2;
+}
+
+.cert_list {
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.cert_item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-secondary, #6b7280);
+  font-size: 13px;
+}
+
+.cert_item svg {
+  color: var(--accent, #2bc32b);
+  flex-shrink: 0;
+}
+
+/* ── Bottom Section ── */
+.footer_bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 20px;
+  padding: 28px 0;
+  border-bottom: 1px solid var(--border, #e0e3e0);
+}
+
+.footer_social {
+  display: flex;
+  gap: 10px;
+}
+
+.social_icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: var(--bg-card, #fff);
+  border: 1px solid var(--border, #d1d5db);
+  color: var(--text-secondary, #6b7280);
+  transition: background 0.3s, color 0.3s, border-color 0.3s, transform 0.2s, box-shadow 0.3s;
+}
+
+.social_icon:hover {
+  background: linear-gradient(135deg, var(--accent), var(--accent-hover));
+  color: #fff;
+  border-color: transparent;
+  transform: translateY(-3px);
+  box-shadow: 0 4px 12px var(--accent-glow);
+}
+
+.footer_payments {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.pay_badge {
+  padding: 6px 14px;
+  border-radius: 6px;
+  background: var(--bg-card, #fff);
+  border: 1px solid var(--border, #d1d5db);
+  color: var(--text-secondary, #6b7280);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  transition: border-color 0.3s, color 0.3s, background 0.3s;
+}
+
+.pay_badge:hover {
+  border-color: var(--text-muted);
+  color: var(--text);
+}
+
+.pay_badge.visa { color: #4a7dff; border-color: rgba(74, 125, 255, 0.3); }
+.pay_badge.mc { color: #ff5f00; border-color: rgba(255, 95, 0, 0.3); }
+.pay_badge.uzcard { color: var(--accent, #2bc32b); border-color: rgba(43, 195, 43, 0.3); }
+.pay_badge.humo { color: #6366f1; border-color: rgba(99, 102, 241, 0.3); }
+.pay_badge.payme { color: #00d4ff; border-color: rgba(0, 212, 255, 0.3); }
+.pay_badge.click { color: #ff6b6b; border-color: rgba(255, 107, 107, 0.3); }
+
+/* ── Copyright ── */
+.footer_copyright {
+  text-align: center;
+  padding: 20px 0;
+}
+
+.footer_copyright p {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-muted, #9ca3af);
+}
+
+/* ── Responsive ── */
+@media (max-width: 1024px) {
+  .footer_links {
+    gap: 30px;
+  }
+}
+
+@media (max-width: 768px) {
+  .footer_wave svg {
+    height: 40px;
+  }
+
+  .footer_top {
+    flex-direction: column;
+    gap: 32px;
+  }
+
+  .footer_brand {
+    max-width: 100%;
+    text-align: center;
+  }
+
+  .footer_logo {
+    justify-content: center;
+  }
+
+  .footer_links {
+    justify-content: center;
+    gap: 24px;
+  }
+
+  .footer_col {
+    align-items: center;
+    text-align: center;
+    min-width: 120px;
+  }
+
+  .footer_col h4::after {
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
+  .footer_col a:hover {
+    padding-left: 0;
+  }
+
+  .footer_middle {
+    flex-direction: column;
+    align-items: center;
+    gap: 28px;
+  }
+
+  .footer_bottom {
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .footer_social {
+    justify-content: center;
+  }
+
+  .footer_payments {
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .app_badges {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .app_badge {
+    justify-content: center;
+  }
+
+  .cert_list {
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .newsletter_form {
+    flex-direction: column;
+  }
+  .newsletter_form button {
+    width: 100%;
+    padding: 12px;
+    border-radius: 0 0 10px 10px;
+  }
+}

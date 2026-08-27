@@ -1,0 +1,182 @@
+.filter_panel {
+  background: var(--bg-card, #fff);
+  border: 1px solid var(--border, #e5e7eb);
+  border-radius: 14px;
+  padding: 14px 18px;
+  margin-bottom: 16px;
+}
+
+.filter_top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.filter_left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.filter_toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border: 1px solid var(--border, #e5e7eb);
+  border-radius: 10px;
+  background: var(--bg-card, #fff);
+  color: var(--text, #1a1a2e);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.filter_toggle:hover {
+  border-color: var(--accent, #2bc32b);
+  color: var(--accent, #2bc32b);
+}
+
+.filter_count {
+  font-size: 13px;
+  color: var(--text-secondary, #6b7280);
+}
+
+.filter_sort {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.filter_sort label {
+  font-size: 13px;
+  color: var(--text-secondary, #6b7280);
+  white-space: nowrap;
+}
+
+.filter_sort select {
+  padding: 8px 12px;
+  border: 1px solid var(--border, #e5e7eb);
+  border-radius: 8px;
+  background: var(--bg-card, #fff);
+  color: var(--text, #1a1a2e);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.filter_body {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border, #e5e7eb);
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  align-items: flex-start;
+}
+
+.filter_group h4 {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-secondary, #6b7280);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 0 0 8px;
+}
+
+.filter_price_inputs {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.filter_price_inputs input {
+  width: 110px;
+  padding: 8px 10px;
+  border: 1px solid var(--border, #e5e7eb);
+  border-radius: 8px;
+  font-size: 13px;
+  background: var(--bg-input, #f9fafb);
+  color: var(--text, #1a1a2e);
+}
+
+.filter_price_inputs span {
+  color: var(--text-muted, #9ca3af);
+}
+
+.filter_rating {
+  display: flex;
+  gap: 6px;
+}
+
+.filter_rating_btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 10px;
+  border: 1px solid var(--border, #e5e7eb);
+  border-radius: 8px;
+  background: var(--bg-card, #fff);
+  color: var(--text-secondary, #6b7280);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.filter_rating_btn:hover,
+.filter_rating_btn.active {
+  border-color: var(--accent, #2bc32b);
+  background: var(--accent-bg, #f0fdf4);
+  color: var(--accent, #2bc32b);
+}
+
+.filter_checkbox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text, #1a1a2e);
+  cursor: pointer;
+}
+
+.filter_checkbox input {
+  accent-color: var(--accent, #2bc32b);
+}
+
+.filter_clear {
+  padding: 8px 16px;
+  border: 1px solid var(--danger, #ef4444);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--danger, #ef4444);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.filter_clear:hover {
+  background: var(--danger-bg, #fef2f2);
+}
+
+@media (max-width: 640px) {
+  .filter_top {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .filter_body {
+    flex-direction: column;
+    gap: 14px;
+  }
+  .filter_price_inputs {
+    flex-wrap: wrap;
+  }
+  .filter_price_inputs input {
+    flex: 1;
+    min-width: 0;
+    width: 100%;
+  }
+}

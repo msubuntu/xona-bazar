@@ -1,0 +1,136 @@
+.review_form {
+  background: var(--bg-secondary, #f5f7f5);
+  border-radius: 14px;
+  padding: 24px;
+}
+
+.review_form h3 {
+  font-size: 16px;
+  font-weight: 700;
+  margin: 0 0 16px;
+  color: var(--text, #1a1a2e);
+}
+
+.review_stars_input {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 16px;
+}
+
+.review_star {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 2px;
+  transition: transform 0.15s;
+}
+
+.review_star:hover {
+  transform: scale(1.15);
+}
+
+.review_rating_label {
+  margin-left: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--accent, #2bc32b);
+}
+
+.review_textarea {
+  width: 100%;
+  padding: 14px;
+  border: 1px solid var(--border, #e5e7eb);
+  border-radius: 10px;
+  font-size: 14px;
+  font-family: inherit;
+  resize: vertical;
+  background: var(--bg-card, #fff);
+  color: var(--text, #1a1a2e);
+  margin-bottom: 12px;
+  transition: border-color 0.2s;
+}
+
+.review_textarea:focus {
+  outline: none;
+  border-color: var(--accent, #2bc32b);
+  box-shadow: 0 0 0 3px var(--accent-glow, rgba(43,195,43,0.15));
+}
+
+.review_submit {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  background: var(--accent, #2bc32b);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.review_submit:hover:not(:disabled) {
+  background: var(--accent-hover, #24a824);
+  transform: translateY(-1px);
+}
+
+.review_submit:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.review_success {
+  text-align: center;
+  padding: 32px;
+  background: var(--bg-secondary, #f5f7f5);
+  border-radius: 14px;
+}
+
+.review_success h3 {
+  font-size: 20px;
+  margin: 12px 0 6px;
+  color: var(--text, #1a1a2e);
+}
+
+.review_success p {
+  color: var(--text-secondary, #6b7280);
+  font-size: 14px;
+}
+
+.review_login_needed {
+  text-align: center;
+  padding: 24px;
+  background: var(--bg-secondary, #f5f7f5);
+  border-radius: 14px;
+}
+
+.review_login_needed p {
+  color: var(--text-secondary, #6b7280);
+  margin: 0 0 12px;
+  font-size: 14px;
+}
+
+.review_login_needed button {
+  padding: 10px 24px;
+  background: var(--accent, #2bc32b);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+@media (max-width: 480px) {
+  .review_form { padding: 16px; }
+  .review_submit {
+    width: 100%;
+    justify-content: center;
+    padding: 14px;
+    min-height: 48px;
+  }
+  .review_textarea { font-size: 16px; }
+  .review_star { padding: 6px; }
+}

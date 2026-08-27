@@ -1,0 +1,95 @@
+/* ── BottomNav: faqat mobil/planshet (≤768px) ── */
+.bottom_nav {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .bottom_nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    height: 60px;
+    background: var(--bg);
+    border-top: 1px solid var(--border);
+    box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.06);
+    padding: 0 4px;
+    padding-bottom: env(safe-area-inset-bottom, 0);
+  }
+
+  .bn_item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    flex: 1;
+    min-width: 0;
+    height: 100%;
+    padding: 6px 0;
+    border: none;
+    background: transparent;
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-size: 10px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: color 0.2s;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .bn_item svg {
+    stroke: var(--text-secondary);
+    transition: stroke 0.2s;
+  }
+
+  .bn_item span {
+    line-height: 1;
+  }
+
+  .bn_item.active {
+    color: var(--accent);
+  }
+
+  .bn_item.active svg {
+    stroke: var(--accent);
+  }
+
+  .bn_icon_wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 32px;
+  }
+
+  .bn_badge {
+    position: absolute;
+    top: -4px;
+    right: -6px;
+    min-width: 16px;
+    height: 16px;
+    padding: 0 4px;
+    border-radius: 9999px;
+    background: #ef4444;
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+  }
+}
+
+/* Desktop'da butunlay yashirin */
+@media (min-width: 769px) {
+  .bottom_nav {
+    display: none !important;
+  }
+}
