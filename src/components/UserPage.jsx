@@ -24,8 +24,9 @@ const ADDRESSES = [
 const STATUS_MAP = {
   pending: { bg: 'var(--warning-bg)', color: 'var(--warning)', label: 'Kutilmoqda', ru: 'Ожидает', en: 'Pending' },
   confirmed: { bg: 'var(--info-bg, #dbeafe)', color: 'var(--info, #3b82f6)', label: 'Tasdiqlangan', ru: 'Подтверждён', en: 'Confirmed' },
-  shipping: { bg: 'var(--warning-bg)', color: 'var(--warning)', label: 'Yetkazilmoqda', ru: 'V puti', en: 'In Transit' },
-  delivered: { bg: 'var(--accent-bg)', color: 'var(--accent)', label: 'Yetkazildi', ru: 'Доставлен', en: 'Delivered' },
+  shipping: { bg: 'var(--warning-bg)', color: 'var(--warning)', label: 'Bajarilmoqda', ru: 'В работе', en: 'In Progress' },
+  delivered: { bg: 'var(--accent-bg)', color: 'var(--accent)', label: 'Yakunlandi', ru: 'Завершён', en: 'Completed' },
+  completed: { bg: 'var(--accent-bg)', color: 'var(--accent)', label: 'Yakunlandi', ru: 'Завершён', en: 'Completed' },
   cancelled: { bg: 'var(--danger-bg)', color: 'var(--danger)', label: 'Bekor qilindi', ru: 'Отменён', en: 'Cancelled' },
 }
 
@@ -42,9 +43,9 @@ const CURRENCY_OPTIONS = [
 ]
 
 const STATUS_LABELS = {
-  uz: { pending: 'Kutilmoqda', confirmed: 'Tasdiqlangan', shipping: 'Yetkazilmoqda', delivered: 'Yetkazildi', cancelled: 'Bekor qilindi' },
-  ru: { pending: 'Ожидает', confirmed: 'Подтверждён', shipping: 'В пути', delivered: 'Доставлен', cancelled: 'Отменён' },
-  en: { pending: 'Pending', confirmed: 'Confirmed', shipping: 'In Transit', delivered: 'Delivered', cancelled: 'Cancelled' },
+  uz: { pending: 'Kutilmoqda', confirmed: 'Tasdiqlangan', shipping: 'Bajarilmoqda', delivered: 'Yakunlandi', completed: 'Yakunlandi', cancelled: 'Bekor qilindi' },
+  ru: { pending: 'Ожидает', confirmed: 'Подтверждён', shipping: 'В работе', delivered: 'Завершён', completed: 'Завершён', cancelled: 'Отменён' },
+  en: { pending: 'Pending', confirmed: 'Confirmed', shipping: 'In Progress', delivered: 'Completed', completed: 'Completed', cancelled: 'Cancelled' },
 }
 
 const ADDRESSES_TITLE = { uz: 'Manzillarim', ru: 'Мои адреса', en: 'My Addresses' }

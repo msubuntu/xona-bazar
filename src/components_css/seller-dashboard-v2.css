@@ -1,6 +1,6 @@
 .sd-v2 { min-height: 100vh; min-height: 100dvh; }
 
-.sdv2-breadcrumb { display: flex; align-items: center; gap: 8px; padding: 16px 0; font-size: 13px; color: var(--text-secondary, #6b7280); }
+.sdv2-breadcrumb { display: flex; align-items: center; gap: 8px; padding: 16px 0; font-size: 13px; color: var(--text-secondary, #6b7280); min-height: 35px; }
 .sdv2-breadcrumb span { cursor: pointer; }
 .sdv2-breadcrumb .active { color: var(--text, #1a1a2e); font-weight: 600; }
 
@@ -136,6 +136,8 @@
   transition: all 0.2s; white-space: nowrap;
 }
 .sdv2-primary-btn:hover { background: var(--accent-hover, #24a824); transform: translateY(-1px); }
+.sdv2-primary-btn.ghost { background: transparent; color: var(--accent, #2bc32b); border: 1px solid var(--accent, #2bc32b); }
+.sdv2-primary-btn.ghost:hover { background: rgba(43, 195, 43, 0.08); }
 
 /* Products toolbar */
 .sdv2-products-toolbar {
@@ -686,6 +688,29 @@
 
 .sdv2-review-date { font-size: 12px; color: var(--text-muted, #9ca3af); }
 .sdv2-review-text { font-size: 14px; color: var(--text, #374151); line-height: 1.5; margin: 0; }
+
+/* Settings enrichment */
+.sdv2-availability-toggle {
+  width: 100%; padding: 11px 12px; border-radius: 10px; border: 1px solid var(--border, #e5e7eb);
+  background: transparent; cursor: pointer; display: flex; align-items: center; gap: 8px;
+  font-size: 14px; font-weight: 600; color: var(--text, #1a1a2e); font-family: inherit;
+}
+.sdv2-availability-toggle.available { color: #16a34a; }
+.sdv2-availability-toggle.busy { color: #dc2626; }
+.sdv2-toggle-dot { width: 10px; height: 10px; border-radius: 50%; background: currentColor; }
+.sdv2-settings-hint { font-size: 12px; color: var(--text-muted, #9ca3af); margin-top: 2px; }
+.sdv2-security-row { display: flex; flex-wrap: wrap; gap: 12px; }
+.sdv2-security-btn {
+  display: inline-flex; align-items: center; gap: 8px; padding: 11px 16px;
+  border: 1px solid var(--border, #e5e7eb); border-radius: 10px; background: var(--bg-input, #f9fafb);
+  color: var(--text, #1a1a2e); font-size: 14px; font-weight: 600; cursor: pointer; font-family: inherit;
+}
+.sdv2-security-btn:hover { border-color: var(--accent, #2bc32b); }
+.sdv2-security-btn.active { border-color: var(--accent, #2bc32b); color: var(--accent, #16a34a); }
+.sdv2-active-badge {
+  background: var(--accent, #2bc32b); color: #fff; font-size: 11px; font-weight: 700;
+  padding: 2px 7px; border-radius: 8px;
+}
 
 @media (max-width: 768px) {
   .sdv2-desktop-title { display: none; }

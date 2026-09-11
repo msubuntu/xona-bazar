@@ -3,6 +3,7 @@ import { useSettings } from '../context/SettingsContext.jsx'
 import { useSeller } from '../context/SellerContext.jsx'
 import { api } from '../services/api'
 import { getGeoErrorMessage } from '../services/geo'
+import { REVIEWS_ENABLED } from '../data/flags'
 import '../components_css/nearbystores.css'
 
 function getDistance(lat1, lng1, lat2, lng2) {
@@ -211,10 +212,10 @@ function NearbyStores({ currentProduct, userLocation, compact = false }) {
               <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
               Eng arzon
             </button>
-            <button className={sortBy === 'rating' ? 'active' : ''} onClick={() => setSortBy('rating')}>
+            {REVIEWS_ENABLED && <button className={sortBy === 'rating' ? 'active' : ''} onClick={() => setSortBy('rating')}>
               <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
               Eng yaxshi
-            </button>
+            </button>}
           </div>
         </div>
       )}
@@ -254,10 +255,12 @@ function NearbyStores({ currentProduct, userLocation, compact = false }) {
                           {store.walkTime}
                         </span>
                       )}
+                      {REVIEWS_ENABLED && (
                       <span className="ns_rating">
                         <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" strokeWidth="1"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
                         {store.rating}
                       </span>
+                      )}
                     </div>
                   </div>
                 </div>

@@ -44,6 +44,34 @@
   background: var(--accent-bg);
 }
 
+/* ── Klaster (marker-cluster) ── */
+.store-cluster-wrapper {
+  background: transparent !important;
+  border: none !important;
+}
+.store-cluster {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--accent, #16a34a);
+  border: 3px solid #fff;
+  box-shadow: 0 3px 14px rgba(0, 0, 0, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-weight: 800;
+  font-size: 14px;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+.store-cluster:hover {
+  transform: scale(1.1);
+}
+.marker-cluster span {
+  line-height: normal;
+}
+
 /* ── Marker Container ── */
 .marker-container {
   display: flex;
@@ -53,8 +81,8 @@
 }
 
 .marker-pin {
-  width: 42px;
-  height: 42px;
+  width: 34px;
+  height: 34px;
   border-radius: 50% 50% 50% 4px;
   transform: rotate(-45deg);
   display: flex;
@@ -62,8 +90,8 @@
   justify-content: center;
   color: #fff;
   font-weight: 800;
-  font-size: 15px;
-  border: 3px solid #fff;
+  font-size: 13px;
+  border: 2.5px solid #fff;
   box-shadow: 0 3px 14px rgba(0, 0, 0, 0.45), 0 0 0 2px rgba(0,0,0,0.08);
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   cursor: pointer;
@@ -74,13 +102,13 @@
   100% { transform: rotate(-45deg) scale(1); opacity: 1; }
 }
 .marker-pin.small {
-  width: 30px;
-  height: 30px;
-  font-size: 12px;
+  width: 24px;
+  height: 24px;
+  font-size: 10px;
   border-width: 2px;
 }
 .marker-pin.selected {
-  transform: rotate(-45deg) scale(1.3);
+  transform: rotate(-45deg) scale(1.25);
   box-shadow: 0 4px 22px rgba(0, 0, 0, 0.5), 0 0 0 3px rgba(43, 195, 43, 0.4);
   z-index: 20 !important;
 }
@@ -182,6 +210,11 @@
   border-top-color: var(--bg-card);
 }
 
+/* Popup markerdan yuqorida turish masofasi (Leaflet default 20px → 30px) */
+.store-popup-wrapper.leaflet-popup {
+  margin-bottom: 30px;
+}
+
 .map-popup-card {
   padding: 16px;
   display: flex;
@@ -279,11 +312,17 @@
   color: var(--accent);
 }
 
+.popup-actions {
+  display: flex;
+  gap: 8px;
+}
+
 .popup-btn {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 6px;
+  flex: 1;
   width: 100%;
   padding: 9px 0;
   border: none;
@@ -298,8 +337,59 @@
 .popup-btn:hover { opacity: 0.9; transform: translateY(-1px); }
 .popup-btn:active { transform: translateY(0); }
 
+.popup-btn.secondary {
+  background: transparent;
+  color: var(--accent);
+  border: 1.5px solid var(--accent);
+}
+.popup-btn.secondary:hover {
+  background: var(--accent-bg, rgba(22, 163, 74, 0.08));
+  opacity: 1;
+}
+
 /* ── Responsive ── */
 @media (max-width: 480px) {
   .marker-label { display: none; }
   .store-map-center-btn { width: 34px; height: 34px; }
+}
+
+/* ── Narx tugma-uslubi marker (Wolt-ish) ── */
+.store-map .xb-price-btn {
+  position: absolute;               /* marker nuqtasiga nisbatan joylashadi */
+  left: 0;
+  top: 0;
+  transform: translate(-50%, -50%); /* markazga tortadi */
+  pointer-events: auto;
+  min-height: 40px;
+  min-width: 40px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 10px;
+  border: 2px solid #fff;
+  border-radius: 999px;
+  cursor: pointer;
+  color: #fff;
+  font-family: inherit;
+  background: #16a34a;
+  transition: transform .15s ease;
+  white-space: nowrap;
+}
+.store-map .xb-price-btn:hover {
+  transform: translate(-50%, -50%) translateY(-2px) scale(1.05);
+}
+.store-map .xb-price-btn-price {
+  font-size: 12.5px;
+  font-weight: 800;
+  line-height: 1.15;
+}
+.store-map .xb-price-btn-sub {
+  margin-top: 1px;
+  width: 100%;
+  text-align: center;
+  font-size: 8.5px;
+  font-weight: 500;
+  line-height: 1;
+  color: rgba(255, 255, 255, .95);
 }

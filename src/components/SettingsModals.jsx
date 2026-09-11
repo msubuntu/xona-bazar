@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { api } from '../services/api'
 import '../components_css/settings-modals.css'
 
 export function PasswordModal({ onClose }) {
@@ -6,8 +7,9 @@ export function PasswordModal({ onClose }) {
   const [show, setShow] = useState({ current: false, newPass: false, confirm: false })
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
+  const [saving, setSaving] = useState(false)
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     if (!form.current || !form.newPass || !form.confirm) {
       setError("Barcha maydonlarni to'ldiring")
@@ -22,8 +24,16 @@ export function PasswordModal({ onClose }) {
       return
     }
     setError('')
-    setSuccess(true)
-    setTimeout(onClose, 1500)
+    setSaving(true)
+    try {
+      await api.auth.changePassword({ currentPassword: form.current, newPassword: form.newPass })
+      setSuccess(true)
+      setTimeout(onClose, 1500)
+    } catch (err) {
+      setError(err?.message || 'Xatolik yuz berdi')
+    } finally {
+      setSaving(false)
+    }
   }
 
   return (
@@ -87,7 +97,7 @@ export function PasswordModal({ onClose }) {
                 </div>
               </div>
               {error && <div className="sm_error">{error}</div>}
-              <button type="submit" className="sm_submit">Parolni yangilash</button>
+              <button type="submit" className="sm_submit" disabled={saving}>{saving ? 'Yuborilmoqda...' : 'Parolni yangilash'}</button>
             </form>
           </>
         )}

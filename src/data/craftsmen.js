@@ -1,5 +1,5 @@
 const SERVICE_TYPES = [
-  { id: 'plumber', label: 'Plumber', icon: '🔧' },
+  { id: 'plumber', label: 'Santexnika', icon: '🔧' },
   { id: 'electrician', label: 'Elektrik', icon: '⚡' },
   { id: 'painter', label: 'Bo\'yoqchi', icon: '🎨' },
   { id: 'tiler', label: 'Kafelchik', icon: '🧱' },
@@ -17,9 +17,23 @@ const DISTRICTS = [
   'Toshkent, Sergeli',
   'Toshkent, Yashnabod',
   'Toshkent, Uchtepa',
+  'Toshkent, Yunusobod',
+  'Toshkent, Mirobod',
+  'Toshkent, Yakkasaroy',
+  'Toshkent, Bektemir',
+  'Toshkent, Yangihayot',
   'Samarqand',
   'Buxoro',
   'Namangan',
+  'Andijon',
+  'Farg\'ona',
+  'Jizzax',
+  'Sirdaryo, Guliston',
+  'Qashqadaryo, Qarshi',
+  'Surxondaryo, Termiz',
+  'Xorazm, Urganch',
+  'Navoiy',
+  'Nukus',
 ]
 
 export { SERVICE_TYPES, DISTRICTS }

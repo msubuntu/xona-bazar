@@ -1,9 +1,11 @@
 import { Router } from 'express'
+import mongoose from 'mongoose'
 import User from '../models/User.js'
 import Product from '../models/Product.js'
 import Order from '../models/Order.js'
 import Booking from '../models/Booking.js'
 import { protect, authorize } from '../middleware/auth.js'
+import { rateLimit } from '../middleware/rate-limit.js'
 import multer from 'multer'
 import { resolve } from 'path'
 
@@ -257,7 +259,7 @@ router.delete('/me/completed-works/:workId', protect, authorize('craftsman'), as
 })
 
 // ── Public: get craftsman reviews from bookings ──
-router.get('/:id/reviews', async (req, res) => {
+router.get('/:id/reviews', rateLimit({ windowMs: 60000, max: 120 }), async (req, res) => {
   try {
     const { page = 1, limit = 20 } = req.query
 
@@ -287,7 +289,7 @@ router.get('/:id/reviews', async (req, res) => {
     const paginated = reviews.slice(start, start + Number(limit))
 
     const agg = await Booking.aggregate([
-      { $match: { craftsmanId: require('mongoose').Types.ObjectId.createFromHexString(req.params.id), rated: true, status: 'completed' } },
+      { $match: { craftsmanId: mongoose.Types.ObjectId.createFromHexString(req.params.id), rated: true, status: 'completed' } },
       { $group: { _id: '$rating', count: { $sum: 1 } } },
     ])
 
@@ -312,8 +314,31 @@ router.get('/', async (req, res) => {
       { shopName: { $regex: escapeRegex(search), $options: 'i' } },
     ]
 
-    const sellers = await User.find(filter).select('-password').sort({ rating: -1 })
-    res.json({ sellers })
+    const sellers = await User.find(filter).select('-password').sort({ rating: -1 }).lean()
+
+    // Har bir do'kon uchun aktiv mahsulotlari (kategoriya + narx) biriktiriladi.
+    // Xaritalardagi "Mahsulotlar" bo'limi shu ma'lumot orqali
+    // mijozga bir xil turdagi mahsulotni tanlash imkonini beradi.
+    const sellerIds = sellers.map(s => s._id)
+    const sellerProducts = sellerIds.length
+      ? await Product.find({ sellerId: { $in: sellerIds }, status: 'active' })
+          .select('name category price sellerId')
+          .lean()
+      : []
+
+    const productsBySeller = {}
+    sellerProducts.forEach(p => {
+      const key = String(p.sellerId)
+      if (!productsBySeller[key]) productsBySeller[key] = []
+      productsBySeller[key].push({ name: p.name, category: p.category, price: p.price })
+    })
+
+    const result = sellers.map(s => ({
+      ...s,
+      products: productsBySeller[String(s._id)] || [],
+    }))
+
+    res.json({ sellers: result })
   } catch (err) {
     res.status(500).json({ message: err.message })
   }

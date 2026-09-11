@@ -2,6 +2,8 @@ import { Router } from 'express'
 import multer from 'multer'
 import User from '../models/User.js'
 import { generateToken, protect } from '../middleware/auth.js'
+import { rateLimit } from '../middleware/rate-limit.js'
+import { getBotConfig } from '../services/telegramBot.js'
 
 const upload = multer({
   storage: multer.diskStorage({
@@ -20,7 +22,16 @@ const upload = multer({
 
 const router = Router()
 
-router.post('/register', async (req, res) => {
+const loginEmailKey = (req) => {
+  const email = String(req.body?.email || '').trim().toLowerCase()
+  return email || 'no-email'
+}
+
+// IP/hisob bo'yicha urinish chegarasi (brute-force/credential-stuffing himoyasi)
+const loginIpLimit = rateLimit({ windowMs: 60_000, max: 60 })
+const loginAccountLimit = rateLimit({ windowMs: 60_000, max: 10, keyFn: loginEmailKey })
+
+router.post('/register', rateLimit({ windowMs: 60_000, max: 10 }), async (req, res) => {
   try {
     const { name, email, phone, password, role, shopName, location, lat, lng, description, services, experience, district, priceRange } = req.body
 
@@ -51,7 +62,7 @@ router.post('/register', async (req, res) => {
   }
 })
 
-router.post('/login', async (req, res) => {
+router.post('/login', loginIpLimit, loginAccountLimit, async (req, res) => {
   try {
     const { email, password } = req.body
     if (!email || !password) return res.status(400).json({ message: 'Email va parolni kiriting' })
@@ -74,7 +85,7 @@ router.get('/me', protect, async (req, res) => {
 
 router.put('/profile', protect, upload.single('avatar'), async (req, res) => {
   try {
-    const { name, email, phone, shopName, location, description, lat, lng, services, experience, district, priceRange, workingHours, available } = req.body
+    const { name, email, phone, shopName, location, description, lat, lng, services, experience, district, priceRange, workingHours, available, social } = req.body
     const user = await User.findById(req.user._id)
 
     if (name) user.name = name
@@ -95,6 +106,11 @@ router.put('/profile', protect, upload.single('avatar'), async (req, res) => {
     if (priceRange !== undefined) user.priceRange = priceRange
     if (workingHours !== undefined) user.workingHours = workingHours
     if (available !== undefined) user.available = available
+    if (social) {
+      if (social.telegram !== undefined) user.social.telegram = social.telegram
+      if (social.instagram !== undefined) user.social.instagram = social.instagram
+      if (social.website !== undefined) user.social.website = social.website
+    }
     if (req.file) user.avatar = `/uploads/${req.file.filename}`
 
     await user.save()
@@ -104,8 +120,77 @@ router.put('/profile', protect, upload.single('avatar'), async (req, res) => {
   }
 })
 
-router.put('/change-password', protect, async (req, res) => {
+router.put('/notifications', protect, async (req, res) => {
   try {
+    const { notifEmail, notifSms, notifPromo, twoFactor } = req.body
+    if (typeof notifEmail !== 'boolean' && typeof notifSms !== 'boolean' && typeof notifPromo !== 'boolean' && typeof twoFactor !== 'boolean') {
+      return res.status(400).json({ message: 'Hech qanday sozlama berilmagan' })
+    }
+    const user = await User.findById(req.user._id)
+    if (typeof notifEmail === 'boolean') user.notifEmail = notifEmail
+    if (typeof notifSms === 'boolean') user.notifSms = notifSms
+    if (typeof notifPromo === 'boolean') user.notifPromo = notifPromo
+    if (typeof twoFactor === 'boolean') user.twoFactor = twoFactor
+    await user.save()
+    res.json({ user })
+  } catch (err) {
+    res.status(400).json({ message: err.message })
+  }
+})
+
+// ── Telegram bot: ulash kodi olish ──
+router.post('/telegram/link-code', protect, async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id)
+    if (!user) return res.status(404).json({ message: 'Foydalanuvchi topilmadi' })
+
+    const code = String(Math.floor(100000 + Math.random() * 900000))
+    user.telegramLinkCode = code
+    user.telegramLinkExpiry = new Date(Date.now() + 10 * 60 * 1000)
+    await user.save()
+
+    const bot = getBotConfig()
+    res.json({
+      code,
+      expiresIn: 10,
+      botUsername: bot.username,
+      botTokenSet: bot.tokenSet,
+      message: bot.tokenSet
+        ? 'Kod 10 daqiqa davomida amal qiladi. Botga /link KOD deb yuboring'
+        : 'Bot hali ishga tushmagan (BOT_TOKEN sozlanmagan). Administratorga murojaat qiling.',
+    })
+  } catch (err) {
+    res.status(500).json({ message: err.message })
+  }
+})
+
+// ── Telegram bot: ulanish holati ──
+router.get('/telegram/status', protect, async (req, res) => {
+  const bot = getBotConfig()
+  res.json({
+    linked: Boolean(req.user.telegramChatId),
+    chatId: req.user.telegramChatId || '',
+    notifTelegram: req.user.notifTelegram !== false,
+    botUsername: bot.username,
+    botTokenSet: bot.tokenSet,
+  })
+})
+
+// ── Telegram bot: ajratish ──
+router.post('/telegram/unlink', protect, async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id)
+    user.telegramChatId = ''
+    user.notifTelegram = true
+    await user.save()
+    res.json({ success: true })
+  } catch (err) {
+    res.status(500).json({ message: err.message })
+  }
+})
+
+router.put('/change-password', protect, async (req, res) => {
+    try {
     const { currentPassword, newPassword } = req.body
     if (!currentPassword || !newPassword) return res.status(400).json({ message: 'Joriy va yangi parol majburiy' })
 

@@ -1,0 +1,514 @@
+/* ═══════════════ MOBILE USER — Uzum / AliExpress uslubi ═══════════════
+   Bitta ustunli mobil kabinet:
+   topbar + profil hero karta + buyurtma statuslari + tezkor amallar + menyu
+   ═══════════════════════════════════════════════════════════════ */
+
+.mua {
+  --g: #00b96b;
+  --g2: #009158;
+  --gsoft: #e9f9f0;
+  --b: #2f6bff;
+  --bsoft: #eaf0ff;
+  --amber: #f59e0b;
+  --ambsoft: #fef3e2;
+  --pink: #e91e63;
+  --pksoft: #fdecef;
+  --red: #ef4444;
+  --card: #fff;
+  --bg: #f4f6f5;
+  --border: #e7ebea;
+  --text: #121a16;
+  --text2: #66766e;
+  --muted: #98a6a0;
+  min-height: 100dvh;
+  max-width: 480px;
+  margin: 0 auto;
+  background: var(--bg);
+  font-family: system-ui, -apple-system, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
+  color: var(--text);
+  padding-bottom: 24px;
+}
+
+.mua * { box-sizing: border-box; }
+.mua button { font-family: inherit; cursor: pointer; }
+.mua img { display: block; }
+
+/* ── topbar ── */
+.mua_topbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 14px;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--border);
+}
+.mua_logo { font-size: 18px; font-weight: 800; letter-spacing: -0.3px; }
+.mua_topbar_title { font-weight: 700; font-size: 15px; }
+
+.mua_circle {
+  width: 38px; height: 38px;
+  display: inline-flex; align-items: center; justify-content: center;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--text);
+}
+.mua_circle.red { color: var(--red); border-color: #f9c8c8; }
+
+.mua_body { padding: 12px 14px; display: flex; flex-direction: column; gap: 12px; }
+
+/* ── hero karta ── */
+.mua_hero {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  padding: 18px 16px;
+  border-radius: 18px;
+  color: #fff;
+  background: linear-gradient(135deg, #12c97a, #008d55);
+}
+.mua_hero::after {
+  content: "";
+  position: absolute;
+  right: -40px; top: -50px;
+  width: 170px; height: 170px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.12);
+  pointer-events: none;
+}
+.mua_avatar {
+  width: 62px; height: 62px; flex-shrink: 0;
+  border-radius: 50%;
+  display: grid; place-items: center;
+  background: rgba(255, 255, 255, 0.22);
+  border: 2px solid rgba(255, 255, 255, 0.5);
+  color: #fff;
+  font-size: 24px; font-weight: 800;
+}
+.mua_hero_info { flex: 1; min-width: 0; }
+.mua_name { font-size: 17px; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mua_hero_sub { font-size: 12px; opacity: 0.85; margin: 3px 0 8px; }
+.mua_role {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.2);
+  font-size: 11px; font-weight: 700;
+}
+.mua_edit {
+  position: relative; z-index: 1;
+  display: flex; align-items: center; gap: 6px;
+  padding: 8px 12px;
+  border: none; border-radius: 10px;
+  background: #fff; color: var(--g2);
+  font-size: 12px; font-weight: 700;
+  white-space: nowrap;
+}
+
+/* ── karta ── */
+.mua_card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 14px;
+}
+.mua_card_head {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 14px;
+}
+.mua_card_title { font-size: 15px; font-weight: 800; }
+.mua_link {
+  display: inline-flex; align-items: center; gap: 2px;
+  border: none; background: none;
+  color: var(--g); font-size: 13px; font-weight: 700;
+}
+
+/* ── buyurtma statuslari ── */
+.mua_ostrip { display: flex; }
+.mua_os {
+  flex: 1;
+  display: flex; flex-direction: column; align-items: center; gap: 5px;
+  border: none; background: none;
+  padding: 2px 0;
+  color: var(--text);
+}
+.mua_os_icon {
+  width: 44px; height: 44px;
+  border-radius: 14px;
+  display: grid; place-items: center;
+}
+.mua_os_icon.amber { background: var(--ambsoft); color: var(--amber); }
+.mua_os_icon.blue { background: var(--bsoft); color: var(--b); }
+.mua_os_icon.green { background: var(--gsoft); color: var(--g2); }
+.mua_os_count { font-size: 13px; font-weight: 800; }
+.mua_os_label { font-size: 10.5px; color: var(--text2); }
+
+/* ── tezkor amallar ── */
+.mua_grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.mua_gi { position: relative; border: none; background: none; padding: 4px 2px; color: var(--text); }
+.mua_gi_icon { width: 46px; height: 46px; margin: 0 auto; border-radius: 50%; display: grid; place-items: center; }
+.mua_gi_icon.pink { background: var(--pksoft); color: var(--pink); }
+.mua_gi_icon.blue { background: var(--bsoft); color: var(--b); }
+.mua_gi_icon.green { background: var(--gsoft); color: var(--g2); }
+.mua_gi_icon.amber { background: var(--ambsoft); color: var(--amber); }
+.mua_gi_label { display: block; margin-top: 6px; font-size: 10.5px; font-weight: 600; color: var(--text2); text-align: center; }
+.mua_badge {
+  position: absolute; top: -2px; left: calc(50% + 12px);
+  min-width: 18px; height: 18px;
+  padding: 0 4px; border-radius: 9px;
+  display: grid; place-items: center;
+  background: var(--red); color: #fff;
+  font-size: 10px; font-weight: 700;
+}
+
+/* ── menyu ro'yxati ── */
+.mua_list { padding: 6px; }
+.mua_li {
+  display: flex; align-items: center; gap: 12px;
+  width: 100%;
+  padding: 13px 8px;
+  border: none; background: none;
+  color: var(--text);
+  font-size: 14px; font-weight: 600;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+.mua_li:last-child { border-bottom: none; }
+.mua_li_icon { width: 34px; height: 34px; flex-shrink: 0; border-radius: 10px; display: grid; place-items: center; background: var(--gsoft); color: var(--g2); }
+.mua_li_label { flex: 1; }
+.mua_li_chev { color: var(--muted); }
+.mua_li.danger .mua_li_label { color: var(--red); }
+.mua_li.danger .mua_li_icon { background: #fdecec; color: var(--red); }
+
+.mua_logout {
+  margin-top: 4px;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  width: 100%;
+  padding: 14px;
+  border: none;
+  border-radius: 14px;
+  background: var(--card);
+  color: var(--red);
+  font-size: 14px; font-weight: 700;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+}
+
+/* ── chip ── */
+.chip {
+  display: inline-flex; align-items: center;
+  padding: 3px 10px; border-radius: 999px;
+  font-size: 11px; font-weight: 700; white-space: nowrap;
+}
+.chip_green { background: #e7f7ef; color: #0e9456; }
+.chip_amber { background: #fef3e2; color: #b45309; }
+.chip_blue { background: #eaf0ff; color: #2447b8; }
+.chip_red { background: #fdecec; color: #b91c1c; }
+
+/* ── uatsiyalar ── */
+.mua_center { text-align: center; color: var(--muted); padding: 50px 0; font-size: 14px; }
+
+.mua_chips { display: flex; gap: 8px; overflow-x: auto; }
+.mua_chip {
+  flex-shrink: 0;
+  padding: 8px 14px;
+  border: 1.5px solid var(--border);
+  border-radius: 999px;
+  background: var(--card);
+  color: var(--text2);
+  font-size: 12.5px; font-weight: 600;
+}
+.mua_chip.on { background: var(--g); border-color: var(--g); color: #fff; }
+
+.mua_order {
+  display: flex; gap: 12px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 14px;
+}
+.mua_order_img {
+  width: 54px; height: 54px; flex-shrink: 0;
+  border-radius: 14px;
+  display: grid; place-items: center;
+  background: var(--gsoft); color: var(--g2);
+}
+.mua_order_img.alt { background: var(--ambsoft); color: var(--amber); }
+.mua_order_body { flex: 1; min-width: 0; }
+.mua_order_top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.mua_order_top strong { font-size: 14px; }
+.mua_order_name { font-size: 13px; font-weight: 600; margin: 5px 0 2px; }
+.mua_order_meta { font-size: 12px; color: var(--text2); }
+.mua_order_total { font-weight: 800; font-size: 15px; color: var(--g2); margin-top: 4px; }
+
+.mua_quote {
+  margin-top: 10px;
+  padding: 12px;
+  background: var(--bsoft);
+  border: 1.5px solid #c4d2f7;
+  border-radius: 12px;
+}
+.mua_quote_label { font-size: 12px; color: var(--b); font-weight: 600; }
+.mua_quote_price { font-size: 20px; font-weight: 800; color: var(--b); margin: 3px 0 10px; }
+.mua_quote_actions { display: flex; gap: 8px; }
+
+.mua_minibtn {
+  border: none; border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 12.5px; font-weight: 700;
+  background: var(--card); color: var(--g2);
+  border: 1.5px solid var(--g);
+}
+.mua_minibtn.solid { background: #10b981; border-color: #10b981; color: #fff; flex: 1; }
+.mua_minibtn.danger { background: #fff; color: var(--red); border-color: #f3a1a1; flex: 1; }
+.mua_minibtn.done { background: var(--gsoft); }
+.mua_minibtn.tiny { padding: 6px 12px; font-size: 11.5px; }
+
+.mua_note { padding: 10px 12px; border-radius: 10px; font-size: 12px; margin-top: 8px; background: #e0e7ff; border: 1px solid #a5b4fc; color: #3730a3; }
+
+/* ── profil ── */
+.mua_form { display: flex; flex-direction: column; gap: 12px; }
+.mua_field { display: flex; flex-direction: column; gap: 5px; }
+.mua_field label { font-size: 12px; font-weight: 600; color: var(--text2); }
+.mua_field input, .mua_field select {
+  width: 100%;
+  padding: 11px 12px;
+  border: 1px solid var(--border);
+  border-radius: 11px;
+  background: var(--card);
+  font-size: 14px; color: var(--text);
+  outline: none;
+}
+.mua_field input:focus, .mua_field select:focus { border-color: var(--g); }
+
+.mua_rows { display: flex; flex-direction: column; }
+.mua_row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 13.5px;
+}
+.mua_row:last-child { border-bottom: none; }
+.mua_row span { display: inline-flex; align-items: center; gap: 6px; color: var(--text2); font-size: 12.5px; }
+.mua_row strong { font-weight: 600; text-align: right; }
+
+.mua_save_msg { color: var(--g2); font-size: 12.5px; font-weight: 600; margin-top: 12px; }
+
+.mua_stats { display: flex; gap: 10px; }
+.mua_stat {
+  flex: 1;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 14px;
+  text-align: center;
+}
+.mua_stat strong { display: block; font-size: 20px; color: var(--g2); }
+.mua_stat span { font-size: 11px; color: var(--text2); }
+
+/* ── saqlanganlar ── */
+.mua_fav {
+  display: flex; gap: 12px; align-items: center;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 12px;
+}
+.mua_fav_img {
+  width: 58px; height: 58px; flex-shrink: 0;
+  border-radius: 12px;
+  display: grid; place-items: center;
+  background: var(--bg); color: var(--g2);
+  font-weight: 800; overflow: hidden; font-size: 20px;
+}
+.mua_fav_img img { width: 100%; height: 100%; object-fit: cover; }
+.mua_fav_info { flex: 1; min-width: 0; }
+.mua_fav_brand { font-size: 11px; color: var(--muted); }
+.mua_fav_name { font-size: 13px; font-weight: 600; margin: 2px 0 4px; }
+.mua_fav_price { font-weight: 700; color: var(--g2); font-size: 13px; }
+.mua_fav_price s { color: var(--muted); margin-left: 6px; font-weight: 500; }
+
+/* ── xabarlar ── */
+.mua_search {
+  display: flex; align-items: center; gap: 8px;
+  padding: 11px 13px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  color: var(--muted);
+}
+.mua_search input { flex: 1; border: none; outline: none; background: none; font-size: 13px; color: var(--text); }
+.mua_conv {
+  display: flex; gap: 12px; align-items: center;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 12px;
+  cursor: pointer;
+}
+.mua_conv:active { background: var(--mob-bg2); }
+.mua_conv_avatar {
+  width: 46px; height: 46px; flex-shrink: 0;
+  border-radius: 50%;
+  display: grid; place-items: center;
+  background: var(--gsoft); color: var(--g2);
+  font-weight: 800;
+}
+.mua_conv_body { flex: 1; min-width: 0; }
+.mua_conv_top { display: flex; justify-content: space-between; font-size: 13px; }
+.mua_conv_top span { color: var(--muted); font-size: 11px; }
+.mua_conv_last { font-size: 12px; color: var(--text2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* ── manzillar ── */
+.mua_addbtn {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  width: 100%;
+  padding: 13px;
+  border: 1.5px dashed var(--g);
+  border-radius: 14px;
+  background: var(--gsoft);
+  color: var(--g2);
+  font-size: 13px; font-weight: 700;
+}
+.mua_addr {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 14px;
+}
+.mua_addr.isdef { border-color: var(--g); }
+.mua_addr_top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.mua_addr_top strong { font-size: 14px; display: flex; align-items: center; gap: 6px; }
+.mua_addr_text { font-size: 13px; color: var(--text2); margin-bottom: 4px; }
+.mua_addr_phone { font-size: 12px; color: var(--muted); margin-bottom: 10px; }
+.mua_addr_actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* ── sozlamalar ── */
+.mua_set_title { font-size: 13px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 8px; }
+.mua_toggle {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  padding: 11px 0;
+  border-bottom: 1px solid var(--border);
+}
+.mua_toggle:last-child { border-bottom: none; }
+.mua_toggle strong { font-size: 13px; display: block; }
+.mua_toggle span { font-size: 11.5px; color: var(--text2); }
+
+.mua_switch { position: relative; width: 46px; height: 26px; flex-shrink: 0; }
+.mua_switch input { opacity: 0; width: 0; height: 0; }
+.mua_switch span {
+  position: absolute; inset: 0;
+  background: var(--border);
+  border-radius: 999px;
+  transition: 0.2s;
+  cursor: pointer;
+}
+.mua_switch span::before {
+  content: "";
+  position: absolute;
+  width: 20px; height: 20px; left: 3px; top: 3px;
+  background: #fff;
+  border-radius: 50%;
+  transition: 0.2s;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+.mua_switch input:checked + span { background: var(--g); }
+.mua_switch input:checked + span::before { transform: translateX(20px); }
+
+.mua_two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 4px; }
+/* ═══════ DARK MODE: MOBIL KABINET (.mua) ═══════
+   ThemeContext <html> ga data-theme="dark" qo'yadi.
+   .mua o'zgaruvchilari dark qiymatlar bilan qayta aniqlanadi. */
+[data-theme='dark'] .mua {
+  --g: #22c55e;
+  --g2: #34d399;
+  --gsoft: rgba(34, 197, 94, 0.15);
+  --b: #60a5fa;
+  --bsoft: rgba(59, 130, 246, 0.15);
+  --amber: #fbbf24;
+  --ambsoft: rgba(245, 158, 11, 0.15);
+  --pink: #f472b6;
+  --pksoft: rgba(236, 72, 153, 0.15);
+  --red: #f87171;
+  --card: #151d2b;
+  --bg: #0b1220;
+  --border: #2b3648;
+  --text: #f3f4f6;
+  --text2: #9ca3af;
+  --muted: #6b7280;
+}
+
+[data-theme='dark'] .mua_topbar {
+  background: rgba(11, 18, 32, 0.92);
+  border-bottom-color: #2b3648;
+}
+[data-theme='dark'] .mua_edit { background: #1f2937; color: #34d399; }
+[data-theme='dark'] .mua_topbar_title { color: #f3f4f6; }
+
+[data-theme='dark'] .mua_li_icon,
+[data-theme='dark'] .mua_gi_icon.green,
+[data-theme='dark'] .mua_os_icon.green,
+[data-theme='dark'] .mua_order_img,
+[data-theme='dark'] .mua_conv_avatar { color: #34d399; }
+[data-theme='dark'] .mua_os_icon.amber,
+[data-theme='dark'] .mua_gi_icon.amber,
+[data-theme='dark'] .mua_order_img.alt { color: #fbbf24; }
+[data-theme='dark'] .mua_os_icon.blue,
+[data-theme='dark'] .mua_gi_icon.blue { color: #60a5fa; }
+[data-theme='dark'] .mua_gi_icon.pink { color: #f472b6; }
+
+[data-theme='dark'] .mua_li.danger .mua_li_icon { background: rgba(239, 68, 68, 0.15); }
+[data-theme='dark'] .mua_circle.red { border-color: #7f1d1d; }
+
+[data-theme='dark'] .chip_green { background: rgba(34, 197, 94, 0.15); color: #34d399; }
+[data-theme='dark'] .chip_amber { background: rgba(245, 158, 11, 0.15); color: #fbbf24; }
+[data-theme='dark'] .chip_blue { background: rgba(59, 130, 246, 0.15); color: #60a5fa; }
+[data-theme='dark'] .chip_red { background: rgba(239, 68, 68, 0.15); color: #f87171; }
+
+[data-theme='dark'] .mua_quote { border-color: #33415e; }
+[data-theme='dark'] .mua_note { background: rgba(67, 56, 202, 0.25); border-color: rgba(129, 140, 248, 0.4); color: #c7d2fe; }
+[data-theme='dark'] .mua_minibtn.danger { background: #1f2937; border-color: rgba(239, 68, 68, 0.4); }
+[data-theme='dark'] .mua_minibtn.done { color: #34d399; }
+
+/* ── manzillar: sheet / loading / empty ── */
+.mua_loading, .mua_empty { padding: 26px 14px; text-align: center; font-size: 13px; color: var(--muted); }
+.mua_sheet_overlay {
+  position: fixed; inset: 0; z-index: 60;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex; align-items: flex-end; justify-content: center;
+}
+.mua_sheet {
+  width: 100%; max-width: 480px;
+  background: var(--card);
+  border-radius: 18px 18px 0 0;
+  padding: 18px 16px calc(18px + env(safe-area-inset-bottom, 0px));
+  display: flex; flex-direction: column; gap: 12px;
+}
+.mua_sheet_title { font-size: 15px; font-weight: 700; }
+.mua_sheet .mua_field label { font-size: 12px; font-weight: 600; color: var(--text2); display: block; margin-bottom: 5px; }
+.mua_sheet .mua_field input,
+.mua_sheet .mua_field textarea {
+  width: 100%; padding: 11px 12px; border-radius: 10px;
+  border: 1px solid var(--border); background: var(--bg);
+  color: var(--text); font-size: 14px; outline: none;
+}
+.mua_addr_defrow { border-bottom: none; padding: 6px 0; }
+.mua_addr_defrow strong { font-size: 13px; color: var(--text); }
+.mua_addr_error { font-size: 12px; color: #ef4444; }
+.mua_sheet_actions { display: flex; gap: 10px; margin-top: 4px; }
+.mua_sheet_actions .mua_minibtn { flex: 1; justify-content: center; font-size: 14px; padding: 12px 0; }
+.mua_minibtn.primary { background: var(--brand, #2563eb); border-color: transparent; color: #fff; font-weight: 700; }
+.mua_minibtn.primary:disabled { opacity: 0.55; cursor: default; }
+[data-theme='dark'] .mua_minibtn.primary { background: #2563eb; color: #fff; }
+[data-theme='dark'] .mua_sheet { background: #111827; border: 1px solid #1f2937; }
+[data-theme='dark'] .mua_sheet .mua_field input,
+[data-theme='dark'] .mua_sheet .mua_field textarea { background: #0b1220; border-color: #1f2937; color: #f3f4f6; }
+[data-theme='dark'] .mua_addr_error { color: #f87171; }
+.mua_pw_ok { font-size: 12px; color: #2bc32b; }
+[data-theme='dark'] .mua_pw_ok { color: #7ee07e; }

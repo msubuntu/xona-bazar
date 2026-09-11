@@ -13,15 +13,19 @@ import orderRoutes from './routes/orders.js'
 import conversationRoutes from './routes/conversations.js'
 import sellerRoutes from './routes/sellers.js'
 import bookingRoutes from './routes/bookings.js'
+import addressRoutes from './routes/addresses.js'
 import Conversation from './models/Conversation.js'
+import { initTelegramBot, notifyUser } from './services/telegramBot.js'
 
 const app = express()
 const server = createServer(app)
-const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:5173'
-const io = new Server(server, { cors: { origin: CLIENT_URL } })
+const CLIENT_URLS = (process.env.CLIENT_URL || 'http://localhost:5173').split(',').map(s => s.trim()).filter(Boolean)
+const io = new Server(server, { cors: { origin: CLIENT_URLS, credentials: true } })
 const onlineUsers = new Map()
 
 await connectDB()
+
+initTelegramBot()
 
 const isProd = process.env.NODE_ENV === 'production'
 
@@ -44,7 +48,10 @@ app.use(helmet({
   crossOriginEmbedderPolicy: false,
   crossOriginResourcePolicy: { policy: 'cross-origin' },
 }))
-app.use(cors({ origin: CLIENT_URL, credentials: true }))
+app.use(cors({
+  origin: (origin, cb) => cb(null, !origin || CLIENT_URLS.includes(origin)),
+  credentials: true,
+}))
 app.use(express.json())
 app.use(mongoSanitize({ replaceWith: '_' }))
 
@@ -61,6 +68,7 @@ app.use('/api/orders', orderRoutes)
 app.use('/api/conversations', (req, res, next) => { req.io = io; req.onlineUsers = onlineUsers; next() }, conversationRoutes)
 app.use('/api/sellers', sellerRoutes)
 app.use('/api/bookings', (req, res, next) => { req.io = io; req.onlineUsers = onlineUsers; next() }, bookingRoutes)
+app.use('/api/addresses', addressRoutes)
 
 app.get('/api/health', (req, res) => res.json({ status: 'ok' }))
 
@@ -96,6 +104,9 @@ io.on('connection', (socket) => {
             conversationId,
             message: { ...msg, _id: msg.createdAt.getTime().toString() },
           })
+        }
+        if (uid !== senderId.toString()) {
+          notifyUser(uid, `<b>💬 Yangi xabar</b>\n${text}`)
         }
       })
     } catch (err) {

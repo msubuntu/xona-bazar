@@ -60,11 +60,139 @@ body {
 #root {
   margin: 0 auto;
   min-height: 100svh;
-  overflow-x: hidden;
+  overflow-x: clip;
 }
 
 @media (max-width: 768px) {
   input, select, textarea {
     font-size: 16px !important;
   }
+}
+
+.tg-bot {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 4px 0;
+}
+.tg-bot-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+.tg-bot-icon {
+  font-size: 22px;
+  line-height: 1;
+}
+.tg-bot-title {
+  font-weight: 600;
+  color: var(--text);
+}
+.tg-bot-desc {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-top: 2px;
+}
+.tg-bot-warn {
+  background: var(--warning-bg);
+  border: 1px solid var(--warning);
+  color: var(--warning);
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 13px;
+}
+.tg-bot-link {
+  color: var(--accent);
+  font-weight: 500;
+  font-size: 13px;
+  text-decoration: none;
+}
+.tg-bot-link:hover {
+  text-decoration: underline;
+}
+.tg-bot-btn {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 14px;
+}
+.tg-bot-btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+.tg-bot-code-box {
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px;
+}
+.tg-bot-code-label {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+}
+.tg-bot-code-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.tg-bot-code {
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: 4px;
+  color: var(--text);
+}
+.tg-bot-code-copy {
+  background: var(--accent-bg);
+  color: var(--accent);
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.tg-bot-code-hint {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 6px;
+}
+.tg-bot-steps {
+  margin-top: 10px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+.tg-bot-linked {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: var(--accent-bg);
+  border: 1px solid var(--accent);
+  border-radius: 10px;
+  padding: 12px;
+}
+.tg-bot-success {
+  color: var(--accent);
+  font-weight: 700;
+}
+.tg-bot-linked p {
+  margin: 0;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+.tg-bot-unlink {
+  align-self: flex-start;
+  background: transparent;
+  border: 1px solid var(--danger);
+  color: var(--danger);
+  border-radius: 8px;
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
 }

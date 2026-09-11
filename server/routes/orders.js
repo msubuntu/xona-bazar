@@ -2,6 +2,7 @@ import { Router } from 'express'
 import Order from '../models/Order.js'
 import Product from '../models/Product.js'
 import { protect, authorize } from '../middleware/auth.js'
+import { notifyUser } from '../services/telegramBot.js'
 
 const router = Router()
 
@@ -25,7 +26,7 @@ router.get('/seller', protect, authorize('seller', 'craftsman'), async (req, res
       const sellerTotal = sellerItems.reduce((sum, item) => sum + item.price * item.qty, 0)
       return {
         _id: order._id,
-        buyer: order.userId ? { name: order.userId.name, phone: order.userId.phone, avatar: order.userId.avatar } : null,
+        buyer: order.userId ? { _id: order.userId._id, name: order.userId.name, phone: order.userId.phone, avatar: order.userId.avatar } : null,
         items: sellerItems,
         total: sellerTotal,
         status: order.status,
@@ -106,6 +107,18 @@ router.post('/', protect, async (req, res) => {
       address,
       phone: phone || req.user.phone,
       note,
+    })
+
+    const buyerName = req.user.name || 'Mijoz'
+    orderItems.forEach(item => {
+      notifyUser(item.sellerId, [
+        `<b>📦 Yangi buyurtma!</b>`,
+        `mijoz: ${buyerName}`,
+        `mahsulot: ${item.name} × ${item.qty}`,
+        `summa: ${(item.price * item.qty).toLocaleString('uz-UZ')} so'm`,
+        `manzil: ${address?.city ? address.city + (address.street ? ', ' + address.street : '') : ''}`,
+        `holat: yangi buyurtma`,
+      ].filter(Boolean).join('\n'))
     })
 
     res.status(201).json({ order })

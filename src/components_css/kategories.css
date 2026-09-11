@@ -75,6 +75,22 @@
     z-index: 1;
   }
 
+  .kategories_count {
+    white-space: nowrap;
+    position: relative;
+    z-index: 1;
+    font-size: 11px;
+    font-weight: 700;
+    background: rgba(0, 0, 0, 0.08);
+    border-radius: 999px;
+    padding: 1px 7px;
+    margin-left: 2px;
+  }
+
+  .kategories_btn.active .kategories_count {
+    background: rgba(255, 255, 255, 0.2);
+  }
+
   @media (max-width: 640px) {
     .kategories_btn {
       padding: 8px 16px;

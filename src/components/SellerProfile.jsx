@@ -11,6 +11,7 @@ import Footer from './Footer'
 import LoginPrompt from './LoginPrompt'
 import ProductCard from './ProductCard'
 import StoreMap from './StoreMap'
+import { REVIEWS_ENABLED } from '../data/flags'
 import '../components_css/seller.css'
 
 function SellerProfile() {
@@ -122,6 +123,25 @@ function SellerProfile() {
                 </span>
               )}
             </div>
+            {(s.social?.telegram || s.social?.instagram || s.social?.website) && (
+              <div className="sp_socials">
+                {s.social.telegram && (
+                  <a href={s.social.telegram.startsWith('http') ? s.social.telegram : `https://t.me/${s.social.telegram.replace('@','')}`} target="_blank" rel="noopener noreferrer" className="sp_social_link" title="Telegram">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M21.94 4.05a1.5 1.5 0 0 0-2.05-1.7L2.3 10.2c-1.2.5-1.15 2.2.08 2.6l4.3 1.4 1.66 5.2c.33 1.03 1.6 1.28 2.33.46l2.32-2.6 4.16 3.05c.9.66 2.17.17 2.39-.9l3.4-15.36zM6.7 13l12.5-7.06-6.5 8.62a1 1 0 0 0-.2.55l-.24 2.9-1.66-5.2L6.7 13z"/></svg>
+                  </a>
+                )}
+                {s.social.instagram && (
+                  <a href={s.social.instagram.startsWith('http') ? s.social.instagram : `https://instagram.com/${s.social.instagram.replace('@','')}`} target="_blank" rel="noopener noreferrer" className="sp_social_link" title="Instagram">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
+                  </a>
+                )}
+                {s.social.website && (
+                  <a href={s.social.website.startsWith('http') ? s.social.website : `https://${s.social.website}`} target="_blank" rel="noopener noreferrer" className="sp_social_link" title="Sayt">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                  </a>
+                )}
+              </div>
+            )}
           </div>
           <div className="sp_actions">
             <button className="sp_chat_btn" onClick={() => { if (!user) { setShowLoginPrompt(true); return } openChat(s) }}>
@@ -138,6 +158,7 @@ function SellerProfile() {
         </div>
 
         <div className="sp_stats">
+          {REVIEWS_ENABLED && (
           <div className="sp_stat">
             <div className="sp_stat_icon" style={{ background: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6' }}>
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
@@ -147,6 +168,7 @@ function SellerProfile() {
               <span>{t('rating')}</span>
             </div>
           </div>
+          )}
           <div className="sp_stat">
             <div className="sp_stat_icon" style={{ background: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b' }}>
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>

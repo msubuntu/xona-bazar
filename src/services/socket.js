@@ -7,7 +7,7 @@ export function getSocket() {
   if (!socket) {
     const url = import.meta.env.VITE_API_URL
       ? import.meta.env.VITE_API_URL.replace(/\/api\/?$/, '')
-      : 'https://xona-bazar-production.up.railway.app'
+      : window.location.origin
     socket = io(url, { autoConnect: false, reconnection: true, reconnectionDelay: 1000, reconnectionAttempts: 20 })
   }
   return socket

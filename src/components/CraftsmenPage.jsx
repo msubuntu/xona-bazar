@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useRef } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useSettings } from '../context/SettingsContext.jsx'
 import { useSeller } from '../context/SellerContext.jsx'
@@ -6,41 +6,9 @@ import { api } from '../services/api'
 import Header from './header'
 import Footer from './Footer'
 import { SERVICE_TYPES, DISTRICTS } from '../data/craftsmen'
+import { REVIEWS_ENABLED } from '../data/flags'
+import { normalizeCraftsman } from '../utils/craftsman'
 import '../components_css/craftsmen.css'
-
-const AVATAR_COLORS = ['#10b981','#f59e0b','#3b82f6','#8b5cf6','#ef4444','#ec4899','#06b6d4','#84cc16','#f97316','#14b8a6']
-
-function getAvatarColor(name) {
-  let hash = 0
-  for (let i = 0; i < (name || '').length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash)
-  return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length]
-}
-
-function normalizeCraftsman(u) {
-  return {
-    id: u._id,
-    _id: u._id,
-    name: u.name,
-    avatar: u.avatar || (u.name || '?')[0].toUpperCase(),
-    color: u.color || getAvatarColor(u.name),
-    verified: u.verified || false,
-    rating: u.rating || 0,
-    reviewCount: u.reviewCount || 0,
-    experience: u.experience || '—',
-    district: u.district || '',
-    description: u.description || '',
-    phone: u.phone || '',
-    workingHours: u.workingHours || '09:00 - 18:00',
-    services: Array.isArray(u.services) ? u.services : [],
-    priceRange: u.priceRange || '',
-    completedJobs: u.completedJobs || 0,
-    available: u.available !== false,
-    portfolio: u.portfolio || [],
-    location: u.location || '',
-    lat: u.lat,
-    lng: u.lng,
-  }
-}
 
 function CraftsmenPage() {
   const { t } = useSettings()
@@ -49,9 +17,7 @@ function CraftsmenPage() {
   const [serviceFilter, setServiceFilter] = useState('all')
   const [districtFilter, setDistrictFilter] = useState('all')
   const [localSearch, setLocalSearch] = useState(searchParams.get('q') || '')
-  const debounceRef = useRef(null)
-  const [debouncedSearch, setDebouncedSearch] = useState(localSearch)
-  const [sort, setSort] = useState('rating')
+  const [sort, setSort] = useState(REVIEWS_ENABLED ? 'rating' : 'experience')
   const [apiCraftsmen, setApiCraftsmen] = useState([])
   const [loading, setLoading] = useState(true)
   const [apiError, setApiError] = useState(null)
@@ -59,12 +25,6 @@ function CraftsmenPage() {
   useEffect(() => {
     setLocalSearch(searchParams.get('q') || '')
   }, [searchParams])
-
-  useEffect(() => {
-    if (debounceRef.current) clearTimeout(debounceRef.current)
-    debounceRef.current = setTimeout(() => setDebouncedSearch(localSearch), 300)
-    return () => { if (debounceRef.current) clearTimeout(debounceRef.current) }
-  }, [localSearch])
 
   useEffect(() => {
     let cancelled = false
@@ -87,6 +47,17 @@ function CraftsmenPage() {
 
   const allCraftsmen = apiCraftsmen
 
+  const matchCraftsman = (c, q) => {
+    const services = (c.services || []).map(sId => {
+      const st = SERVICE_TYPES.find(s => s.id === sId)
+      return (st ? st.label : sId).toLowerCase()
+    }).join(' ')
+    return (c.name || '').toLowerCase().includes(q)
+      || (c.description || '').toLowerCase().includes(q)
+      || (c.district || '').toLowerCase().includes(q)
+      || services.includes(q)
+  }
+
   const filtered = useMemo(() => {
     let result = [...allCraftsmen]
 
@@ -98,12 +69,9 @@ function CraftsmenPage() {
       result = result.filter(c => c.district === districtFilter)
     }
 
-    if (debouncedSearch.trim()) {
-      const q = debouncedSearch.toLowerCase()
-      result = result.filter(c =>
-        (c.name || '').toLowerCase().includes(q) ||
-        (c.description || '').toLowerCase().includes(q)
-      )
+    const q = localSearch.trim().toLowerCase()
+    if (q) {
+      result = result.filter(c => matchCraftsman(c, q))
     }
 
     switch (sort) {
@@ -115,7 +83,26 @@ function CraftsmenPage() {
     }
 
     return result
-  }, [allCraftsmen, serviceFilter, districtFilter, debouncedSearch, sort])
+  }, [allCraftsmen, serviceFilter, districtFilter, localSearch, sort])
+
+  const [searchOpen, setSearchOpen] = useState(false)
+
+  // Qidiruv oynasi uchun natijalar: nom, tavsif, tuman va xizmat nomi bo'yicha
+  const searchResults = useMemo(() => {
+    const q = localSearch.trim().toLowerCase()
+    if (!q) return allCraftsmen
+    return allCraftsmen.filter(c => matchCraftsman(c, q))
+  }, [allCraftsmen, localSearch])
+
+  const selectFromSearch = (c) => { openCraftsman(c); setSearchOpen(false) }
+
+  // ESC bilan yopish
+  useEffect(() => {
+    if (!searchOpen) return
+    const onKey = (e) => { if (e.key === 'Escape') setSearchOpen(false) }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [searchOpen])
 
   return (
     <div className="craftsmen-page">
@@ -130,7 +117,7 @@ function CraftsmenPage() {
           <div className="cp_search_row">
             <div className="cp_local_search">
               <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-              <input type="text" placeholder="Usta qidirish..." value={localSearch} onChange={e => setLocalSearch(e.target.value)} />
+              <input type="text" readOnly placeholder="Usta qidirish..." value={localSearch} onClick={() => setSearchOpen(true)} onFocus={() => setSearchOpen(true)} />
               {localSearch && (
                 <button className="cp_search_clear" onClick={() => setLocalSearch('')}>
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
@@ -174,8 +161,6 @@ function CraftsmenPage() {
               <div className="cp_filter_field">
                 <label>{t('sortBy')}</label>
                 <select value={sort} onChange={e => setSort(e.target.value)}>
-                  <option value="rating">{t('sortRating')}</option>
-                  <option value="reviews">{t('sortReviews')}</option>
                   <option value="experience">{t('sortExperience')}</option>
                   <option value="jobs">{t('sortJobs')}</option>
                 </select>
@@ -191,6 +176,13 @@ function CraftsmenPage() {
         {loading ? (
           <div className="cp_empty">
             <p>Yuklanmoqda...</p>
+          </div>
+        ) : apiError ? (
+          <div className="cp_empty">
+            <svg xmlns="http://www.w3.org/2000/svg" width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1">
+              <circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>
+            </svg>
+            <p>{apiError}</p>
           </div>
         ) : filtered.length === 0 ? (
           <div className="cp_empty">
@@ -232,13 +224,15 @@ function CraftsmenPage() {
                   </div>
 
                   <div className="cp_card_meta">
+                    {REVIEWS_ENABLED && (
                     <span className="cp_card_rating">
                       <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" className="fill-amber-400 stroke-amber-400" strokeWidth="1">
                         <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
                       </svg>
                       {c.rating}
                     </span>
-                    <span>({c.reviewCount})</span>
+                    )}
+                    {REVIEWS_ENABLED && <span>({c.reviewCount})</span>}
                     <span>•</span>
                     <span>{c.experience}</span>
                   </div>
@@ -265,6 +259,76 @@ function CraftsmenPage() {
         )}
       </div>
       <Footer />
+
+      {/* ═══ QIDIRUV OYNASI (ustalar) — desktop ═══ */}
+      {searchOpen && (
+        <div className="cp_search_overlay" onClick={() => setSearchOpen(false)}>
+          <div className="cp_search_modal" onClick={e => e.stopPropagation()}>
+            {/* Qidiruv maydoni */}
+            <div className="cp_search_bar">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>
+              <input
+                autoFocus
+                type="text"
+                placeholder="Usta qidirish..."
+                value={localSearch}
+                onChange={e => setLocalSearch(e.target.value)}
+                className="cp_search_input"
+              />
+              {localSearch && (
+                <button onClick={() => setLocalSearch('')} aria-label="Tozalash" className="cp_ov_clear">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+                </button>
+              )}
+              <button onClick={() => setSearchOpen(false)} aria-label="Yopish" className="cp_ov_close">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+              </button>
+            </div>
+
+            {/* Natijalar ro'yxati */}
+            <div className="cp_search_list">
+              {loading ? (
+                <div className="cp_search_hint">Yuklanmoqda...</div>
+              ) : searchResults.length === 0 ? (
+                <div className="cp_search_hint">
+                  <strong>Hech narsa topilmadi</strong>
+                  <div>&laquo;{localSearch}&raquo; bo'yicha usta topilmadi</div>
+                </div>
+              ) : (
+                <>
+                  <div className="cp_search_count">{searchResults.length} ta natija</div>
+                  {searchResults.map(c => (
+                    <div
+                      key={c._id || c.id}
+                      onClick={() => selectFromSearch(c)}
+                      className="cp_search_item"
+                    >
+                      <div className="cp_search_avatar" style={{ background: c.color }}>
+                        {c.avatar?.startsWith('/') ? <img src={c.avatar} alt="" /> : c.avatar}
+                      </div>
+                      <div className="cp_search_info">
+                        <div className="cp_search_name">
+                          {c.name}
+                          {c.verified && (
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" /></svg>
+                          )}
+                        </div>
+                        <div className="cp_search_meta">
+                          {REVIEWS_ENABLED && <span className="cp_search_rating">&#9733; {c.rating || 0}</span>}
+                          {REVIEWS_ENABLED && <span>({c.reviewCount || 0})</span>}
+                          <span>{Array.isArray(c.services) && c.services.length > 0 ? SERVICE_TYPES.find(s => s.id === c.services[0])?.label || c.services[0] : ''}</span>
+                          <span>{c.district}</span>
+                        </div>
+                      </div>
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="cp_search_caret"><polyline points="9 18 15 12 9 6" /></svg>
+                    </div>
+                  ))}
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

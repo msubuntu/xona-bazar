@@ -26,6 +26,8 @@ import ProtectedRoute from './components/ProtectedRoute'
 import NotFound from './components/NotFound'
 import BottomNav from './components/BottomNav'
 import BookingListener from './components/BookingListener'
+import useIsMobile from "./mobile/useIsMobile"
+import MobileApp from "./mobile/MobileApp"
 
 function HomePage() {
   const [searchParams] = useSearchParams()
@@ -38,17 +40,24 @@ function HomePage() {
   const [filters, setFilters] = useState({ priceMin: '', priceMax: '', minRating: 0, onSale: false })
   const [sort, setSort] = useState('popular')
   const debounceRef = useRef(null)
+  const PAGE_SIZE = 24
+  const [page, setPage] = useState(1)
+  const [hasMore, setHasMore] = useState(true)
+  const [loadingMore, setLoadingMore] = useState(false)
+  const pageRef = useRef(1)
+  const sentinelRef = useRef(null)
 
   useEffect(() => {
     const q = searchParams.get('q') || ''
     setSearchQuery(q)
   }, [searchParams])
 
-  const loadProducts = useCallback(async (query) => {
-    setLoading(true)
+  const loadProducts = useCallback(async (query, pageNum = 1, append = false) => {
+    if (pageNum <= 1) setLoading(true)
+    else setLoadingMore(true)
     setApiError(null)
     try {
-      const params = {}
+      const params = { page: pageNum, limit: PAGE_SIZE }
       if (selectedCategory !== 'all') params.category = selectedCategory
       if (query?.trim()) params.search = query.trim()
       if (sort === 'price_asc') params.sort = 'price_low'
@@ -65,20 +74,24 @@ function HomePage() {
         sellerName: p.sellerId?.name || '',
         image: p.image || (p.images && p.images[0]) || '',
       }))
-      setApiProducts(normalized)
+      pageRef.current = pageNum
+      setPage(pageNum)
+      setHasMore(pageNum < data.pages)
+      setApiProducts(prev => append ? [...prev, ...normalized] : normalized)
     } catch (err) {
       console.error('API products load error:', err)
       setApiError(err.message)
-      setApiProducts([])
+      if (!append) setApiProducts([])
     } finally {
       setLoading(false)
+      setLoadingMore(false)
     }
   }, [selectedCategory, sort])
 
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current)
     debounceRef.current = setTimeout(() => {
-      loadProducts(searchQuery)
+      loadProducts(searchQuery, 1, false)
     }, 350)
     return () => { if (debounceRef.current) clearTimeout(debounceRef.current) }
   }, [searchQuery, selectedCategory, sort, loadProducts])
@@ -102,10 +115,32 @@ function HomePage() {
     return result
   }, [apiProducts, filters])
 
+  const loadingRef = useRef(false)
+  useEffect(() => {
+    loadingRef.current = loading || loadingMore
+  }, [loading, loadingMore])
+
+  useEffect(() => {
+    const el = sentinelRef.current
+    if (!el) return
+    const observer = new IntersectionObserver((entries) => {
+      if (!entries[0].isIntersecting) return
+      if (loadingRef.current || !hasMore) return
+      loadProducts(searchQuery, pageRef.current + 1, true)
+    }, { rootMargin: '400px' })
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [hasMore, searchQuery, selectedCategory, sort, loadProducts, loading, apiProducts.length])
+
   return (
     <>
       <Header />
-      <Banner />
+      <Banner
+        onExplore={(cat) => {
+          setSelectedCategory(cat)
+          document.getElementById('products-section')?.scrollIntoView({ behavior: 'smooth' })
+        }}
+      />
       <Kategories selected={selectedCategory} onSelect={setSelectedCategory} />
       <FilterPanel
         filters={filters}
@@ -114,11 +149,11 @@ function HomePage() {
         sort={sort}
         productCount={filteredProducts.length}
       />
-      <section className="py-4">
+      <section id="products-section" className="py-4">
         <h2 className="mb-4 text-xl font-bold" style={{ color: 'var(--text, #1f2937)' }}>
           {selectedCategory === 'all' ? t('popularProducts') : selectedCategory}
         </h2>
-        {filteredProducts.length === 0 ? (
+        {filteredProducts.length === 0 && !loading ? (
           <div style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--text-muted, #9ca3af)' }}>
             <svg xmlns="http://www.w3.org/2000/svg" width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
@@ -128,9 +163,18 @@ function HomePage() {
           </div>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 md:gap-4">
-            {loading
+            {loading && apiProducts.length === 0
               ? Array.from({ length: 8 }).map((_, i) => <ProductSkeleton key={i} />)
                 : filteredProducts.map((p) => <ProductCard key={p._id || p.id} product={p} />)}
+          </div>
+        )}
+        {filteredProducts.length > 0 && (
+          <div ref={sentinelRef} style={{ textAlign: 'center', padding: '20px 0', color: 'var(--text-muted, #9ca3af)', fontSize: '14px' }}>
+            {loadingMore
+              ? 'Yuklanmoqda...'
+              : !hasMore
+                ? t('allProductsLoaded') || 'Barcha mahsulotlar yuklandi'
+                : ''}
           </div>
         )}
       </section>
@@ -140,6 +184,8 @@ function HomePage() {
 }
 
 function App() {
+  const isMobile = useIsMobile()
+  if (isMobile) return <MobileApp />
   return (
     <div className="container">
       <Routes>
@@ -156,8 +202,12 @@ function App() {
         <Route path="/messages" element={
           <ProtectedRoute><MessagesPage /></ProtectedRoute>
         } />
-        <Route path="/seller-dashboard" element={<SellerDashboard />} />
-        <Route path="/craftsman-dashboard" element={<CraftsmanDashboard />} />
+        <Route path="/seller-dashboard" element={
+          <ProtectedRoute roles={['seller']}><SellerDashboard /></ProtectedRoute>
+        } />
+        <Route path="/craftsman-dashboard" element={
+          <ProtectedRoute roles={['craftsman']}><CraftsmanDashboard /></ProtectedRoute>
+        } />
         <Route path="*" element={<NotFound />} />
       </Routes>
       <AuthModal />

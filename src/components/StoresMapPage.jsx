@@ -7,6 +7,7 @@ import { getGeoErrorMessage } from '../services/geo'
 import Header from './header'
 import Footer from './Footer'
 import StoreMap from './StoreMap'
+import { REVIEWS_ENABLED } from '../data/flags'
 import '../components_css/storesmap.css'
 
 function StoresMapPage() {
@@ -28,7 +29,7 @@ function StoresMapPage() {
         setGeoError('')
       },
       (err) => setGeoError(getGeoErrorMessage(err)),
-      { timeout: 8000, maximumAge: 300000 }
+      { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 }
     )
   }, [])
 
@@ -73,6 +74,7 @@ function StoresMapPage() {
               userLocation={userLocation}
               selectedStoreId={selectedStore?._id}
               height="calc(100vh - 200px)"
+              cluster
             />
           </div>
           <div className="smp_list_col">
@@ -107,11 +109,13 @@ function StoresMapPage() {
                           )}
                         </div>
                         <div className="smp_store_meta">
+                          {REVIEWS_ENABLED && (
                           <span className="smp_store_rating">
                             <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" strokeWidth="1"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
                             {store.rating || 0}
                           </span>
-                          <span>{store.reviewCount || 0} sharh</span>
+                          )}
+                          {REVIEWS_ENABLED && <span>{store.reviewCount || 0} sharh</span>}
                         </div>
                       </div>
                     </div>

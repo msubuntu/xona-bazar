@@ -53,6 +53,24 @@ function LocationPicker({ lat, lng, onChange }) {
     }
   }, [])
 
+  // Tashqaridan (masalan, matn maydonidan geocoding orqali) lat/lng o'zgarsa — markerni ko'chirish
+  useEffect(() => {
+    const map = mapInstance.current
+    if (!map || !lat || !lng) return
+    if (markerRef.current) {
+      markerRef.current.setLatLng([lat, lng])
+    } else {
+      markerRef.current = L.marker([lat, lng], { draggable: true }).addTo(map)
+      markerRef.current.on('dragend', (e) => {
+        const pos = e.target.getLatLng()
+        onChange?.({ lat: pos.lat, lng: pos.lng })
+      })
+    }
+    if (map.getZoom() < 13) map.setView([lat, lng], 14)
+    else map.panTo([lat, lng])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lat, lng])
+
   const detectLocation = () => {
     if (!navigator.geolocation) {
       setGeoError('Geolocation qo\'llab-quvvatlanmaydi')

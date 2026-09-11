@@ -10,24 +10,26 @@ import { SettingsProvider } from './context/SettingsContext.jsx'
 import { SellerProvider } from './context/SellerContext.jsx'
 import { MessagesProvider } from './context/MessagesContext.jsx'
 import { FavoritesProvider } from './context/FavoritesContext.jsx'
+import RoleRedirect from './components/RoleRedirect.jsx'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <BrowserRouter>
       <ThemeProvider>
-        <SettingsProvider>
           <AuthProvider>
+            <SettingsProvider>
             <CartProvider>
               <FavoritesProvider>
                 <SellerProvider>
                   <MessagesProvider>
                     <App />
+                    <RoleRedirect />
                   </MessagesProvider>
                 </SellerProvider>
               </FavoritesProvider>
             </CartProvider>
+            </SettingsProvider>
           </AuthProvider>
-        </SettingsProvider>
       </ThemeProvider>
     </BrowserRouter>
   </StrictMode>,

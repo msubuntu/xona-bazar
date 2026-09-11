@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Narx marker uslublari — demo</title>
+<style>
+  :root {
+    --bg: #eef1f6;
+    --card: #ffffff;
+    --ink: #131a22;
+    --muted: #6b7485;
+    --line: #e2e6ee;
+    --accent: #16a34a;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; background: var(--bg); color: var(--ink); padding: 28px 20px 60px; }
+  .wrap { max-width: 1180px; margin: 0 auto; }
+  header h1 { font-size: 24px; font-weight: 800; }
+  header p { color: var(--muted); margin-top: 6px; font-size: 14px; line-height: 1.5; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 18px; margin-top: 24px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 16px; overflow: hidden; box-shadow: 0 2px 10px rgba(20,30,50,.05); }
+  .card-head { padding: 14px 16px 10px; }
+  .card-head h2 { font-size: 15px; font-weight: 700; }
+  .card-head .src { font-size: 12px; color: var(--muted); margin-top: 3px; }
+  .mapbox { position: relative; height: 200px; overflow: hidden;
+    background:
+      /* streets */
+      linear-gradient(90deg, rgba(255,255,255,.55) 48%, transparent 52%, transparent),
+      linear-gradient(0deg, rgba(255,255,255,.55) 48%, transparent 52%, transparent),
+      /* blocks */
+      repeating-linear-gradient(0deg, #dbe3ec 0 34px, #d3dce7 34px 68px),
+      linear-gradient(115deg, #e7edf4, #dbe3ec);
+    background-blend-mode: normal;
+  }
+  .mapbox::after { content: ""; position: absolute; inset: 0; box-shadow: inset 0 0 0 1px rgba(0,0,0,.03); }
+  .pin { position: absolute; cursor: pointer; }
+  .note { padding: 12px 16px 14px; border-top: 1px dashed var(--line); font-size: 12.5px; color: var(--muted); line-height: 1.55; background: #fafbfd; }
+  .note b { color: var(--ink); }
+
+  /* ---------- 1. Classic teardrop (Google Maps / 2GIS) ---------- */
+  .c1 .pin { left: 18%; top: 34%; }
+  .td { width: 46px; height: 46px;
+    background: linear-gradient(160deg,#1fa04b,#0d7a36);
+    border-radius: 50% 50% 50% 0; transform: rotate(-45deg);
+    border: 3px solid #fff;
+    box-shadow: 0 6px 14px rgba(10,60,30,.35);
+    display: flex; align-items: center; justify-content: center;
+    transition: transform .18s ease; }
+  .td:hover { transform: rotate(-45deg) scale(1.1); }
+  .td img { width: 24px; height: 24px; border-radius: 50%; object-fit: cover; transform: rotate(45deg); box-shadow: 0 0 0 2px #fff; }
+  .td .dot { width: 13px; height: 13px; border-radius: 50%; background:#fff; transform: rotate(45deg); }
+  .c1 .price { position: absolute; left: 50%; top: 58px; transform: translateX(-50%);
+    background:#fff; border-radius: 20px; padding: 4px 11px; white-space: nowrap;
+    font-size: 12.5px; font-weight: 700; box-shadow: 0 4px 10px rgba(10,60,30,.18);
+    border: 1px solid #e3e8ef; }
+
+  /* ---------- 2. Uber / Yandex pill ---------- */
+  .c2 .pin { left: 30%; top: 40%; }
+  .pill { display: flex; flex-direction: column; align-items: center; }
+  .pill .bub { width: 30px; height: 30px; border-radius: 50%; background: #131a22; color: #fff;
+    display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 800;
+    border: 3px solid #fff; box-shadow: 0 4px 10px rgba(0,0,0,.18); z-index: 1; }
+  .pill .tag { margin-top: -12px; position: relative; background: #131a22; color: #fff;
+    font-size: 12px; font-weight: 700; padding: 6px 12px; border-radius: 2px 12px 12px 12px; white-space: nowrap;
+    box-shadow: 0 5px 12px rgba(0,0,0,.22); }
+  .c2 .pin:nth-child(2) { left: 62%; top: 30%; }
+  .c2 .pin:nth-child(2) .bub { background:#16a34a; }
+  .c2 .pin:nth-child(2) .tag { background:#16a34a; }
+
+  /* ---------- 3. Airbnb price chip (hover-kengayadi) ---------- */
+  .c3 .pin { left: 46%; top: 34%; }
+  .ab { background:#fff; border-radius: 10px; border: 1px solid #dde3ec;
+    padding: 6px 13px; font-size: 12.5px; font-weight: 800; white-space: nowrap;
+    box-shadow: 0 5px 12px rgba(0,0,0,.14); display: flex; align-items: center; gap: 6px;
+    transition: all .18s ease; }
+  .ab:hover { background:#131a22; color:#fff; transform: translateY(-2px); box-shadow: 0 8px 16px rgba(0,0,0,.2); }
+  .ab .arrow { font-size: 10px; opacity:.7; }
+
+  /* ---------- 4. Wolt delivery: rasm + yopishgan narx tag ---------- */
+  .c4 .pin { left: 70%; top: 40%; }
+  .wolt { display: flex; flex-direction: column; align-items: center; }
+  .wolt .img { width: 42px; height: 42px; border-radius: 50%; overflow: hidden;
+    border: 3px solid #fff; box-shadow: 0 4px 12px rgba(0,0,0,.18); background:#f2f4f8;
+    display: flex; align-items:center; justify-content:center; font-size: 18px; position: relative; z-index: 1;}
+  .wolt .img img { width: 100%; height: 100%; object-fit: cover; }
+  .wolt .line { width: 2px; height: 8px; background:#fff; box-shadow: 0 2px 6px rgba(0,0,0,.15); }
+  .wolt .tag { background:#fff; border-radius: 9px; border:1px solid #e2ddff;
+    font-size: 12px; font-weight: 800; padding: 4px 11px; color:#7c2dff;
+    box-shadow: 0 4px 10px rgba(80,30,200,.14); white-space: nowrap; }
+
+  /* ---------- 5. Food-market (Ozon truck / Glovo): surat tile + badge ---------- */
+  .c5 .pin { left: 22%; top: 28%; }
+  .tile { width: 52px; height: 52px; border-radius: 12px; overflow: visible; position: relative; }
+  .tile .img { width: 52px; height: 52px; border-radius: 12px; overflow: hidden; border: 3px solid #fff;
+    box-shadow: 0 5px 14px rgba(0,0,0,.2); background:#f2f4f8; display:flex; align-items:center; justify-content:center; font-size: 22px;}
+  .tile img { width: 100%; height: 100%; object-fit: cover; }
+  .tile .st { position: absolute; bottom: -8px; left: 50%; transform: translateX(-50%);
+    background: #fff; border: 1px solid #eee; border-radius: 8px; font-size: 11px; font-weight: 800;
+    padding: 3px 9px; white-space: nowrap; box-shadow: 0 4px 10px rgba(0,0,0,.16); color:#c2410c; }
+  .c5 .pin:nth-child(2) { left: 58%; top: 46%; }
+  .c5 .pin:nth-child(2) .tile .st { color:#16a34a; }
+
+  /* ---------- 6. Market (Ozon/WB): soqqa + tirqish narx ---------- */
+  .c6 .pin { left: 40%; top: 38%; }
+  .sock { background:#fff; border-radius: 6px; padding: 5px 10px; font-size: 12px; font-weight: 800;
+    border: 2px dashed #c8d2e0; box-shadow: 0 4px 10px rgba(0,0,0,.12); white-space: nowrap;
+    transition: all .18s ease; position: relative; }
+  .sock::after { content:""; position:absolute; left:50%; bottom:-7px; width:10px; height:10px; background:#fff;
+    border-right:2px dashed #c8d2e0; border-bottom:2px dashed #c8d2e0; transform: translateX(-50%) rotate(45deg); border-radius: 2px; }
+  .sock:hover { border-color: #16a34a; color:#16a34a; box-shadow: 0 6px 14px rgba(22,163,74,.2); }
+
+  /* ---------- 7. Stacked (bir nuqtada ko'p mahsulot) ---------- */
+  .c7 .pin { left: 50%; top: 38%; }
+  .stack { display: flex; align-items: center; }
+  .stack .c { width: 20px; height: 20px; border-radius: 50%; border: 2px solid #fff;
+    box-shadow: 0 3px 8px rgba(0,0,0,.2); display:flex; align-items:center; justify-content:center;
+    font-size: 8px; font-weight:800; color:#fff; margin-left: -8px; }
+  .stack .c:first-child { margin-left: 0; }
+  .stack .g { background: linear-gradient(150deg,#22c55e,#15803d); }
+  .stack .b { background: linear-gradient(150deg,#4f8bff,#2457e0); }
+  .stack .o { background: linear-gradient(150deg,#ff9a3d,#e4620e); }
+  .stack .counter { margin-left: 6px; background:#131a22; color:#fff; border-radius: 20px;
+    font-size: 11px; font-weight: 800; padding: 4px 10px; box-shadow: 0 4px 10px rgba(0,0,0,.18); }
+  .c7 .pin:nth-child(2) { left: 72%; top: 30%; }
+  .c7 .pin:nth-child(3) { left: 30%; top: 54%; }
+
+  /* ---------- 8. "dan 89 so'm" gradient pill ---------- */
+  .c8 .pin { left: 55%; top: 42%; }
+  .from { display: flex; flex-direction: column; align-items: center; }
+  .from .g { width: 34px; height: 34px; border-radius: 50%;
+    background: radial-gradient(circle at 30% 25%, #6f8bff, #3b5bdb);
+    border: 3px solid #fff; box-shadow: 0 5px 12px rgba(59,91,219,.4);
+    display: flex; align-items: center; justify-content: center; color: #fff; font-size: 9px; font-weight: 800;
+    z-index: 1; transition: transform .18s ease; }
+  .from .g:hover { transform: scale(1.12); }
+  .from .label { margin-top: -13px; background: linear-gradient(90deg,#6f8bff,#3b5bdb); color:#fff;
+    font-size: 11.5px; font-weight: 800; padding: 4px 12px; border-radius: 3px 12px 12px 12px; white-space: nowrap;
+    box-shadow: 0 5px 12px rgba(59,91,219,.35); }
+
+  footer { margin-top: 26px; font-size: 13px; color: var(--muted); line-height: 1.6; }
+  footer b { color: var(--ink); }
+  .tag-mini { display:inline-block; background:#e7f6ec; color:#0e7a3a; border-radius: 6px; font-size: 11px; font-weight:700; padding:2px 7px; margin-top:6px; }
+
+  /* ---------- 0. Tanlangan uslub: narx-tugma ---------- */
+  .xb-price-btn { pointer-events:auto; min-height:44px; min-width:44px; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    padding:6px 10px; border:none; border-radius:13px; cursor:pointer; color:#fff; font-family:inherit;
+    background:#16a34a; box-shadow:0 8px 20px rgba(22,163,74,.35); transition: transform .15s ease, box-shadow .15s ease; white-space:nowrap; }
+  .xb-price-btn:hover { transform: translateY(-2px) scale(1.04); box-shadow:0 10px 22px rgba(22,163,74,.45); }
+  .xb-price-btn-price { font-size:14.5px; font-weight:800; line-height:1.2; }
+  .xb-price-btn-sub { margin-top:2px; width:100%; text-align:center; font-size:9.5px; font-weight:500; line-height:1; color:rgba(255,255,255,.95); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Narx marker uslublari</h1>
+    <p>Xona Bazar xaritasida mahsulot narxini ko'rsatish uchun real, zamonaviy saytlarda ishlatiladigan 8 ta variant. Har bir kartochka — kichik mock-xarita; pinlar ustiga bosib/hover qilib ko'ring.</p>
+  </header>
+
+  <div class="grid">
+
+    <!-- 0: Tanlangan uslub -->
+    <section class="card c0">
+      <div class="card-head">
+        <h2>Siz tanlagan uslub — narx-tugma (rang o'zgartirildi)</h2>
+        <div class="src">Tugma dizayni asl ishlatilgan; rangi yashil aksentga almashtirildi</div>
+      </div>
+      <div class="mapbox" style="height:190px">
+        <div class="pin" style="left:24%;top:42%"><button class="xb-price-btn" type="button"><span class="xb-price-btn-price">52,000 so'm</span><span class="xb-price-btn-sub">Hammasi mavjud</span></button></div>
+        <div class="pin" style="left:62%;top:34%"><button class="xb-price-btn" type="button" style="background:#131a22;box-shadow:0 8px 20px rgba(0,0,0,.3)"><span class="xb-price-btn-price">1,047,000 so'm</span><span class="xb-price-btn-sub">Hammasi mavjud</span></button></div>
+        <div class="pin" style="left:46%;top:64%"><button class="xb-price-btn" type="button" style="background:#ee7a13;box-shadow:0 8px 20px rgba(238,122,19,.4)"><span class="xb-price-btn-price">9,900 so'm</span><span class="xb-price-btn-sub">Chegirma</span></button></div>
+      </div>
+      <div class="note"><b>Qo'llanilgan:</b> yashil <b>#16a34a</b> — StoreMap'dagi mahsulot markeri endi mana shu ko'rinishda. Qo'shimcha ranglar: qora (Uber uslubi), amber (aksiya).<span class="tag-mini">Asosiy variant</span></div>
+    </section>
+
+    <!-- 1 -->
+    <section class="card c1">
+      <div class="card-head">
+        <h2>1. Klassik teardrop + narx</h2>
+        <div class="src">Google Maps · 2GIS · Yandex Karta — joy markeri, pastida oq "narx" munlo</div>
+      </div>
+      <div class="mapbox">
+        <div class="pin"><div class="td"><img src="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' fill='%23d9e6ff'/%3E%3C/svg%3E" alt="" onerror="this.outerHTML='<span class=dot></span>'"/></div><div class="price">119 000 so'm</div></div>
+        <div class="pin" style="left:72%;top:55%;"><div class="td" style="background:linear-gradient(160deg,#4f8bff,#2457e0)"><span class="dot"></span></div><div class="price">45 000 so'm</div></div>
+      </div>
+      <div class="note"><b>Qachon:</b> eng tanilgan, "manzil" hissi beradi. Rasm o'rniga rang ham mumkin. <span class="tag-mini">Tavsiya etilgan asos</span></div>
+    </section>
+
+    <!-- 2 -->
+    <section class="card c2">
+      <div class="card-head">
+        <h2>2. Uber / Yandex pill</h2>
+        <div class="src">Uber · Yandex Taxi · Delivery Club — quyuq rangli narx-tabletka</div>
+      </div>
+      <div class="mapbox">
+        <div class="pin"><div class="pill"><div class="bub">P</div><div class="tag">1 047 000 so'm</div></div></div>
+        <div class="pin"><div class="pill"><div class="bub">E</div><div class="tag">25 000 so'm</div></div></div>
+      </div>
+      <div class="note"><b>Qachon:</b> tezkor tushunarli, kontrast yuqori. Rasm o'rniga bosh harf/emoji. Mobil uchun qulay.</div>
+    </section>
+
+    <!-- 3 -->
+    <section class="card c3">
+      <div class="card-head">
+        <h2>3. Airbnb narx-chipi (hover)</h2>
+        <div class="src">Airbnb · Booking — oq chip, hover'da quyuq, pastga strelka</div>
+      </div>
+      <div class="mapbox">
+        <div class="pin"><div class="ab">3 200 000 so'm <span class="arrow">▾</span></div></div>
+        <div class="pin" style="left:22%;top:52%;"><div class="ab" style="padding:5px 10px;font-size:11.5px">chiptalar 8 yanvar ▾</div></div>
+      </div>
+      <div class="note"><b>Qachon:</b> "narx nuqta, detail keyinroq" uslubi. Hover'da nom/info kengayadi — juda chiroyli.</div>
+    </section>
+
+    <!-- 4 -->
+    <section class="card c4">
+      <div class="card-head">
+        <h2>4. Wolt — surat + rangli narx</h2>
+        <div class="src">Wolt · iFood · Bolt Food — surat doira, tagida chiziq orqali narx</div>
+      </div>
+      <div class="mapbox">
+        <div class="pin">
+          <div class="wolt">
+            <div class="img"><img src="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' fill='%23ffe0b0'/%3E%3C/svg%3E" alt="" onerror="this.innerHTML='🍕'"/></div>
+            <div class="line"></div>
+            <div class="tag">12 000 so'm</div>
+          </div>
+        </div>
+        <div class="pin" style="left:60%;top:52%;">
+          <div class="wolt">
+            <div class="img"><img src="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' fill='%23c8f7c8'/%3E%3C/svg%3E" alt="" onerror="this.innerHTML='🥗'"/></div>
+            <div class="line"></div>
+            <div class="tag" style="color:#16a34a;border-color:#d3f2d3">9 500 so'm</div>
+          </div>
+        </div>
+      </div>
+      <div class="note"><b>Qachon:</b> ovqat/oziq-ovqat bo'lsa — mahsulot "jonli ko'rinadi". <span class="tag-mini">Tavsiya etilgan</span></div>
+    </section>
+
+    <!-- 5 -->
+    <section class="card c5">
+      <div class="card-head">
+        <h2>5. Surat-tile + narx bilan</h2>
+        <div class="src">Ozon Travel · Glovo · onlayn-marketlar — kvadrat surat, ostida narx</div>
+      </div>
+      <div class="mapbox">
+        <div class="pin">
+          <div class="tile">
+            <div class="img"><img src="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' fill='%23ffd9d9'/%3E%3C/svg%3E" alt="" onerror="this.innerHTML='🛒'"/></div>
+            <div class="st">58 000 so'm</div>
+          </div>
+        </div>
+        <div class="pin">
+          <div class="tile"><div class="img"><img src="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' fill='%23ffecc9'/%3E%3C/svg%3E" alt="" onerror="this.innerHTML='🧰'"/></div><div class="st">1 200 000 so'm</div></div>
+        </div>
+      </div>
+      <div class="note"><b>Qachon:</b> mahsulot surati eng muhim bo'lsa. Kvadrat surat qanotlari bilan "til" hissi.</div>
+    </section>
+
+    <!-- 6 -->
+    <section class="card c6">
+      <div class="card-head">
+        <h2>6. Market: soqqa + tire narx</h2>
+        <div class="src">Ozon · Wildberries · Kaspi — tirnoqli (dashed) narx stal"i, pastda strelka</div>
+      </div>
+      <div class="mapbox">
+        <div class="pin"><div class="sock">12 000 so'm</div></div>
+        <div class="pin" style="left:70%;top:32%;"><div class="sock" style="border-color:#16a34a;color:#16a34a">chegirma 9 900 so'm</div></div>
+      </div>
+      <div class="note"><b>Qachon:</b> chegirma/aksiyan'lar ko'p bo'lganda. Hover'da yashil urg'u.</div>
+    </section>
+
+    <!-- 7 -->
+    <section class="card c7">
+      <div class="card-head">
+        <h2>7. Stacked — bir nuqtada ko'p</h2>
+        <div class="src">2GIS · Yandex — yonma-yon uyum, bosilganda "orqadagi" ko'rinadi</div>
+      </div>
+      <div class="mapbox">
+        <div class="pin"><div class="stack"><div class="c g">1</div><div class="c b">2</div><div class="c o">3</div><div class="counter">3+</div></div></div>
+        <div class="pin"><div class="stack"><div class="c b">1</div><div class="counter">2</div></div></div>
+        <div class="pin"><div class="stack"><div class="c o">1</div><div class="counter">1</div></div></div>
+      </div>
+      <div class="note"><b>Qachon:</b> bitta do'kon nuqtasida 3+ mahsulot bo'lsa (biznikida aniq shunday). Bosilganda navigatsiya.</div>
+    </section>
+
+    <!-- 8 -->
+    <section class="card c8">
+      <div class="card-head">
+        <h2>8. "dan ... so'm" gradient</h2>
+        <div class="src">Booking · Aviasales · 21vek — doira + pastda gradient narx</div>
+      </div>
+      <div class="mapbox">
+        <div class="pin">
+          <div class="from"><div class="g">₩</div><div class="label">dan 215 000 so'm</div></div>
+        </div>
+      </div>
+      <div class="note"><b>Qachon:</b> eng arzon "starting price"ni ko'rsatish. Premium/hurmatli ko'rinish.</div>
+    </section>
+
+  </div>
+
+  <footer>
+    <b>Xona Bazar uchun tavsiya:</b> variant <b>4</b> (surat + narx) yoki <b>1</b> (teardrop + narx) ni "marker-pin selected" asosiga qo'shib, cluster'da <b>7</b>-uslub bilan ("3+" hisobi) birlashtirish eng maqul — narx doim ko'rinar, rasm mahsulotni tanitadi.<br/>
+    Demo fayl asosiy loyihaga YO'L QO'YILADI — faqat o'rganish uchun. Xohlasangiz bir variaintni StoreMap.jsx ga port qilaman.
+  </footer>
+</div>
+</body>
+</html>

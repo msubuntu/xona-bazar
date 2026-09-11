@@ -20,7 +20,7 @@ function CartPage() {
 
   const handlePlaceOrder = async () => {
     if (!user) { openLogin(); return }
-    if (!address.trim()) { setOrderError(t('deliveryAddress') || 'Manzilni kiriting'); return }
+    if (!address.trim()) { setOrderError(t('enterAddress') || 'Manzilni kiriting'); return }
     setOrderError(null)
     try {
       await createOrder(address.trim(), phone.trim(), note.trim())
@@ -156,7 +156,7 @@ function CartPage() {
 
               <div className="cartpage_checkout_form">
                 <div className="cartpage_field">
-                  <label>{t('deliveryAddress') || 'Yetkazish manzili'} *</label>
+                  <label>Manzil / Qabul qilish joyi *</label>
                   <input type="text" value={address} onChange={e => setAddress(e.target.value)} placeholder="Manzilni kiriting..." />
                 </div>
                 <div className="cartpage_field">

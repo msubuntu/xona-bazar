@@ -8,41 +8,9 @@ import Header from './header'
 import Footer from './Footer'
 import LoginPrompt from './LoginPrompt'
 import { SERVICE_TYPES } from '../data/craftsmen'
+import { normalizeCraftsman } from '../utils/craftsman'
+import { REVIEWS_ENABLED } from '../data/flags'
 import '../components_css/craftsmen.css'
-
-const AVATAR_COLORS = ['#10b981','#f59e0b','#3b82f6','#8b5cf6','#ef4444','#ec4899','#06b6d4','#84cc16','#f97316','#14b8a6']
-function getAvatarColor(name) {
-  let hash = 0
-  for (let i = 0; i < (name || '').length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash)
-  return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length]
-}
-
-function normalizeCraftsman(u) {
-  return {
-    id: u._id,
-    _id: u._id,
-    name: u.name || "Noma'lum usta",
-    avatar: u.avatar || (u.name || '?')[0].toUpperCase(),
-    color: u.color || getAvatarColor(u.name),
-    verified: u.verified || false,
-    rating: u.rating || 0,
-    reviewCount: u.reviewCount || 0,
-    experience: u.experience || '—',
-    district: u.district || '',
-    description: u.description || '',
-    phone: u.phone || '',
-    workingHours: u.workingHours || '09:00 - 18:00',
-    services: Array.isArray(u.services) ? u.services : [],
-    priceRange: u.priceRange || '',
-    completedJobs: u.completedJobs || 0,
-    available: u.available !== false,
-    portfolio: u.portfolio || [],
-    completedWorks: u.completedWorks || [],
-    location: u.location || '',
-    lat: u.lat,
-    lng: u.lng,
-  }
-}
 
 function CraftsmanDetail() {
   const { selectedCraftsman, setSelectedCraftsman, openChat } = useSeller()
@@ -54,13 +22,14 @@ function CraftsmanDetail() {
   const [showBooking, setShowBooking] = useState(false)
   const [showLoginPrompt, setShowLoginPrompt] = useState(false)
   const [bookingForm, setBookingForm] = useState({
-    date: '', time: '', address: '', description: '', phone: '',
+    date: '', time: '', address: '', description: '', phone: '', service: '',
   })
   const [bookingSubmitted, setBookingSubmitted] = useState(false)
   const [bookingLoading, setBookingLoading] = useState(false)
   const [bookingError, setBookingError] = useState(null)
   const [apiCraftsman, setApiCraftsman] = useState(null)
   const [apiLoading, setApiLoading] = useState(false)
+  const [apiError, setApiError] = useState(null)
   const [reviews, setReviews] = useState([])
   const [reviewsLoading, setReviewsLoading] = useState(false)
   const [reviewDist, setReviewDist] = useState({ 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 })
@@ -73,11 +42,12 @@ function CraftsmanDetail() {
   useEffect(() => {
     if (isMongoId) {
       setApiLoading(true)
+      setApiError(null)
       api.sellers.get(id)
         .then(data => {
           if (data.seller) setApiCraftsman(normalizeCraftsman(data.seller))
         })
-        .catch(() => {})
+        .catch(err => setApiError(err.message || 'Xatolik yuz berdi'))
         .finally(() => setApiLoading(false))
     }
   }, [id, isMongoId])
@@ -115,6 +85,7 @@ function CraftsmanDetail() {
     })
   }
 
+  if (apiError && !c) return <div className="cd"><Header /><div style={{textAlign:'center',padding:'80px 20px'}}>{apiError}</div></div>
   if (!c || apiLoading) return <div className="cd"><Header /><div style={{textAlign:'center',padding:'80px 20px'}}>Yuklanmoqda...</div></div>
 
   const handleBooking = async (e) => {
@@ -125,7 +96,7 @@ function CraftsmanDetail() {
     try {
       await api.bookings.create({
         craftsmanId: c._id || c.id,
-        service: c.services?.[0] || 'general',
+        service: bookingForm.service || c.services?.[0] || 'general',
         date: bookingForm.date,
         time: bookingForm.time,
         address: bookingForm.address,
@@ -136,7 +107,7 @@ function CraftsmanDetail() {
       setTimeout(() => {
         setBookingSubmitted(false)
         setShowBooking(false)
-        setBookingForm({ date: '', time: '', address: '', description: '', phone: '' })
+        setBookingForm({ date: '', time: '', address: '', description: '', phone: '', service: '' })
       }, 3000)
     } catch (err) {
       setBookingError(err.message || 'Xatolik')
@@ -200,6 +171,25 @@ function CraftsmanDetail() {
                 {t('experience')}: {c.experience}
               </span>
             </div>
+            {(c.social?.telegram || c.social?.instagram || c.social?.website) && (
+              <div className="cd_socials">
+                {c.social.telegram && (
+                  <a href={c.social.telegram.startsWith('http') ? c.social.telegram : `https://t.me/${c.social.telegram.replace('@','')}`} target="_blank" rel="noopener noreferrer" className="cd_social_link" title="Telegram">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M21.94 4.05a1.5 1.5 0 0 0-2.05-1.7L2.3 10.2c-1.2.5-1.15 2.2.08 2.6l4.3 1.4 1.66 5.2c.33 1.03 1.6 1.28 2.33.46l2.32-2.6 4.16 3.05c.9.66 2.17.17 2.39-.9l3.4-15.36zM6.7 13l12.5-7.06-6.5 8.62a1 1 0 0 0-.2.55l-.24 2.9-1.66-5.2L6.7 13z"/></svg>
+                  </a>
+                )}
+                {c.social.instagram && (
+                  <a href={c.social.instagram.startsWith('http') ? c.social.instagram : `https://instagram.com/${c.social.instagram.replace('@','')}`} target="_blank" rel="noopener noreferrer" className="cd_social_link" title="Instagram">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
+                  </a>
+                )}
+                {c.social.website && (
+                  <a href={c.social.website.startsWith('http') ? c.social.website : `https://${c.social.website}`} target="_blank" rel="noopener noreferrer" className="cd_social_link" title="Sayt">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                  </a>
+                )}
+              </div>
+            )}
           </div>
           <div className="cd_actions">
             <button className="cd_book_btn" onClick={() => {
@@ -220,18 +210,22 @@ function CraftsmanDetail() {
         </div>
 
         <div className="cd_stats">
+          {REVIEWS_ENABLED && (
           <div className="cd_stat">
             <div className="cd_stat_icon" style={{ background: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6' }}>
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
             </div>
             <div><strong>{c.rating}</strong><span>{t('rating')}</span></div>
           </div>
+          )}
+          {REVIEWS_ENABLED && (
           <div className="cd_stat">
             <div className="cd_stat_icon" style={{ background: 'rgba(16, 185, 129, 0.1)', color: '#10b981' }}>
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
             </div>
             <div><strong>{c.reviewCount}</strong><span>{t('reviews')}</span></div>
           </div>
+          )}
           <div className="cd_stat">
             <div className="cd_stat_icon" style={{ background: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b' }}>
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
@@ -271,9 +265,9 @@ function CraftsmanDetail() {
             <button className={activeTab === 'portfolio' ? 'active' : ''} onClick={() => setActiveTab('portfolio')}>
               Tugatgan ishlar ({(c.completedWorks || []).length})
             </button>
-            <button className={activeTab === 'reviews' ? 'active' : ''} onClick={() => setActiveTab('reviews')}>
+            {REVIEWS_ENABLED && <button className={activeTab === 'reviews' ? 'active' : ''} onClick={() => setActiveTab('reviews')}>
               {t('reviews')} ({c.reviewCount || 0})
-            </button>
+            </button>}
             <button className={activeTab === 'about' ? 'active' : ''} onClick={() => setActiveTab('about')}>
               {t('aboutCraftsman')}
             </button>
@@ -354,7 +348,7 @@ function CraftsmanDetail() {
                 })}
               </div>
             )}
-            {activeTab === 'reviews' && (
+            {REVIEWS_ENABLED && activeTab === 'reviews' && (
               <div className="cd_reviews_tab">
                 {c.rating > 0 && (
                   <div className="cd_reviews_summary">
@@ -473,6 +467,24 @@ function CraftsmanDetail() {
                 </div>
               ) : (
                 <form className="cd_booking_form" onSubmit={handleBooking}>
+                  <div className="cd_form_row">
+                    <div className="cd_form_field">
+                      <label>{t('selectBookingService')}</label>
+                      <select
+                        required
+                        value={bookingForm.service}
+                        onChange={e => setBookingForm({...bookingForm, service: e.target.value})}
+                      >
+                        <option value="">{t('chooseService')}</option>
+                        {(c.services && c.services.length > 0 ? c.services : SERVICE_TYPES.map(s => s.id)).map(sId => {
+                          const st = SERVICE_TYPES.find(s => s.id === sId)
+                          return (
+                            <option key={sId} value={sId}>{st ? `${st.icon} ${st.label}` : sId}</option>
+                          )
+                        })}
+                      </select>
+                    </div>
+                  </div>
                   <div className="cd_form_row">
                     <div className="cd_form_field">
                       <label>{t('date')}</label>

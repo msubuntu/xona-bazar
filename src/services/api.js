@@ -1,4 +1,4 @@
-const API_URL = import.meta.env.VITE_API_URL || 'https://xona-bazar-production.up.railway.app/api'
+const API_URL = import.meta.env.VITE_API_URL || '/api'
 
 async function request(endpoint, options = {}) {
   const token = localStorage.getItem('xona-token')
@@ -10,6 +10,12 @@ async function request(endpoint, options = {}) {
 
   const res = await fetch(`${API_URL}${endpoint}`, { ...options, headers })
   const data = await res.json()
+  const credEndpoints = ['/auth/login', '/auth/register', '/auth/change-password']
+  const isCredError = credEndpoints.some(e => endpoint.startsWith(e))
+  if (res.status === 401 && token && !isCredError) {
+    localStorage.removeItem('xona-token')
+    window.dispatchEvent(new CustomEvent('xona:unauthorized'))
+  }
   if (!res.ok) throw new Error(data.message || 'Xatolik')
   return data
 }
@@ -19,10 +25,15 @@ export const api = {
     register: (body) => request('/auth/register', { method: 'POST', body: JSON.stringify(body) }),
     login: (email, password) => request('/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) }),
     me: () => request('/auth/me'),
+    notifications: (body) => request('/auth/notifications', { method: 'PUT', body: JSON.stringify(body) }),
+    changePassword: (body) => request('/auth/change-password', { method: 'PUT', body: JSON.stringify(body) }),
     updateProfile: (body) => {
       if (body instanceof FormData) return request('/auth/profile', { method: 'PUT', body })
       return request('/auth/profile', { method: 'PUT', body: JSON.stringify(body) })
     },
+    telegramStatus: () => request('/auth/telegram/status'),
+    telegramLinkCode: () => request('/auth/telegram/link-code', { method: 'POST', body: JSON.stringify({}) }),
+    telegramUnlink: () => request('/auth/telegram/unlink', { method: 'POST', body: JSON.stringify({}) }),
   },
 
   products: {
@@ -52,6 +63,7 @@ export const api = {
   conversations: {
     list: () => request('/conversations'),
     create: (sellerId, text) => request('/conversations', { method: 'POST', body: JSON.stringify({ sellerId, text }) }),
+    start: (buyerId) => request('/conversations/start', { method: 'POST', body: JSON.stringify({ buyerId }) }),
     sendMessage: (id, text) => request(`/conversations/${id}/messages`, { method: 'POST', body: JSON.stringify({ text }) }),
     markRead: (id) => request(`/conversations/${id}/read`, { method: 'PUT' }),
   },
@@ -73,7 +85,7 @@ export const api = {
       create: (formData) => request('/sellers/me/completed-works', { method: 'POST', body: formData }),
       delete: (workId) => request(`/sellers/me/completed-works/${workId}`, { method: 'DELETE' }),
     },
-    reviews: (params = {}) => {
+    myReviews: (params = {}) => {
       const q = new URLSearchParams(params).toString()
       return request(`/sellers/me/reviews?${q}`)
     },
@@ -109,6 +121,14 @@ export const api = {
     setPrice: (id, quotedPrice) => request(`/bookings/${id}/price`, { method: 'PUT', body: JSON.stringify({ quotedPrice }) }),
     updatePayment: (id, data) => request(`/bookings/${id}/payment`, { method: 'PUT', body: JSON.stringify(data) }),
     rate: (id, data) => request(`/bookings/${id}/rate`, { method: 'POST', body: JSON.stringify(data) }),
+  },
+
+  addresses: {
+    list: () => request('/addresses'),
+    create: (body) => request('/addresses', { method: 'POST', body: JSON.stringify(body) }),
+    update: (id, body) => request(`/addresses/${id}`, { method: 'PUT', body: JSON.stringify(body) }),
+    remove: (id) => request(`/addresses/${id}`, { method: 'DELETE' }),
+    setDefault: (id) => request(`/addresses/${id}/default`, { method: 'POST' }),
   },
 }
 

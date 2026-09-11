@@ -30,3 +30,6 @@ server/uploads/
 *.njsproj
 *.sln
 *.sw?
+
+# Obsidian export (generated, not source)
+obsidian-vault/

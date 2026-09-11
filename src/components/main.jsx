@@ -1,4 +1,5 @@
 import React from "react";
+import { REVIEWS_ENABLED } from '../data/flags'
 import '../components_css/main.css'
 import cardImg from '../assets/card_p.jpg'
 
@@ -21,7 +22,7 @@ function  Main() {
 
         <h2>13 189.84 UZS</h2>
 
-        <div className="rating">
+        <div className="rating" style={{ display: REVIEWS_ENABLED ? 'flex' : 'none' }}>
             ⭐ 4.9
             <span>6 933 sotib olgan</span>
         </div>

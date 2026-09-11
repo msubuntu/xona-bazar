@@ -1,8 +1,34 @@
 import { Router } from 'express'
 import Conversation from '../models/Conversation.js'
+import User from '../models/User.js'
 import { protect } from '../middleware/auth.js'
+import { notifyUser } from '../services/telegramBot.js'
 
 const router = Router()
+
+router.post('/start', protect, async (req, res) => {
+  try {
+    const { buyerId } = req.body
+    if (!buyerId) return res.status(400).json({ message: 'buyerId majburiy' })
+    if (buyerId === req.user._id.toString()) {
+      return res.status(400).json({ message: "O'zingiz bilan suhbat boshlab bo'lmaydi" })
+    }
+    const buyer = await User.findById(buyerId)
+    if (!buyer) return res.status(404).json({ message: 'Foydalanuvchi topilmadi' })
+
+    let conversation = await Conversation.findOne({
+      participants: { $all: [req.user._id, buyerId], $size: 2 }
+    })
+    if (!conversation) {
+      conversation = await Conversation.create({ participants: [req.user._id, buyerId] })
+    }
+    const populated = await conversation.populate('participants', 'name avatar color shopName')
+    const other = populated.participants.find(p => p._id.toString() !== req.user._id.toString())
+    res.status(201).json({ conversation: { _id: conversation._id, seller: other, messages: conversation.messages } })
+  } catch (err) {
+    res.status(400).json({ message: err.message })
+  }
+})
 
 router.get('/', protect, async (req, res) => {
   try {
@@ -70,6 +96,13 @@ router.post('/', protect, async (req, res) => {
       })
     }
 
+    conversation.participants.forEach(pid => {
+      const uid = pid.toString()
+      if (uid !== req.user._id.toString()) {
+        notifyUser(uid, `<b>💬 Yangi xabar</b>\n${text}`)
+      }
+    })
+
     res.status(201).json({ conversation })
   } catch (err) {
     res.status(400).json({ message: err.message })
@@ -108,6 +141,13 @@ router.post('/:id/messages', protect, async (req, res) => {
         }
       })
     }
+
+    conversation.participants.forEach(pid => {
+      const pidStr = pid.toString()
+      if (pidStr !== uid) {
+        notifyUser(pidStr, `<b>💬 Yangi xabar</b>\n${text}`)
+      }
+    })
 
     res.json({ message: msg, conversation })
   } catch (err) {

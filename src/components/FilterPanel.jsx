@@ -1,13 +1,13 @@
 import { useState } from 'react'
 import { useSettings } from '../context/SettingsContext.jsx'
+import { REVIEWS_ENABLED } from '../data/flags'
 import '../components_css/filter.css'
 
 const SORT_OPTIONS = [
   { value: 'popular', labelKey: 'sortPopular' },
   { value: 'price-asc', labelKey: 'sortPriceLow' },
   { value: 'price-desc', labelKey: 'sortPriceHigh' },
-  { value: 'rating', labelKey: 'sortRating' },
-  { value: 'reviews', labelKey: 'sortReviews' },
+  ...(REVIEWS_ENABLED ? [{ value: 'rating', labelKey: 'sortRating' }, { value: 'reviews', labelKey: 'sortReviews' }] : []),
 ]
 
 function FilterPanel({ filters, onFilterChange, onSortChange, sort, productCount }) {
@@ -58,6 +58,7 @@ function FilterPanel({ filters, onFilterChange, onSortChange, sort, productCount
             </div>
           </div>
 
+          {REVIEWS_ENABLED && (
           <div className="filter_group">
             <h4>Reyting</h4>
             <div className="filter_rating">
@@ -75,6 +76,7 @@ function FilterPanel({ filters, onFilterChange, onSortChange, sort, productCount
               ))}
             </div>
           </div>
+          )}
 
           <div className="filter_group">
             <h4>Chegirma</h4>

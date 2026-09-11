@@ -12,6 +12,7 @@ import Footer from './Footer'
 import LoginPrompt from './LoginPrompt'
 import ReviewForm from './ReviewForm'
 import StoreMap from './StoreMap'
+import { REVIEWS_ENABLED } from '../data/flags'
 import NearbyStores from './NearbyStores'
 import '../components_css/productdetail.css'
 
@@ -124,6 +125,8 @@ function ProductDetail() {
 
   const seller = p.sellerId && typeof p.sellerId === 'object' ? p.sellerId : null
 
+  const mapStores = seller ? [{ ...seller, storePrice: displayPrice }] : []
+
   const liked = isFavorite(pid)
 
   const handleAdd = () => {
@@ -210,6 +213,7 @@ function ProductDetail() {
             <h1 className="pd_name">{p.name}</h1>
 
             <div className="pd_rating_row">
+              {REVIEWS_ENABLED && (
               <div className="pd_stars">
                 {[1,2,3,4,5].map(s => (
                   <svg key={s} xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
@@ -219,8 +223,9 @@ function ProductDetail() {
                   </svg>
                 ))}
               </div>
-              <span className="pd_rating_num">{p.rating}</span>
-              <span className="pd_reviews_link">{p.reviews.length.toLocaleString()} {t('reviews')}</span>
+              )}
+              {REVIEWS_ENABLED && <span className="pd_rating_num">{p.rating}</span>}
+              {REVIEWS_ENABLED && <span className="pd_reviews_link">{p.reviews.length.toLocaleString()} {t('reviews')}</span>}
               <span className="pd_sold">{t('soldPlus')}</span>
             </div>
 
@@ -338,10 +343,12 @@ function ProductDetail() {
                   )}
                 </div>
                 <div className="pd_seller_meta">
+                  {REVIEWS_ENABLED && (
                   <span className="pd_seller_rating">
                     <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" className="fill-amber-400 stroke-amber-400" strokeWidth="1"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
                     {seller.rating || 0}
                   </span>
+                  )}
                 </div>
               </div>
               <svg className="pd_seller_arrow" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="9 18 15 12 9 6"/></svg>
@@ -394,7 +401,7 @@ function ProductDetail() {
           <div className="pd_tab_headers">
             <button className={activeTab === 'desc' ? 'active' : ''} onClick={() => setActiveTab('desc')}>{t('description')}</button>
             <button className={activeTab === 'spec' ? 'active' : ''} onClick={() => setActiveTab('spec')}>{t('specifications')}</button>
-            <button className={activeTab === 'reviews' ? 'active' : ''} onClick={() => setActiveTab('reviews')}>{t('allReviews')} ({p.reviews.length})</button>
+            {REVIEWS_ENABLED && <button className={activeTab === 'reviews' ? 'active' : ''} onClick={() => setActiveTab('reviews')}>{t('allReviews')} ({p.reviews.length})</button>}
           </div>
 
           <div className="pd_tab_content">
@@ -409,15 +416,14 @@ function ProductDetail() {
                 <tbody>
                   <tr><td>{t('brand')}</td><td>{p.brand}</td></tr>
                   <tr><td>{t('productName')}</td><td>{p.name}</td></tr>
-                  <tr><td>{t('rating')}</td><td>{p.rating} / 5</td></tr>
-                  <tr><td>{t('reviewsCount')}</td><td>{p.reviews.length.toLocaleString()}</td></tr>
+                  {REVIEWS_ENABLED && <><tr><td>{t('rating')}</td><td>{p.rating} / 5</td></tr><tr><td>{t('reviewsCount')}</td><td>{p.reviews.length.toLocaleString()}</td></tr></>}
                   <tr><td>{t('price')}</td><td>{convertPrice(displayPrice)}</td></tr>
                   <tr><td>{t('warrantySpec')}</td><td>{t('warrantySpecVal')}</td></tr>
                   <tr><td>{t('pickupSpec')}</td><td>{t('pickupSpecVal')}</td></tr>
                 </tbody>
               </table>
             )}
-            {activeTab === 'reviews' && (
+            {REVIEWS_ENABLED && activeTab === 'reviews' && (
               <div className="pd_reviews">
                 <ReviewForm
                   productName={p.name}
@@ -500,6 +506,7 @@ function ProductDetail() {
                     <div className="pd_similar_info">
                       <span className="pd_similar_brand">{item.brand}</span>
                       <h4>{item.name}</h4>
+                      {REVIEWS_ENABLED && (
                       <div className="pd_similar_rating">
                         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" className="fill-amber-400 stroke-amber-400" strokeWidth="1">
                           <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
@@ -507,6 +514,7 @@ function ProductDetail() {
                         <span>{item.rating}</span>
                         <span className="pd_similar_reviews">({item.reviews.length})</span>
                       </div>
+                      )}
                       <div className="pd_similar_prices">
                         <span className="pd_similar_price">{convertPrice(item.price)}</span>
                         {item.oldPrice && <span className="pd_similar_oldprice">{convertPrice(item.oldPrice)}</span>}

@@ -1,7 +1,9 @@
 import { useCart } from '../context/CartContext.jsx'
+import { useSettings } from '../context/SettingsContext.jsx'
 import '../components_css/cart.css'
 
 function CartPanel() {
+  const { convertPrice } = useSettings()
   const { items, open, setOpen, removeItem, updateQty, totalItems, totalPrice } = useCart()
 
   if (!open) return null
@@ -53,7 +55,7 @@ function CartPanel() {
                         {[item.variant.color, item.variant.size].filter(Boolean).join(' / ')}
                       </span>
                     )}
-                    <span className="cart_item_price">{item.price.toLocaleString()} so'm</span>
+                    <span className="cart_item_price">{convertPrice(item.price)}</span>
                     <div className="cart_item_actions">
                       <div className="qty_control">
                         <button onClick={() => updateQty(id, item.qty - 1)}>
@@ -81,15 +83,11 @@ function CartPanel() {
               <div className="cart_summary">
                 <div className="cart_summary_row">
                   <span>Mahsulotlar ({totalItems})</span>
-                  <span>{totalPrice.toLocaleString()} so'm</span>
-                </div>
-                <div className="cart_summary_row">
-                  <span>Yetkazish</span>
-                  <span className="free_delivery">Bepul</span>
+                  <span>{convertPrice(totalPrice)}</span>
                 </div>
                 <div className="cart_summary_total">
                   <span>Jami</span>
-                  <span>{totalPrice.toLocaleString()} so'm</span>
+                  <span>{convertPrice(totalPrice)}</span>
                 </div>
               </div>
               <button className="cart_checkout">

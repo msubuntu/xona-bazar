@@ -96,6 +96,12 @@ export function AuthProvider({ children }) {
   }, [])
 
   useEffect(() => {
+    const onUnauthorized = () => setUser(null)
+    window.addEventListener('xona:unauthorized', onUnauthorized)
+    return () => window.removeEventListener('xona:unauthorized', onUnauthorized)
+  }, [])
+
+  useEffect(() => {
     if (showAuth) {
       document.body.style.overflow = 'hidden'
     } else {

@@ -2,12 +2,14 @@ import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '../context/AuthContext.jsx'
 import { useNavigate } from 'react-router-dom'
 import { getSocket } from '../services/socket'
+import { useSettings } from '../context/SettingsContext.jsx'
 import '../components_css/toast.css'
 
 let toastId = 0
 
 export default function BookingListener() {
   const { user } = useAuth()
+  const { convertPrice } = useSettings()
   const navigate = useNavigate()
   const [toasts, setToasts] = useState([])
 
@@ -22,7 +24,7 @@ export default function BookingListener() {
     const handleBookingUpdated = (data) => {
       const id = ++toastId
       const statusLabels = {
-        quote_sent: `${data.craftsmanName} sizga narx taklif qildi: ${data.quotedPrice ? data.quotedPrice.toLocaleString('uz-UZ') + " so'm" : ''}`,
+        quote_sent: `${data.craftsmanName} sizga narx taklif qildi: ${data.quotedPrice ? convertPrice(data.quotedPrice) : ''}`,
         quote_accepted: `${data.userName} narxni qabul qildi`,
         in_progress: 'Usta ishni boshladi',
         completed: 'Ish yakunlandi',
@@ -36,7 +38,7 @@ export default function BookingListener() {
 
     socket.on('booking_updated', handleBookingUpdated)
     return () => socket.off('booking_updated', handleBookingUpdated)
-  }, [user, removeToast])
+  }, [user, removeToast, convertPrice])
 
   if (toasts.length === 0) return null
 

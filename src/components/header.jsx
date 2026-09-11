@@ -6,6 +6,7 @@ import { useSettings } from '../context/SettingsContext.jsx'
 import { useMessages } from '../context/MessagesContext.jsx'
 import { useFavorites } from '../context/FavoritesContext.jsx'
 import { useSeller } from '../context/SellerContext.jsx'
+import { isPanelRole, panelDashboard } from './RoleRedirect.jsx'
 import '../components_css/header.css'
 
 const SEARCH_SUGGESTIONS = [
@@ -36,6 +37,8 @@ function Header() {
     const { totalUnread } = useMessages()
     const { totalFavorites } = useFavorites()
     const { setSelectedCraftsman, setSelectedSeller } = useSeller()
+    const panelUser = isPanelRole(user)
+    const panelDash = panelDashboard(user)
     const [showDropdown, setShowDropdown] = useState(false)
     const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
     const [showSuggestions, setShowSuggestions] = useState(false)
@@ -160,9 +163,10 @@ function Header() {
     return (
     <>
         <header>
-            <div className="logo" onClick={() => { setSelectedCraftsman(null); setSelectedSeller(null); navigate('/') }} style={{ cursor: 'pointer' }}>
+            <div className="logo" onClick={() => { setSelectedCraftsman(null); setSelectedSeller(null); navigate(panelUser ? panelDash : '/') }} style={{ cursor: 'pointer' }}>
                 <span>Xona</span><p>Bazar</p>
             </div>
+            {!panelUser && (
             <div className="search" ref={searchRef}>
                 <input
                     ref={inputRef}
@@ -205,7 +209,10 @@ function Header() {
                     </div>
                 )}
             </div>
+            )}
             <div className="login">
+                {!panelUser && (
+                    <>
                 <button className="cart_btn ustalar_nav" onClick={() => { setSelectedCraftsman(null); setSelectedSeller(null); navigate('/craftsmen') }} title={t('craftsmen')}>
                     <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
@@ -224,8 +231,8 @@ function Header() {
                     </svg>
                     {totalItems > 0 && <span className="cart_badge">{totalItems}</span>}
                 </button>
-
-                {user && (
+                    </>)}
+                {user && !panelUser && (
                     <>
                         <button className="cart_btn header-favorites" title={t('myFavorites')} onClick={() => goTo('favorites')}>
                             <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -257,6 +264,8 @@ function Header() {
                                     </div>
                                 </div>
                                 <div className="user_dropdown_divider"></div>
+                                {!panelUser && (
+                                <>
                                 <button className="user_dropdown_item" onClick={() => goTo('profile')}>
                                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                         <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/>
@@ -289,12 +298,16 @@ function Header() {
                                     {user?.role === 'craftsman' ? 'Usta paneli' : t('sellerDashboard')}
                                 </button>
                                 )}
+                                </>
+                                )}
+                                {!panelUser && (
                                 <button className="user_dropdown_item" onClick={() => goTo('settings')}>
                                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                         <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/>
                                     </svg>
                                     {t('settings')}
                                 </button>
+                                )}
                                 <div className="user_dropdown_divider"></div>
                                 <button className="user_dropdown_item logout" onClick={() => { setShowLogoutConfirm(true); setShowDropdown(false) }}>
                                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

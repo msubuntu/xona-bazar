@@ -3,6 +3,7 @@ import { useCart } from '../context/CartContext.jsx'
 import { useAuth } from '../context/AuthContext.jsx'
 import { useSettings } from '../context/SettingsContext.jsx'
 import { useFavorites } from '../context/FavoritesContext.jsx'
+import { REVIEWS_ENABLED } from '../data/flags'
 import LoginPrompt from './LoginPrompt'
 import '../components_css/productcard.css'
 
@@ -74,6 +75,7 @@ export default function ProductCard({ product }) {
         <div className="pc_info">
           <span className="pc_brand">{product.brand}</span>
           <h3 className="pc_name">{product.name}</h3>
+          {REVIEWS_ENABLED && (
           <div className="pc_rating">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" strokeWidth="1">
               <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
@@ -81,6 +83,7 @@ export default function ProductCard({ product }) {
             <strong>{product.rating}</strong>
             <span>({Array.isArray(product.reviews) ? product.reviews.length : product.reviews || 0})</span>
           </div>
+          )}
           <div className="pc_prices">
             <span className="pc_price">{convertPrice(product.price)}</span>
             {product.oldPrice && (

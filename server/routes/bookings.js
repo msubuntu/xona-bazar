@@ -2,6 +2,7 @@ import { Router } from 'express'
 import Booking from '../models/Booking.js'
 import User from '../models/User.js'
 import { protect, authorize } from '../middleware/auth.js'
+import { notifyUser } from '../services/telegramBot.js'
 
 const router = Router()
 
@@ -11,6 +12,12 @@ router.post('/', protect, async (req, res) => {
     const { craftsmanId, service, description, date, time, address, phone } = req.body
     if (!craftsmanId || !service || !date) {
       return res.status(400).json({ message: 'Xizmat, sana va usta majburiy' })
+    }
+    if (typeof service !== 'string' || service.length > 100) {
+      return res.status(400).json({ message: 'Xizmat noto\'g\'ri kiritildi' })
+    }
+    if (Number.isNaN(new Date(date).getTime())) {
+      return res.status(400).json({ message: 'Sana noto\'g\'ri' })
     }
     if (typeof craftsmanId !== 'string' || !/^[0-9a-f]{24}$/i.test(craftsmanId)) {
       return res.status(400).json({ message: 'Noto\'g\'ri usta ID' })
@@ -31,6 +38,15 @@ router.post('/', protect, async (req, res) => {
       address: address || '',
       phone: phone || req.user.phone || '',
     })
+
+    notifyUser(craftsmanId, [
+      `<b>🛠 Yangi so'rov (buyurtma)</b>`,
+      `mijoz: ${req.user.name || 'Mijoz'} (${phone || req.user.phone || '-'})`,
+      `xizmat: ${service}`,
+      `sana: ${new Date(date).toLocaleDateString('uz-UZ')}${time ? ' ' + time : ''}`,
+      address ? `manzil: ${address}` : null,
+      description ? `izoh: ${description}` : null,
+    ].filter(Boolean).join('\n'))
 
     const populated = await booking.populate('craftsmanId', 'name phone avatar services')
 
@@ -160,6 +176,21 @@ router.put('/:id/status', protect, async (req, res) => {
       }
     }
 
+    const notifyTarget = isUser ? booking.craftsmanId.toString() : booking.userId.toString()
+    const statusMsgs = {
+      quote_sent: 'mijozga narx taklifi yuborildi',
+      quote_accepted: 'narx taklifi qabul qilindi',
+      in_progress: 'usta ishni boshladi',
+      completed: 'ish yakunlandi',
+      cancelled: 'buyurtma bekor qilindi',
+    }
+    notifyUser(notifyTarget, [
+      `<b>🛠 Buyurtma holati yangilandi</b>`,
+      `xizmat: ${booking.service}`,
+      `holat: ${statusMsgs[status] || status}`,
+      booking.quotedPrice ? `narx taklifi: ${booking.quotedPrice.toLocaleString('uz-UZ')} so'm` : null,
+    ].filter(Boolean).join('\n'))
+
     res.json({ booking: populated })
   } catch (err) {
     res.status(400).json({ message: err.message })
@@ -179,7 +210,12 @@ router.put('/:id/price', protect, authorize('craftsman'), async (req, res) => {
       return res.status(400).json({ message: 'Faqat kutilayotgan buyurtmaga narx qo\'yish mumkin' })
     }
 
-    booking.quotedPrice = Number(quotedPrice)
+    const price = Number(quotedPrice)
+    if (!Number.isFinite(price) || price <= 0) {
+      return res.status(400).json({ message: 'Narx noto\'g\'ri kiritildi' })
+    }
+
+    booking.quotedPrice = price
     booking.status = 'quote_sent'
     await booking.save()
 
@@ -199,6 +235,13 @@ router.put('/:id/price', protect, authorize('craftsman'), async (req, res) => {
         })
       }
     }
+
+    notifyUser(booking.userId, [
+      `<b>💰 Narx taklifi</b>`,
+      `usta: ${populated.craftsmanId?.name || 'Usta'}`,
+      `xizmat: ${booking.service}`,
+      `narx: ${price.toLocaleString('uz-UZ')} so'm`,
+    ].join('\n'))
 
     res.json({ booking: populated })
   } catch (err) {

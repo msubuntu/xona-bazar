@@ -2,31 +2,16 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext.jsx'
 import { useSettings } from '../context/SettingsContext.jsx'
+import { useTheme } from '../context/ThemeContext.jsx'
 import { useMessages } from '../context/MessagesContext.jsx'
 import { api } from '../services/api'
+import TelegramBotLink from './TelegramBotLink'
 import Header from './header'
 import Footer from './Footer'
 import LocationPicker from './LocationPicker'
+import { REVIEWS_ENABLED } from '../data/flags'
+import { PasswordModal, TwoFactorModal } from './SettingsModals'
 import '../components_css/seller-dashboard-v2.css'
-
-const CATEGORIES = [
-  { value: 'paints', label: "Bo'yoqlar" },
-  { value: 'tiles', label: "G'isht va Plitka" },
-  { value: 'plumbing', label: 'Sanitariya' },
-  { value: 'electrical', label: 'Elektr' },
-  { value: 'tools', label: 'Asboblar' },
-  { value: 'building', label: 'Qurilish' },
-  { value: 'furniture', label: 'Mebel' },
-  { value: 'doors', label: 'Eshik va Deraza' },
-]
-
-const SECTIONS = [
-  { id: 'overview', label: "Umumiy ko'rish", icon: '\u{1F4CA}' },
-  { id: 'products', label: 'Mahsulotlarim', icon: '\u{1F4E6}' },
-  { id: 'orders', label: 'Buyurtmalar', icon: '\u{1F6D2}' },
-  { id: 'reviews', label: 'Sharhlar', icon: '\u{2B50}' },
-  { id: 'settings', label: 'Sozlamalar', icon: '\u{2699}\u{FE0F}' },
-]
 
 const INITIAL_FORM = { name: '', brand: '', category: 'paints', description: '', price: '', oldPrice: '', stock: '' }
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024
@@ -37,7 +22,25 @@ const MAX_VIDEOS = 1
 
 function SellerDashboard() {
   const { user, updateProfile } = useAuth()
-  const { t, convertPrice } = useSettings()
+  const { t, convertPrice, lang, setLang } = useSettings()
+  const CATEGORIES = [
+    { value: 'paints', label: t('catPaints') },
+    { value: 'tiles', label: t('catTiles') },
+    { value: 'plumbing', label: t('catPlumbing') },
+    { value: 'electrical', label: t('catElectrical') },
+    { value: 'tools', label: t('catTools') },
+    { value: 'building', label: t('catBuilding') },
+    { value: 'furniture', label: t('catFurniture') },
+    { value: 'doors', label: t('catDoors') },
+  ]
+  const SECTIONS = [
+    { id: 'overview', label: t('overview'), icon: '\u{1F4CA}' },
+    { id: 'products', label: t('myProducts'), icon: '\u{1F4E6}' },
+    { id: 'orders', label: t('ordersTab'), icon: '\u{1F6D2}' },
+    ...(REVIEWS_ENABLED ? [{ id: 'reviews', label: t('allReviews'), icon: '\u{2B50}' }] : []),
+    { id: 'settings', label: t('settings'), icon: '\u{2699}\u{FE0F}' },
+  ]
+  const { dark, toggleTheme } = useTheme()
   const navigate = useNavigate()
   const { conversations, sendMessage, openConversation, activeConversation, closeConversation } = useMessages()
   const fileInputRef = useRef(null)
@@ -67,6 +70,7 @@ function SellerDashboard() {
   const [ordersError, setOrdersError] = useState(null)
   const [orderStatusFilter, setOrderStatusFilter] = useState('')
   const [updatingOrderId, setUpdatingOrderId] = useState(null)
+  const [contactingOrderId, setContactingOrderId] = useState(null)
 
   const [reviews, setReviews] = useState([])
   const [reviewsLoading, setReviewsLoading] = useState(false)
@@ -90,8 +94,11 @@ function SellerDashboard() {
   const [hasVariants, setHasVariants] = useState(false)
   const [variants, setVariants] = useState([])
 
-  const [profileForm, setProfileForm] = useState({ name: '', shopName: '', location: '', description: '', lat: null, lng: null })
+  const [profileForm, setProfileForm] = useState({ name: '', shopName: '', location: '', description: '', lat: null, lng: null, workingHours: '09:00 - 18:00', available: true, social: { telegram: '', instagram: '', website: '' } })
   const [profileSaveMsg, setProfileSaveMsg] = useState(null)
+  const [showPasswordModal, setShowPasswordModal] = useState(false)
+  const [show2FAModal, setShow2FAModal] = useState(false)
+  const [twoFactor, setTwoFactor] = useState(false)
 
   const loadDashboard = useCallback(async () => {
     setLoading(true)
@@ -103,11 +110,11 @@ function SellerDashboard() {
       setRecentOrders(data.recentOrders)
     } catch (err) {
       console.error('Dashboard load error:', err)
-      setError(err.message || 'Ma\'lumotlarni yuklashda xatolik')
+      setError(err.message || t('loadDataError'))
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [t])
 
   const loadMyProducts = useCallback(async () => {
     try {
@@ -128,11 +135,11 @@ function SellerDashboard() {
       setOrders(data.orders)
     } catch (err) {
       console.error('Orders load error:', err)
-      setOrdersError(err.message || 'Buyurtmalarni yuklashda xatolik')
+      setOrdersError(err.message || t('loadOrdersError'))
     } finally {
       setOrdersLoading(false)
     }
-  }, [])
+  }, [t])
 
   const loadReviews = useCallback(async (ratingFilter = 0) => {
     setReviewsLoading(true)
@@ -140,18 +147,18 @@ function SellerDashboard() {
     try {
       const params = { page: 1, limit: 50 }
       if (ratingFilter) params.rating = ratingFilter
-      const data = await api.sellers.reviews(params)
+      const data = await api.sellers.myReviews(params)
       setReviews(data.reviews || [])
     } catch (err) {
       console.error('Reviews load error:', err)
-      setReviewsError(err.message || 'Sharhlarni yuklashda xatolik')
+      setReviewsError(err.message || t('loadReviewsError'))
     } finally {
       setReviewsLoading(false)
     }
-  }, [])
+  }, [t])
 
-  useEffect(() => { loadDashboard() }, [loadDashboard])
-  useEffect(() => { loadMyProducts() }, [loadMyProducts])
+  useEffect(() => { if (user?.role === 'seller') loadDashboard() }, [loadDashboard, user?.role])
+  useEffect(() => { if (user?.role === 'seller') loadMyProducts() }, [loadMyProducts, user?.role])
   useEffect(() => {
     if (activeSection === 'orders') loadOrders(orderStatusFilter)
   }, [activeSection, orderStatusFilter, loadOrders])
@@ -169,34 +176,17 @@ function SellerDashboard() {
         description: user.description || '',
         lat: user.lat || null,
         lng: user.lng || null,
+        workingHours: user.workingHours || '09:00 - 18:00',
+        available: user.available !== false,
+        social: user.social || { telegram: '', instagram: '', website: '' },
       })
+      setTwoFactor(user.twoFactor === true)
     }
   }, [user])
 
   useEffect(() => {
     return () => { imagePreviews.forEach(p => { if (p.startsWith('blob:')) URL.revokeObjectURL(p) }) }
   }, [imagePreviews])
-
-  if (!user || (user.role !== 'seller' && user.role !== 'craftsman')) {
-    return (
-      <>
-        <Header />
-        <div className="sd-v2" style={{ textAlign: 'center', padding: '80px 20px' }}>
-          <h2>{t('accessDenied')}</h2>
-          <p style={{ color: 'var(--text-muted)', marginTop: 8 }}>{t('sellerAccessOnly')}</p>
-          <button onClick={() => navigate('/')} style={{ marginTop: 16, padding: '10px 24px', background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: 8, fontWeight: 600, cursor: 'pointer' }}>
-            {t('home')}
-          </button>
-        </div>
-        <Footer />
-      </>
-    )
-  }
-
-  if (user?.role === 'craftsman') {
-    navigate('/craftsman-dashboard', { replace: true })
-    return null
-  }
 
   const filteredProducts = myProducts.filter(p =>
     p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -279,15 +269,15 @@ function SellerDashboard() {
 
     for (const file of files) {
       if (imageFiles.length + newFiles.length >= MAX_IMAGES) {
-        errors.push(`Maksimal ${MAX_IMAGES} ta rasm yuklash mumkin`)
+        errors.push(`${t('maxImages')} ${MAX_IMAGES} ${t('imagesUploadSuffix')}`)
         break
       }
       if (!file.type.startsWith('image/')) {
-        errors.push(`${file.name}: faqat rasm fayllari qabul qilinadi`)
+        errors.push(`${file.name}: ${t('imageFilesOnly')}`)
         continue
       }
       if (file.size > MAX_IMAGE_SIZE) {
-        errors.push(`${file.name}: hajmi 5MB dan katta`)
+        errors.push(`${file.name}: ${t('imageTooLarge')}`)
         continue
       }
       newFiles.push(file)
@@ -297,7 +287,7 @@ function SellerDashboard() {
     if (errors.length) {
       setFormErrors(prev => ({ ...prev, image: errors.join('; ') }))
     } else {
-      setFormErrors(prev => { const { image, ...rest } = prev; return rest })
+      setFormErrors(prev => { const { image: _image, ...rest } = prev; return rest })
     }
 
     setImageFiles(prev => [...prev, ...newFiles])
@@ -319,12 +309,12 @@ function SellerDashboard() {
     const file = e.target.files && e.target.files[0]
     if (!file) return
     if (!/^video\/mp4$/.test(file.type) && !file.name.toLowerCase().endsWith('.mp4')) {
-      setFormErrors(prev => ({ ...prev, video: 'Faqat MP4 video yuklash mumkin' }))
+      setFormErrors(prev => ({ ...prev, video: t('mp4Only') }))
       if (e.target) e.target.value = ''
       return
     }
     if (file.size > MAX_VIDEO_SIZE) {
-      setFormErrors(prev => ({ ...prev, video: 'Video hajmi 100MB dan katta' }))
+      setFormErrors(prev => ({ ...prev, video: t('videoTooLarge') }))
       if (e.target) e.target.value = ''
       return
     }
@@ -332,7 +322,7 @@ function SellerDashboard() {
     setVideoFile(file)
     setVideoPreview(URL.createObjectURL(file))
     setEditVideoUrl('')
-    setFormErrors(prev => { const { video, ...rest } = prev; return rest })
+    setFormErrors(prev => { const { video: _video, ...rest } = prev; return rest })
     if (e.target) e.target.value = ''
   }
 
@@ -357,15 +347,15 @@ function SellerDashboard() {
 
     for (const file of files) {
       if (currentCount + newFiles.length >= MAX_IMAGES) {
-        errors.push(`Variant ${idx + 1}: maksimal ${MAX_IMAGES} ta rasm`)
+        errors.push(`${t('variant')} ${idx + 1}: ${t('maxImages')} ${MAX_IMAGES} ${t('imagesUploadSuffix')}`)
         break
       }
       if (!file.type.startsWith('image/')) {
-        errors.push(`${file.name}: faqat rasm fayllari qabul qilinadi`)
+        errors.push(`${file.name}: ${t('imageFilesOnly')}`)
         continue
       }
       if (file.size > MAX_IMAGE_SIZE) {
-        errors.push(`${file.name}: hajmi 5MB dan katta`)
+        errors.push(`${file.name}: ${t('imageTooLarge')}`)
         continue
       }
       newFiles.push(file)
@@ -403,30 +393,30 @@ function SellerDashboard() {
   const validateStep = (step) => {
     const errors = {}
     if (step === 1) {
-      if (!form.name.trim()) errors.name = 'Mahsulot nomini kiriting'
-      if (!form.brand.trim()) errors.brand = 'Brendni kiriting'
-      if (!form.description.trim()) errors.description = 'Tavsifni kiriting'
+      if (!form.name.trim()) errors.name = t('enterProductName')
+      if (!form.brand.trim()) errors.brand = t('enterBrand')
+      if (!form.description.trim()) errors.description = t('enterDescription')
     }
     if (step === 2) {
       if (hasVariants) {
         if (variants.length === 0) {
-          errors.variants = 'Kamida 1 ta variant qo\'shing'
+          errors.variants = t('addAtLeastOneVariant')
         } else {
           const invalidPrice = variants.find(v => !v.price || Number(v.price) <= 0)
-          if (invalidPrice) errors.variants = 'Har bir variantning narxi musbat son bo\'lishi kerak'
+          if (invalidPrice) errors.variants = t('variantPricePositive')
           variants.forEach((v, i) => {
             const n = (v.previews || []).length
             if (n < MIN_IMAGES || n > MAX_IMAGES) {
               if (!errors.variants) errors.variants = ''
-              errors['variant_' + i] = `Variant #${i + 1}: ${MIN_IMAGES}-${MAX_IMAGES} ta rasm yuklang (hozir ${n} ta)`
+              errors['variant_' + i] = `${t('variant')} #${i + 1}: ${MIN_IMAGES}-${MAX_IMAGES} ${t('imagesUploaded')} (${t('currently')} ${n} ${t('countShort')})`
             }
           })
         }
       } else {
-        if (!form.price || Number(form.price) <= 0) errors.price = 'Narxni kiriting'
+        if (!form.price || Number(form.price) <= 0) errors.price = t('enterPrice')
         const n = imagePreviews.length
         if (n < MIN_IMAGES || n > MAX_IMAGES) {
-          errors.image = `${MIN_IMAGES}-${MAX_IMAGES} ta rasm yuklang (hozir ${n} ta)`
+          errors.image = `${MIN_IMAGES}-${MAX_IMAGES} ${t('imagesUploaded')} (${t('currently')} ${n} ${t('countShort')})`
         }
       }
     }
@@ -496,16 +486,16 @@ function SellerDashboard() {
       const fd = buildFormData()
       if (editProduct) {
         await api.products.update(editProduct._id, fd)
-        setSubmitMsg({ type: 'success', text: 'Mahsulot yangilandi!' })
+        setSubmitMsg({ type: 'success', text: t('productUpdated') })
       } else {
         await api.products.create(fd)
-        setSubmitMsg({ type: 'success', text: "Mahsulot qoshildi!" })
+        setSubmitMsg({ type: 'success', text: t('productAdded') })
       }
       loadDashboard()
       loadMyProducts()
       setTimeout(() => { setShowAddForm(false); resetForm() }, 1200)
     } catch (err) {
-      setSubmitMsg({ type: 'error', text: err.message || 'Xatolik yuz berdi' })
+      setSubmitMsg({ type: 'error', text: err.message || t('errorOccurred') })
     } finally {
       setSubmitting(false)
     }
@@ -541,12 +531,63 @@ function SellerDashboard() {
         description: profileForm.description,
         lat: profileForm.lat,
         lng: profileForm.lng,
+        workingHours: profileForm.workingHours,
+        available: profileForm.available,
+        social: profileForm.social,
       })
-      setProfileSaveMsg({ type: 'success', text: 'Saqlandi!' })
+      setProfileSaveMsg({ type: 'success', text: t('saved') })
       setTimeout(() => setProfileSaveMsg(null), 3000)
     } catch (err) {
-      setProfileSaveMsg({ type: 'error', text: err.message || 'Xatolik' })
+      setProfileSaveMsg({ type: 'error', text: err.message || t('error') })
     }
+  }
+
+  // ── Joylashuv ↔ manzil matni ikki tomonlama sinxronizatsiya ──
+  // Koordinata → manzil matni (xaritada belgilanganda matn maydoni ham yangilanadi)
+  const reverseGeocode = async (lat, lng) => {
+    try {
+      const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=17&accept-language=uz`)
+      const data = await res.json()
+      return data?.display_name || ''
+    } catch { return '' }
+  }
+
+  // Manzil matni → koordinata (matn yozilganda xarita markerni ko'chiradi)
+  const geocodeAddress = async (address) => {
+    try {
+      const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=1&accept-language=uz`)
+      const data = await res.json()
+      if (Array.isArray(data) && data.length > 0) {
+        return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) }
+      }
+      return null
+    } catch { return null }
+  }
+
+  const handleLocationChange = async ({ lat, lng }) => {
+    setProfileForm(prev => ({ ...prev, lat, lng }))
+    const address = await reverseGeocode(lat, lng)
+    if (address) setProfileForm(prev => ({ ...prev, location: address }))
+  }
+
+  const handleAddressGeocode = async () => {
+    const address = (profileForm.location || '').trim()
+    if (address.length < 5) return
+    const coords = await geocodeAddress(address)
+    if (coords) setProfileForm(prev => ({ ...prev, lat: coords.lat, lng: coords.lng }))
+  }
+
+  const disableTwoFactor = async () => {
+    try {
+      await api.auth.notifications({ twoFactor: false })
+      setTwoFactor(false)
+    } catch (err) {
+      alert(err?.message || t('error'))
+    }
+  }
+
+  const setSocial = (field, value) => {
+    setProfileForm(prev => ({ ...prev, social: { ...prev.social, [field]: value } }))
   }
 
   const goToProducts = () => {
@@ -556,7 +597,7 @@ function SellerDashboard() {
 
   const categoryLabel = (val) => CATEGORIES.find(c => c.value === val)?.label || val
 
-  const STEP_LABELS = ['Asosiy ma\'lumot', 'Narx va rasm', 'Tasdiqlash']
+  const STEP_LABELS = [t('stepBasic'), t('stepPriceImages'), t('stepConfirm')]
 
   const createEmptyVariant = () => ({
     color: '', colorHex: '', size: '', price: '', oldPrice: '', stock: '', sku: '', files: [], previews: [],
@@ -585,7 +626,7 @@ function SellerDashboard() {
       }
       return !prev
     })
-    setFormErrors(prev => { const { variants, price, ...rest } = prev; return rest })
+    setFormErrors(prev => { const { variants: _variants, price: _price, ...rest } = prev; return rest })
   }
 
   /* ──────── Multi-step form modal ──────── */
@@ -593,24 +634,24 @@ function SellerDashboard() {
   const renderFormStep1 = () => (
     <div className="sdv2-step-fields">
       <div className="sdv2-form-field">
-        <label>Mahsulot nomi *</label>
-        <input type="text" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder="Masalan: Lateks boyog 10L" />
+        <label>{t('productName')} *</label>
+        <input type="text" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder={t('productNamePlaceholder')} />
         {formErrors.name && <span className="sdv2-field-error">{formErrors.name}</span>}
       </div>
       <div className="sdv2-form-field">
-        <label>Brend *</label>
-        <input type="text" value={form.brand} onChange={e => setForm({ ...form, brand: e.target.value })} placeholder="Masalan: Beseda" />
+        <label>{t('brand')} *</label>
+        <input type="text" value={form.brand} onChange={e => setForm({ ...form, brand: e.target.value })} placeholder={t('brandPlaceholder')} />
         {formErrors.brand && <span className="sdv2-field-error">{formErrors.brand}</span>}
       </div>
       <div className="sdv2-form-field">
-        <label>Kategoriya</label>
+        <label>{t('category')}</label>
         <select value={form.category} onChange={e => setForm({ ...form, category: e.target.value })}>
           {CATEGORIES.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
         </select>
       </div>
       <div className="sdv2-form-field">
-        <label>Qisqa tavsif *</label>
-        <textarea rows={3} value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} placeholder="Mahsulot haqida qisqacha..." />
+        <label>{t('shortDescription')} *</label>
+        <textarea rows={3} value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} placeholder={t('shortDescriptionPlaceholder')} />
         {formErrors.description && <span className="sdv2-field-error">{formErrors.description}</span>}
       </div>
     </div>
@@ -624,8 +665,8 @@ function SellerDashboard() {
             <span className="sdv2-toggle-thumb" />
           </span>
           <span className="sdv2-toggle-text">
-            <strong>Bu mahsulotda variantlar bormi?</strong>
-            <span>Rang, o'lcham kabi variantlar qo'shing</span>
+            <strong>{t('hasVariants')}</strong>
+            <span>{t('addVariantsHint')}</span>
           </span>
         </label>
       </div>
@@ -636,30 +677,30 @@ function SellerDashboard() {
         <>
           <div className="sdv2-form-row">
             <div className="sdv2-form-field">
-              <label>Narx (so'm) *</label>
+              <label>{t('priceInUzs')} *</label>
               <input type="number" value={form.price} onChange={e => setForm({ ...form, price: e.target.value })} placeholder="1500000" />
               {formErrors.price && <span className="sdv2-field-error">{formErrors.price}</span>}
             </div>
             <div className="sdv2-form-field">
-              <label>Eski narx (ixtiyoriy)</label>
+              <label>{t('oldPriceOptional')}</label>
               <input type="number" value={form.oldPrice} onChange={e => setForm({ ...form, oldPrice: e.target.value })} placeholder="1800000" />
             </div>
                     </div>
           <div className="sdv2-form-field">
-            <label>Ombor soni</label>
+            <label>{t('stockCount')}</label>
             <input type="number" value={form.stock} onChange={e => setForm({ ...form, stock: e.target.value })} placeholder="10" />
           </div>
           <div className="sdv2-form-field">
-            <label>Mahsulot rasmlari ({imagePreviews.length}/{MAX_IMAGES}) *</label>
+            <label>{t('productImages')} ({imagePreviews.length}/{MAX_IMAGES}) *</label>
             <div className="sdv2-upload-grid">
               {imagePreviews.map((preview, i) => (
                 <div className="sdv2-upload-thumb" key={i}>
-                  {preview ? <img src={preview} alt={`Rasm ${i + 1}`} /> : (
+                  {preview ? <img src={preview} alt={`${t('image')} ${i + 1}`} /> : (
                     <div className="sdv2-upload-thumb-empty">
                       <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ color: 'var(--text-muted)' }}><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
                     </div>
                   )}
-                  {i === 0 && <span className="sdv2-thumb-badge">Asosiy</span>}
+                  {i === 0 && <span className="sdv2-thumb-badge">{t('defaultBadge')}</span>}
                   <button type="button" className="sdv2-upload-remove-sm" onClick={() => removeImage(i)}>
                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                   </button>
@@ -669,11 +710,11 @@ function SellerDashboard() {
                 <div className="sdv2-upload-add" onClick={() => fileInputRef.current?.click()}>
                   <input ref={fileInputRef} type="file" accept="image/*" multiple onChange={handleImageSelect} className="sdv2-file-input" />
                   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ color: 'var(--text-muted)' }}><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                  <span>Qo'shish</span>
+                  <span>{t('addBtn')}</span>
                 </div>
               )}
             </div>
-            <span className="sdv2-upload-hint">JPG, PNG, WEBP - har biri 5MB gacha, {MIN_IMAGES}-{MAX_IMAGES} ta rasm | 1:1 kvadrat format (1000x1000px) tavsiya etiladi</span>
+            <span className="sdv2-upload-hint">JPG, PNG, WEBP - {t('eachMax5MB')}, {MIN_IMAGES}-{MAX_IMAGES} {t('images')} | {t('squareFormatHint')} (1000x1000px) {t('recommended')}</span>
             {formErrors.image && <span className="sdv2-field-error">{formErrors.image}</span>}
           </div>
         </>
@@ -683,58 +724,58 @@ function SellerDashboard() {
             <div className="sdv2-variant-card" key={v._id || idx}>
               <div className="sdv2-variant-card-header">
                 <span className="sdv2-variant-num">#{idx + 1}</span>
-                <button type="button" className="sdv2-variant-remove" onClick={() => removeVariant(idx)} title="O'chirish">
+                <button type="button" className="sdv2-variant-remove" onClick={() => removeVariant(idx)} title={t('delete')}>
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                 </button>
               </div>
               <div className="sdv2-variant-fields">
                 <div className="sdv2-variant-row">
                   <div className="sdv2-form-field" style={{ flex: 1 }}>
-                    <label>Rang nomi</label>
-                    <input type="text" value={v.color} onChange={e => updateVariant(idx, 'color', e.target.value)} placeholder="Masalan: Bordo" />
+                    <label>{t('colorName')}</label>
+                    <input type="text" value={v.color} onChange={e => updateVariant(idx, 'color', e.target.value)} placeholder={t('colorPlaceholder')} />
                   </div>
                   <div className="sdv2-form-field" style={{ flex: '0 0 auto' }}>
-                    <label>Rang</label>
+                    <label>{t('color')}</label>
                     <div className="sdv2-color-input-wrap">
                       <input type="color" value={v.colorHex || '#800020'} onChange={e => updateVariant(idx, 'colorHex', e.target.value)} className="sdv2-color-input" />
                       {v.colorHex && <span className="sdv2-color-dot" style={{ background: v.colorHex }} />}
                     </div>
                   </div>
                   <div className="sdv2-form-field" style={{ flex: 1 }}>
-                    <label>O'lcham</label>
-                    <input type="text" value={v.size} onChange={e => updateVariant(idx, 'size', e.target.value)} placeholder="42, 1L, 5L..." />
+                    <label>{t('size')}</label>
+                    <input type="text" value={v.size} onChange={e => updateVariant(idx, 'size', e.target.value)} placeholder={t('sizePlaceholder')} />
                   </div>
                 </div>
                 <div className="sdv2-variant-row">
                   <div className="sdv2-form-field" style={{ flex: 1 }}>
-                    <label>Narx (so'm) *</label>
+                    <label>{t('priceInUzs')} *</label>
                     <input type="number" value={v.price} onChange={e => updateVariant(idx, 'price', e.target.value)} placeholder="80000" />
                   </div>
                   <div className="sdv2-form-field" style={{ flex: 1 }}>
-                    <label>Eski narx</label>
+                    <label>{t('oldPrice')}</label>
                     <input type="number" value={v.oldPrice} onChange={e => updateVariant(idx, 'oldPrice', e.target.value)} placeholder="95000" />
                   </div>
                   <div className="sdv2-form-field" style={{ flex: 1 }}>
-                    <label>Ombor</label>
+                    <label>{t('stockWord')}</label>
                     <input type="number" value={v.stock} onChange={e => updateVariant(idx, 'stock', e.target.value)} placeholder="10" />
                   </div>
                 </div>
                 <div className="sdv2-variant-row">
                   <div className="sdv2-form-field" style={{ flex: 1 }}>
-                    <label>SKU (ixtiyoriy)</label>
-                    <input type="text" value={v.sku} onChange={e => updateVariant(idx, 'sku', e.target.value)} placeholder="Ombor kodi" />
+                    <label>{t('skuOptional')}</label>
+                    <input type="text" value={v.sku} onChange={e => updateVariant(idx, 'sku', e.target.value)} placeholder={t('skuPlaceholder')} />
                   </div>
                                     <div className="sdv2-form-field">
-                    <label>Variant #{idx + 1} rasmlari ({(v.previews || []).length}/{MAX_IMAGES}) *</label>
+                    <label>{t('variant')} #{idx + 1} {t('variantImages')} ({(v.previews || []).length}/{MAX_IMAGES}) *</label>
                     <div className="sdv2-upload-grid">
                       {(v.previews || []).map((prev, pi) => (
                         <div className="sdv2-upload-thumb" key={pi}>
-                          {prev ? <img src={prev} alt={`Variant ${idx + 1} Rasm ${pi + 1}`} /> : (
+                          {prev ? <img src={prev} alt={`${t('variant')} ${idx + 1} ${t('image')} ${pi + 1}`} /> : (
                             <div className="sdv2-upload-thumb-empty">
                               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ color: 'var(--text-muted)' }}><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
                             </div>
                           )}
-                          {pi === 0 && <span className="sdv2-thumb-badge">Asosiy</span>}
+                          {pi === 0 && <span className="sdv2-thumb-badge">{t('defaultBadge')}</span>}
                           <button type="button" className="sdv2-upload-remove-sm" onClick={() => removeVariantImage(idx, pi)}>
                             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                           </button>
@@ -744,11 +785,11 @@ function SellerDashboard() {
                         <div className="sdv2-upload-add" onClick={() => document.getElementById(`variant-img-${idx}`)?.click()}>
                           <input id={`variant-img-${idx}`} type="file" accept="image/*" multiple onChange={(e) => handleVariantImageSelect(idx, e)} className="sdv2-file-input" />
                           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ color: 'var(--text-muted)' }}><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                          <span>Qo'shish</span>
+                          <span>{t('addBtn')}</span>
                         </div>
                       )}
                     </div>
-                    <span className="sdv2-upload-hint">Har bir variantga {MIN_IMAGES}-{MAX_IMAGES} ta rasm | 1:1 kvadrat format tavsiya etiladi</span>
+                    <span className="sdv2-upload-hint">{t('perVariantImages')} {MIN_IMAGES}-{MAX_IMAGES} {t('images')} | {t('squareFormatRecommended')}</span>
                     {formErrors['variant_' + idx] && <span className="sdv2-field-error">{formErrors['variant_' + idx]}</span>}
                   </div>
                 </div>
@@ -757,20 +798,20 @@ function SellerDashboard() {
           ))}
           <button type="button" className="sdv2-variant-add-btn" onClick={addVariant}>
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            Variant qo'shish
+            {t('addVariant')}
           </button>
         </div>
       )}
 
             {/* ── Butun mahsulotga 1 ta video (MP4) ── */}
       <div className="sdv2-form-field">
-        <label>Mahsulot videosi (MP4, ixtiyoriy — maks 1 ta)</label>
+        <label>{t('productVideo')}</label>
         {(videoPreview && videoPreview.startsWith('/uploads/')) || videoFile ? (
           <div className="sdv2-video-preview">
             <video src={videoFile ? videoPreview : (editVideoUrl || videoPreview)} controls />
             <div className="sdv2-video-meta">
               <span className="sdv2-video-name">{videoFile ? videoFile.name : (editVideoUrl || videoPreview).split('/').pop()}</span>
-              <button type="button" className="sdv2-upload-remove-sm" onClick={removeVideo} title="O'chirish">
+              <button type="button" className="sdv2-upload-remove-sm" onClick={removeVideo} title={t('delete')}>
                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
               </button>
             </div>
@@ -781,10 +822,10 @@ function SellerDashboard() {
             <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ color: 'var(--text-muted)' }}>
               <polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
             </svg>
-            <span>Video yuklash (MP4)</span>
+            <span>{t('uploadVideo')}</span>
           </div>
         )}
-        <span className="sdv2-upload-hint">Faqat MP4, 100MB gacha, 1 ta</span>
+        <span className="sdv2-upload-hint">{t('videoHint')}</span>
         {formErrors.video && <span className="sdv2-field-error">{formErrors.video}</span>}
       </div>
     </div>
@@ -810,7 +851,7 @@ function SellerDashboard() {
         </div>
         <div className="sdv2-confirm-info">
           <span className="sdv2-confirm-brand">{form.brand}</span>
-          <h4>{form.name || 'Nomsiz mahsulot'}</h4>
+          <h4>{form.name || t('unnamedProduct')}</h4>
           <span className="sdv2-confirm-category">{categoryLabel(form.category)}</span>
           {form.description && <p className="sdv2-confirm-desc">{form.description}</p>}
           {!hasVariants ? (
@@ -820,23 +861,23 @@ function SellerDashboard() {
             </div>
           ) : (
             <div className="sdv2-confirm-variants">
-              <span className="sdv2-confirm-variants-title">Variantlar ({variants.length}):</span>
+              <span className="sdv2-confirm-variants-title">{t('variants')} ({variants.length}):</span>
               {variants.map((v, i) => (
                 <div className="sdv2-confirm-variant" key={v._id || i}>
                   <span className="sdv2-confirm-variant-dot" style={{ background: v.colorHex || '#94a3b8' }} />
                   <span className="sdv2-confirm-variant-info">
-                    {[v.color, v.size].filter(Boolean).join(' / ') || `Variant ${i + 1}`}
+                    {[v.color, v.size].filter(Boolean).join(' / ') || `${t('variant')} ${i + 1}`}
                   </span>
                   <span className="sdv2-confirm-variant-price">
                     {v.price ? convertPrice(Number(v.price)) : '—'}
                     {v.oldPrice && <s>{convertPrice(Number(v.oldPrice))}</s>}
                   </span>
-                  {v.stock != null && v.stock !== '' && <span className="sdv2-confirm-variant-stock">{v.stock} ta</span>}
+                  {v.stock != null && v.stock !== '' && <span className="sdv2-confirm-variant-stock">{v.stock} {t('countShort')}</span>}
                 </div>
               ))}
             </div>
           )}
-          {form.stock && !hasVariants && <span className="sdv2-confirm-stock">Omborda: {form.stock} ta</span>}
+          {form.stock && !hasVariants && <span className="sdv2-confirm-stock">{t('inStock')}: {form.stock} {t('countShort')}</span>}
         </div>
       </div>
     </div>
@@ -879,12 +920,12 @@ function SellerDashboard() {
             <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
           </svg>
           <p>{error}</p>
-          <button className="sdv2-primary-btn" onClick={loadDashboard}>Qayta urinish</button>
+          <button className="sdv2-primary-btn" onClick={loadDashboard}>{t('retry')}</button>
         </div>
       )
     }
 
-    const ORDER_STATUS_LABELS = { pending: 'Kutilmoqda', confirmed: 'Tasdiqlangan', shipping: 'Yetkazilmoqda', delivered: 'Yetkazildi', cancelled: 'Bekor qilingan' }
+const ORDER_STATUS_LABELS = { pending: t('st_pending'), confirmed: t('st_confirmed'), shipping: t('st_shipping'), delivered: t('st_delivered'), completed: t('st_completed'), cancelled: t('st_cancelled') }
 
     return (
     <div className="sdv2-overview">
@@ -895,7 +936,7 @@ function SellerDashboard() {
           </div>
           <div className="sdv2-stat-info">
             <span className="sdv2-stat-value">{stats.totalProducts}</span>
-            <span className="sdv2-stat-label">Mahsulotlar</span>
+            <span className="sdv2-stat-label">{t('products')}</span>
           </div>
         </div>
         <div className="sdv2-stat-card">
@@ -904,8 +945,8 @@ function SellerDashboard() {
           </div>
           <div className="sdv2-stat-info">
             <span className="sdv2-stat-value">{stats.totalOrders}</span>
-            <span className="sdv2-stat-label">Buyurtmalar</span>
-            {stats.pendingOrders > 0 && <span className="sdv2-stat-badge">{stats.pendingOrders} yangi</span>}
+            <span className="sdv2-stat-label">{t('ordersTab')}</span>
+            {stats.pendingOrders > 0 && <span className="sdv2-stat-badge">{stats.pendingOrders} {t('new')}</span>}
           </div>
         </div>
         <div className="sdv2-stat-card">
@@ -914,35 +955,37 @@ function SellerDashboard() {
           </div>
           <div className="sdv2-stat-info">
             <span className="sdv2-stat-value">{convertPrice(stats.totalRevenue)}</span>
-            <span className="sdv2-stat-label">Daromad</span>
+            <span className="sdv2-stat-label">{t('revenue')}</span>
           </div>
         </div>
+        {REVIEWS_ENABLED && (
         <div className="sdv2-stat-card">
           <div className="sdv2-stat-icon purple">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
           </div>
           <div className="sdv2-stat-info">
             <span className="sdv2-stat-value">{stats.averageRating > 0 ? stats.averageRating : '\u2014'}</span>
-            <span className="sdv2-stat-label">O'rtacha reyting</span>
+            <span className="sdv2-stat-label">{t('averageRating')}</span>
           </div>
         </div>
+        )}
       </div>
 
       <div className="sdv2-recent-grid">
         <div className="sdv2-recent">
           <div className="sdv2-recent-header">
-            <h3>So'nggi mahsulotlar</h3>
-            <button className="sdv2-link-btn" onClick={() => setActiveSection('products')}>Hammasini korish</button>
+            <h3>{t('recentProducts')}</h3>
+            <button className="sdv2-link-btn" onClick={() => setActiveSection('products')}>{t('viewAll')}</button>
           </div>
           {recentProducts.length === 0 ? (
             <div className="sdv2-empty-state">
               <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ color: 'var(--text-muted)' }}>
                 <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/>
               </svg>
-              <p>Hali mahsulot qoshmagansiz</p>
+              <p>{t('noProductsYet')}</p>
               <button className="sdv2-primary-btn" onClick={goToProducts}>
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                Mahsulot qoshish
+                {t('addProduct')}
               </button>
             </div>
           ) : (
@@ -956,7 +999,7 @@ function SellerDashboard() {
                   </div>
                   <div className="sdv2-recent-meta">
                     <span className="sdv2-recent-price">{convertPrice(p.price)}</span>
-                    <span className={`sdv2-recent-status ${p.status}`}>{p.status === 'active' ? 'Faol' : "To'xtatilgan"}</span>
+                    <span className={`sdv2-recent-status ${p.status}`}>{p.status === 'active' ? t('active') : t('paused')}</span>
                   </div>
                 </div>
               ))}
@@ -966,15 +1009,15 @@ function SellerDashboard() {
 
         <div className="sdv2-recent">
           <div className="sdv2-recent-header">
-            <h3>So'nggi buyurtmalar</h3>
-            <button className="sdv2-link-btn" onClick={() => setActiveSection('orders')}>Hammasini korish</button>
+            <h3>{t('recentOrders')}</h3>
+            <button className="sdv2-link-btn" onClick={() => setActiveSection('orders')}>{t('viewAll')}</button>
           </div>
           {recentOrders.length === 0 ? (
             <div className="sdv2-empty-state">
               <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" style={{color:'var(--text-muted)'}}>
                 <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6"/>
               </svg>
-              <p>Hali buyurtma yo'q</p>
+              <p>{t('noOrdersYet')}</p>
             </div>
           ) : (
             <div className="sdv2-recent-list">
@@ -982,8 +1025,8 @@ function SellerDashboard() {
                 <div className="sdv2-recent-item" key={o._id}>
                   <div className="sdv2-order-avatar">{o.buyer?.name?.[0] || '?'}</div>
                   <div className="sdv2-recent-info">
-                    <span className="sdv2-recent-brand">{o.buyer?.name || 'Noma\'lum'}</span>
-                    <span className="sdv2-recent-name">{o.items.length} ta mahsulot · {convertPrice(o.total)}</span>
+                    <span className="sdv2-recent-brand">{o.buyer?.name || t('unknown')}</span>
+                    <span className="sdv2-recent-name">{o.items.length} {t('items')} · {convertPrice(o.total)}</span>
                   </div>
                   <div className="sdv2-recent-meta">
                     <span className={`sdv2-status-chip ${o.status}`}>{ORDER_STATUS_LABELS[o.status] || o.status}</span>
@@ -1003,29 +1046,29 @@ function SellerDashboard() {
       <div className="sdv2-products-toolbar">
         <div className="sdv2-search">
           <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <input type="text" placeholder="Mahsulot qidirish..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
+          <input type="text" placeholder={t('searchProduct')} value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
         </div>
         <button className="sdv2-primary-btn" onClick={openAddForm}>
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          Yangi mahsulot
+{t('newProduct')}
         </button>
       </div>
 
       <div className="sdv2-products-table">
         <div className="sdv2-table-header">
-          <span className="sdv2-col-img">Rasm</span>
-          <span className="sdv2-col-name">Nomi</span>
-          <span className="sdv2-col-price">Narx</span>
-          <span className="sdv2-col-stock">Ombor</span>
-          <span className="sdv2-col-sold">Sotilgan</span>
-          <span className="sdv2-col-status">Holat</span>
-          <span className="sdv2-col-actions">Amallar</span>
+          <span className="sdv2-col-img">{t('image')}</span>
+          <span className="sdv2-col-name">{t('nameLabel')}</span>
+          <span className="sdv2-col-price">{t('price')}</span>
+          <span className="sdv2-col-stock">{t('stockWord')}</span>
+          <span className="sdv2-col-sold">{t('soldWord')}</span>
+          <span className="sdv2-col-status">{t('status')}</span>
+          <span className="sdv2-col-actions">{t('actions')}</span>
         </div>
 
         {loading ? (
-          <div className="sdv2-no-data">Yuklanmoqda...</div>
+          <div className="sdv2-no-data">{t('loading')}</div>
         ) : filteredProducts.length === 0 ? (
-          <div className="sdv2-no-data">Mahsulot topilmadi</div>
+          <div className="sdv2-no-data">{t('noProducts')}</div>
         ) : (
           filteredProducts.map(p => (
             <div className="sdv2-table-row" key={p._id}>
@@ -1046,25 +1089,25 @@ function SellerDashboard() {
                     ? p.variants.reduce((sum, v) => sum + (v.stock || 0), 0)
                     : null
                   const totalStock = variantStock !== null ? variantStock : (p.stock || 0)
-                  return <span className={`sdv2-stock ${totalStock < 10 ? 'low' : ''}`}>{totalStock} ta</span>
+                  return <span className={`sdv2-stock ${totalStock < 10 ? 'low' : ''}`}>{totalStock} {t('countShort')}</span>
                 })()}
               </div>
               <div className="sdv2-col-sold">{p.sold || 0}</div>
               <div className="sdv2-col-status">
-                <span className={`sdv2-status-badge ${p.status}`}>{p.status === 'active' ? 'Faol' : "To'xtatilgan"}</span>
+                <span className={`sdv2-status-badge ${p.status}`}>{p.status === 'active' ? t('active') : t('paused')}</span>
               </div>
               <div className="sdv2-col-actions">
-                <button className="sdv2-action edit" onClick={() => openEditForm(p)} title="Tahrirlash">
+                <button className="sdv2-action edit" onClick={() => openEditForm(p)} title={t('edit')}>
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                 </button>
-                <button className={`sdv2-action toggle ${p.status === 'active' ? 'pause' : 'play'}`} onClick={() => toggleStatus(p)} title={p.status === 'active' ? "To'xtatish" : 'Yoqish'}>
+                <button className={`sdv2-action toggle ${p.status === 'active' ? 'pause' : 'play'}`} onClick={() => toggleStatus(p)} title={p.status === 'active' ? t('pause') : t('enable')}>
                   {p.status === 'active' ? (
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
                   ) : (
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
                   )}
                 </button>
-                <button className="sdv2-action delete" onClick={() => handleDelete(p._id)} title="O'chirish">
+                <button className="sdv2-action delete" onClick={() => handleDelete(p._id)} title={t('delete')}>
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
                 </button>
               </div>
@@ -1076,17 +1119,16 @@ function SellerDashboard() {
   )
 
   const ORDER_FILTERS = [
-    { value: '', label: 'Barchasi' },
-    { value: 'pending', label: 'Kutilmoqda' },
-    { value: 'confirmed', label: 'Tasdiqlangan' },
-    { value: 'shipping', label: 'Yetkazilmoqda' },
-    { value: 'delivered', label: 'Yetkazildi' },
-    { value: 'cancelled', label: 'Bekor qilingan' },
+    { value: '', label: t('all') },
+    { value: 'pending', label: t('st_pending') },
+    { value: 'confirmed', label: t('st_confirmed') },
+    { value: 'completed', label: t('filterCompleted') },
+    { value: 'cancelled', label: t('st_cancelled') },
   ]
 
-  const ORDER_STATUS_LABELS = { pending: 'Kutilmoqda', confirmed: 'Tasdiqlangan', shipping: 'Yetkazilmoqda', delivered: 'Yetkazildi', cancelled: 'Bekor qilingan' }
+  const ORDER_STATUS_LABELS = { pending: t('st_pending'), confirmed: t('st_confirmed'), shipping: t('st_shipping'), delivered: t('st_delivered'), completed: t('st_completed'), cancelled: t('st_cancelled') }
 
-  const STATUS_FLOW = ['pending', 'confirmed', 'shipping', 'delivered']
+  const STATUS_FLOW = ['pending', 'confirmed', 'completed']
 
   const handleStatusUpdate = async (orderId, newStatus) => {
     setUpdatingOrderId(orderId)
@@ -1098,6 +1140,19 @@ function SellerDashboard() {
       console.error('Status update error:', err)
     } finally {
       setUpdatingOrderId(null)
+    }
+  }
+
+  const handleContactBuyer = async (order) => {
+    if (!order?.buyer?._id) return
+    setContactingOrderId(order._id)
+    try {
+      const { conversation } = await api.conversations.start(order.buyer._id)
+      navigate(`/messages?conv=${conversation._id}`)
+    } catch (err) {
+      console.error('Contact buyer error:', err)
+    } finally {
+      setContactingOrderId(null)
     }
   }
 
@@ -1129,7 +1184,7 @@ function SellerDashboard() {
             <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
           </svg>
           <p>{ordersError}</p>
-          <button className="sdv2-primary-btn" onClick={() => loadOrders(orderStatusFilter)}>Qayta urinish</button>
+          <button className="sdv2-primary-btn" onClick={() => loadOrders(orderStatusFilter)}>{t('retry')}</button>
         </div>
       )
     }
@@ -1151,7 +1206,7 @@ function SellerDashboard() {
           <svg xmlns="http://www.w3.org/2000/svg" width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2" style={{ color: 'var(--text-muted)' }}>
             <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6"/>
           </svg>
-          <p>{orderStatusFilter ? 'Bu holatda buyurtma yo\'q' : 'Hali buyurtma yo\'q'}</p>
+          <p>{orderStatusFilter ? t('noOrdersForFilter') : t('noOrdersYet')}</p>
         </div>
       ) : (
         <div className="sdv2-orders-list">
@@ -1163,7 +1218,7 @@ function SellerDashboard() {
                   <div className="sdv2-order-buyer">
                     <div className="sdv2-order-avatar">{order.buyer?.name?.[0] || '?'}</div>
                     <div>
-                      <strong>{order.buyer?.name || 'Noma\'lum'}</strong>
+                      <strong>{order.buyer?.name || t('unknown')}</strong>
                       <span>{order.buyer?.phone || order.phone || ''}</span>
                     </div>
                   </div>
@@ -1186,7 +1241,7 @@ function SellerDashboard() {
                 </div>
 
                 <div className="sdv2-order-bottom">
-                  <span className="sdv2-order-total">Jami: {convertPrice(order.total)}</span>
+                  <span className="sdv2-order-total">{t('total')}: {convertPrice(order.total)}</span>
                   <div className="sdv2-order-actions">
                     {next && (
                       <button
@@ -1197,19 +1252,26 @@ function SellerDashboard() {
                         {updatingOrderId === order._id ? '...' : ORDER_STATUS_LABELS[next]}
                       </button>
                     )}
-                    {order.status !== 'cancelled' && order.status !== 'delivered' && (
+                    {order.status !== 'cancelled' && order.status !== 'delivered' && order.status !== 'completed' && (
                       <button
                         className="sdv2-cancel-btn sm"
                         disabled={updatingOrderId === order._id}
                         onClick={() => handleStatusUpdate(order._id, 'cancelled')}
                       >
-                        Bekor qilish
+{t('cancel')}
                       </button>
                     )}
+                    <button
+                      className="sdv2-primary-btn sm ghost"
+                      disabled={contactingOrderId === order._id}
+                      onClick={() => handleContactBuyer(order)}
+                    >
+                      {contactingOrderId === order._id ? '...' : t('writeMessageBtn')}
+                    </button>
                   </div>
                 </div>
 
-                {order.address && <div className="sdv2-order-address">Manzil: {order.address}</div>}
+                {order.address && <div className="sdv2-order-address">{t('address')}: {order.address}</div>}
               </div>
             )
           })}
@@ -1220,7 +1282,7 @@ function SellerDashboard() {
   }
 
   const REVIEW_RATING_FILTERS = [
-    { value: 0, label: 'Barchasi' },
+    { value: 0, label: t('all') },
     { value: 5, label: '5 \u2605' },
     { value: 4, label: '4 \u2605' },
     { value: 3, label: '3 \u2605' },
@@ -1250,7 +1312,7 @@ function SellerDashboard() {
             <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
           </svg>
           <p>{reviewsError}</p>
-          <button className="sdv2-primary-btn" onClick={() => loadReviews(reviewRatingFilter)}>Qayta urinish</button>
+          <button className="sdv2-primary-btn" onClick={() => loadReviews(reviewRatingFilter)}>{t('retry')}</button>
         </div>
       )
     }
@@ -1272,7 +1334,7 @@ function SellerDashboard() {
           <svg xmlns="http://www.w3.org/2000/svg" width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2" style={{ color: 'var(--text-muted)' }}>
             <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
           </svg>
-          <p>{reviewRatingFilter ? 'Bu reytingda sharh yo\'q' : 'Hali sharh yo\'q'}</p>
+          <p>{reviewRatingFilter ? t('noReviewsForRating') : t('noReviews')}</p>
         </div>
       ) : (
         <div className="sdv2-reviews-list">
@@ -1281,8 +1343,8 @@ function SellerDashboard() {
               <div className="sdv2-review-top">
                 <div className="sdv2-order-avatar">{review.buyerName?.[0] || 'U'}</div>
                 <div className="sdv2-review-meta">
-                  <strong>{review.buyerName || 'Noma\'lum'}</strong>
-                  <span className="sdv2-review-product">{review.productName || 'Mahsulot'}</span>
+                  <strong>{review.buyerName || t('unknown')}</strong>
+                  <span className="sdv2-review-product">{review.productName || t('product')}</span>
                 </div>
                 <div className="sdv2-review-right">
                   <div className="sdv2-review-stars">
@@ -1316,6 +1378,32 @@ function SellerDashboard() {
     }
   }, [activeConversation, activeConversation?.messages?.length])
 
+  useEffect(() => {
+    if (user?.role === 'craftsman') {
+      navigate('/craftsman-dashboard', { replace: true })
+    }
+  }, [user, navigate])
+
+  if (!user || (user.role !== 'seller' && user.role !== 'craftsman')) {
+    return (
+      <>
+        <Header />
+        <div className="sd-v2" style={{ textAlign: 'center', padding: '80px 20px' }}>
+          <h2>{t('accessDenied')}</h2>
+          <p style={{ color: 'var(--text-muted)', marginTop: 8 }}>{t('sellerAccessOnly')}</p>
+          <button onClick={() => navigate('/')} style={{ marginTop: 16, padding: '10px 24px', background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: 8, fontWeight: 600, cursor: 'pointer' }}>
+            {t('home')}
+          </button>
+        </div>
+        <Footer />
+      </>
+    )
+  }
+
+  if (user?.role === 'craftsman') {
+    return null
+  }
+
   const handleSellerSend = () => {
     if (!msgInput.trim() || !activeConversation) return
     sendMessage(activeConversation.id, msgInput.trim(), activeConversation.sellerId)
@@ -1326,7 +1414,7 @@ function SellerDashboard() {
     <div className="sdv2-messages">
       <div className="sdv2-msg_sidebar">
         <div className="sdv2-msg_sidebar_header">
-          <h3>Xabarlar</h3>
+          <h3>{t('messages')}</h3>
           <span className="sdv2-msg_count">{conversations.length}</span>
         </div>
         <div className="sdv2-msg_list">
@@ -1335,7 +1423,7 @@ function SellerDashboard() {
               <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2" style={{ color: 'var(--text-muted)' }}>
                 <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
               </svg>
-              <p>Hali suhbat yo'q</p>
+              <p>{t('noChats')}</p>
             </div>
           ) : (
             conversations.map(conv => (
@@ -1349,7 +1437,7 @@ function SellerDashboard() {
                 </div>
                 <div className="sdv2-msg_item_info">
                   <div className="sdv2-msg_item_top">
-                    <span className="sdv2-msg_item_name">{conv.sellerName || 'Foydalanuvchi'}</span>
+                    <span className="sdv2-msg_item_name">{conv.sellerName || t('user')}</span>
                     <span className="sdv2-msg_item_time">{conv.lastTime}</span>
                   </div>
                   <div className="sdv2-msg_item_bottom">
@@ -1369,8 +1457,8 @@ function SellerDashboard() {
             <svg xmlns="http://www.w3.org/2000/svg" width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" style={{ color: 'var(--text-muted)' }}>
               <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
             </svg>
-            <h3>Suhbatni tanlang</h3>
-            <p>Chap tomondagi suhbat ro'yxatidan birini tanlang</p>
+            <h3>{t('selectConversation')}</h3>
+            <p>{t('selectChatFromLeft')}</p>
           </div>
         ) : (
           <>
@@ -1383,8 +1471,8 @@ function SellerDashboard() {
                   {activeConversation.sellerAvatar || 'U'}
                 </div>
                 <div>
-                  <h4>{activeConversation.sellerName || 'Foydalanuvchi'}</h4>
-                  <span className="sdv2-msg_online"><span className="sdv2-msg_online_dot"></span> Online</span>
+                  <h4>{activeConversation.sellerName || t('user')}</h4>
+                  <span className="sdv2-msg_online"><span className="sdv2-msg_online_dot"></span>{' '}{t('online')}</span>
                 </div>
               </div>
             </div>
@@ -1414,7 +1502,7 @@ function SellerDashboard() {
             <div className="sdv2-msg_chat_input">
               <input
                 type="text"
-                placeholder="Xabar yozing..."
+                placeholder={t('writeMessage')}
                 value={msgInput}
                 onChange={e => setMsgInput(e.target.value)}
                 onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSellerSend() } }}
@@ -1434,38 +1522,65 @@ function SellerDashboard() {
   const renderSettings = () => (
     <div className="sdv2-settings">
       <div className="sdv2-settings-card">
-        <h3>Do'kon malumotlari</h3>
+        <h3>{t('shopInfo')}</h3>
         <form onSubmit={handleSaveProfile}>
           <div className="sdv2-form-row">
             <div className="sdv2-form-field">
-              <label>Ism</label>
-              <input type="text" value={profileForm.name} onChange={e => setProfileForm({ ...profileForm, name: e.target.value })} placeholder="Ismingiz" />
+              <label>{t('firstName')}</label>
+              <input type="text" value={profileForm.name} onChange={e => setProfileForm({ ...profileForm, name: e.target.value })} placeholder={t('yourName')} />
             </div>
             <div className="sdv2-form-field">
-              <label>Do'kon nomi</label>
-              <input type="text" value={profileForm.shopName} onChange={e => setProfileForm({ ...profileForm, shopName: e.target.value })} placeholder="Do'kon nomi" />
+              <label>{t('shopName')}</label>
+              <input type="text" value={profileForm.shopName} onChange={e => setProfileForm({ ...profileForm, shopName: e.target.value })} placeholder={t('shopName')} />
             </div>
           </div>
           <div className="sdv2-form-row">
             <div className="sdv2-form-field">
-              <label>Manzil (matn)</label>
-              <input type="text" value={profileForm.location} onChange={e => setProfileForm({ ...profileForm, location: e.target.value })} placeholder="Masalan: Chilonzor tumani, Amir Temur ko'chasi 15" />
+              <label>{t('locationText')}</label>
+              <input
+                type="text"
+                value={profileForm.location}
+                onChange={e => setProfileForm({ ...profileForm, location: e.target.value })}
+                onBlur={handleAddressGeocode}
+                onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleAddressGeocode() } }}
+                placeholder={t('locationTextPlaceholder')}
+              />
             </div>
           </div>
           <div className="sdv2-form-field">
-            <label>Tavsif</label>
-            <textarea rows={4} value={profileForm.description} onChange={e => setProfileForm({ ...profileForm, description: e.target.value })} placeholder="Do'koningiz haqida qisqacha" />
+            <label>{t('description')}</label>
+            <textarea rows={4} value={profileForm.description} onChange={e => setProfileForm({ ...profileForm, description: e.target.value })} placeholder={t('sellerDescPlaceholder')} />
           </div>
 
           <div className="sdv2-settings-divider" />
 
           <div className="sdv2-form-field">
-            <label>Do'kon joylashuvi</label>
+            <label>{t('shopLocation')}</label>
             <LocationPicker
               lat={profileForm.lat}
               lng={profileForm.lng}
-              onChange={({ lat, lng }) => setProfileForm(prev => ({ ...prev, lat, lng }))}
+              onChange={handleLocationChange}
             />
+          </div>
+
+          <div className="sdv2-settings-divider" />
+
+          <div className="sdv2-form-row">
+            <div className="sdv2-form-field">
+              <label>{t('workingHours')}</label>
+              <input type="text" value={profileForm.workingHours} onChange={e => setProfileForm({ ...profileForm, workingHours: e.target.value })} placeholder="09:00 - 18:00" />
+            </div>
+            <div className="sdv2-form-field">
+              <label>{t('status')}</label>
+              <button
+                type="button"
+                className={`sdv2-availability-toggle ${profileForm.available ? 'available' : 'busy'}`}
+                onClick={() => setProfileForm(prev => ({ ...prev, available: !prev.available }))}
+              >
+                <span className="sdv2-toggle-dot" />
+                {profileForm.available ? `🟢 ${t('open')}` : `🔴 ${t('closed')}`}
+              </button>
+            </div>
           </div>
 
           {profileSaveMsg && (
@@ -1480,10 +1595,79 @@ function SellerDashboard() {
           )}
 
           <div className="sdv2-form-actions" style={{ marginTop: 16 }}>
-            <button type="submit" className="sdv2-primary-btn">Saqlash</button>
+            <button type="submit" className="sdv2-primary-btn">{t('saveBtn')}</button>
           </div>
         </form>
       </div>
+
+      <div className="sdv2-settings-card" style={{ marginTop: 20 }}>
+        <h3>{t('socialLinks')}</h3>
+        <form onSubmit={handleSaveProfile}>
+          <div className="sdv2-form-row">
+            <div className="sdv2-form-field">
+              <label>{t('telegram')}</label>
+              <input type="text" value={profileForm.social.telegram} onChange={e => setSocial('telegram', e.target.value)} placeholder={t('telegramPlaceholder')} />
+            </div>
+            <div className="sdv2-form-field">
+              <label>{t('instagram')}</label>
+              <input type="text" value={profileForm.social.instagram} onChange={e => setSocial('instagram', e.target.value)} placeholder={t('instagramPlaceholder')} />
+            </div>
+          </div>
+          <div className="sdv2-form-field">
+            <label>{t('website')}</label>
+            <input type="text" value={profileForm.social.website} onChange={e => setSocial('website', e.target.value)} placeholder={t('websitePlaceholder')} />
+          </div>
+          <div className="sdv2-settings-hint">{t('socialLinksHint')}</div>
+          <div className="sdv2-form-actions" style={{ marginTop: 12 }}>
+            <button type="submit" className="sdv2-primary-btn">{t('saveBtn')}</button>
+          </div>
+        </form>
+      </div>
+
+      <div className="sdv2-settings-card" style={{ marginTop: 20 }}>
+        <h3>{t('accountSecurity')}</h3>
+        <div className="sdv2-security-row">
+          <button type="button" className="sdv2-security-btn" onClick={() => setShowPasswordModal(true)}>
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+            {t('changePassword')}
+          </button>
+          <button
+            type="button"
+            className={`sdv2-security-btn ${twoFactor ? 'active' : ''}`}
+            onClick={() => { if (!twoFactor) setShow2FAModal(true); else disableTwoFactor() }}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            {twoFactor ? t('twoFactorVerificationOn') : t('twoFactorVerification')}
+            {twoFactor && <span className="sdv2-active-badge">ON</span>}
+          </button>
+        </div>
+      </div>
+
+      <div className="sdv2-settings-card" style={{ marginTop: 20 }}>
+        <h3>{t('appSettings')}</h3>
+        <div className="sdv2-form-row">
+          <div className="sdv2-form-field">
+            <label>{t('chooseLanguage')}</label>
+            <select value={lang} onChange={e => setLang(e.target.value)}>
+              <option value="uz">{t('langUzbek')}</option>
+              <option value="ru">{t('ru')}</option>
+              <option value="en">{t('en')}</option>
+            </select>
+          </div>
+          <div className="sdv2-form-field">
+            <label>{t('viewMode')}</label>
+            <button type="button" className={`sdv2-security-btn ${dark ? 'active' : ''}`} onClick={toggleTheme} style={{ width: '100%' }}>
+              {dark ? `🌙 ${t('darkModeLabel')}` : `☀️ ${t('lightModeLabel')}`}
+            </button>
+          </div>
+        </div>
+        <div style={{ marginTop: 16, paddingTop: 16, borderTop: '1px solid var(--border)' }}>
+          <TelegramBotLink />
+        </div>
+      </div>
+
+      {showPasswordModal && <PasswordModal onClose={() => setShowPasswordModal(false)} />}
+      {show2FAModal && <TwoFactorModal onClose={() => setShow2FAModal(false)} onEnable={() => setTwoFactor(true)} />}
     </div>
   )
 
@@ -1492,7 +1676,7 @@ function SellerDashboard() {
       case 'overview': return renderOverview()
       case 'products': return renderProducts()
       case 'orders': return renderOrders()
-      case 'reviews': return renderReviews()
+      case 'reviews': return REVIEWS_ENABLED ? renderReviews() : renderOverview()
       case 'settings': return renderSettings()
       default: return renderOverview()
     }
@@ -1502,18 +1686,15 @@ function SellerDashboard() {
     <div className="sd-v2">
       <Header />
 
-      <div className="sdv2-breadcrumb">
-        <span onClick={() => navigate('/')}>{t('home')}</span>
-        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="9 18 15 12 9 6"/></svg>
-        <span className="active">Sotuvchi paneli</span>
-      </div>
+      {/* Breadcrumb olib tashlandi — lekin joyi (hajmi) saqlanadi */}
+      <div className="sdv2-breadcrumb" aria-hidden="true" />
 
       <div className="sdv2-layout">
         <div className={`sdv2-sidebar-overlay${sidebarOpen ? ' visible' : ''}`} onClick={() => setSidebarOpen(false)} />
 
         <aside className={`sdv2-sidebar ${sidebarOpen ? 'open' : ''}`}>
           <div className="sdv2-sidebar-header">
-            <span style={{fontWeight:700,fontSize:16}}>Menyu</span>
+            <span style={{fontWeight:700,fontSize:16}}>{t('menu')}</span>
             <button className="sdv2-sidebar-close" onClick={() => setSidebarOpen(false)}>
               <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
             </button>
@@ -1521,8 +1702,8 @@ function SellerDashboard() {
           <div className="sdv2-sidebar-user">
             <div className="sdv2-avatar">{(user.name || 'S')[0].toUpperCase()}</div>
             <div className="sdv2-sidebar-user-info">
-              <span className="sdv2-sidebar-user-name">{user.name || 'Sotuvchi'}</span>
-              <span className="sdv2-sidebar-user-role">{user.role === 'craftsman' ? 'Usta' : 'Sotuvchi'}</span>
+              <span className="sdv2-sidebar-user-name">{user.name || t('seller')}</span>
+              <span className="sdv2-sidebar-user-role">{user.role === 'craftsman' ? t('craftsman') : t('seller')}</span>
             </div>
           </div>
           <nav className="sdv2-nav">
@@ -1563,7 +1744,7 @@ function SellerDashboard() {
         <div className="sdv2-modal-overlay" onClick={() => { setShowAddForm(false); setEditProduct(null) }}>
           <div className="sdv2-modal sdv2-modal-lg" onClick={e => e.stopPropagation()}>
             <div className="sdv2-modal-header">
-              <h2>{editProduct ? 'Mahsulotni tahrirlash' : "Yangi mahsulot qo'shish"}</h2>
+              <h2>{editProduct ? t('editProduct') : t('addNewProduct')}</h2>
               <button onClick={() => { setShowAddForm(false); setEditProduct(null) }}>
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
               </button>
@@ -1602,19 +1783,19 @@ function SellerDashboard() {
               {formStep > 1 && (
                 <button type="button" className="sdv2-cancel-btn" onClick={prevStep}>
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
-                  Orqaga
+                  {t('back')}
                 </button>
               )}
               <div className="sdv2-modal-footer-right">
-                <button type="button" className="sdv2-cancel-btn" onClick={() => { setShowAddForm(false); setEditProduct(null) }}>Bekor qilish</button>
+                <button type="button" className="sdv2-cancel-btn" onClick={() => { setShowAddForm(false); setEditProduct(null) }}>{t('cancel')}</button>
                 {formStep < 3 ? (
                   <button type="button" className="sdv2-primary-btn" onClick={nextStep}>
-                    Oldinga
+                    {t('forward')}
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
                   </button>
                 ) : (
                   <button type="button" className="sdv2-primary-btn" onClick={handleSubmit} disabled={submitting}>
-                    {submitting ? 'Yuklanmoqda...' : (editProduct ? 'Saqlash' : "Qo'shish")}
+                    {submitting ? t('loading') : (editProduct ? t('saveBtn') : t('addBtn'))}
                   </button>
                 )}
               </div>

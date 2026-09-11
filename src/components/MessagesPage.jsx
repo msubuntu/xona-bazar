@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext.jsx'
 import { useMessages } from '../context/MessagesContext.jsx'
 import { useSettings } from '../context/SettingsContext.jsx'
@@ -9,8 +9,9 @@ import '../components_css/messages.css'
 
 function MessagesPage() {
   const { user, openLogin } = useAuth()
-  const { conversations, activeConversation, sendMessage, openConversation, closeConversation } = useMessages()
+  const { conversations, activeConversation, sendMessage, openConversation, closeConversation, loadConversations, loading } = useMessages()
   const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
   const { t } = useSettings()
 
   const [input, setInput] = useState('')
@@ -19,12 +20,30 @@ function MessagesPage() {
   const [mobileView, setMobileView] = useState('list')
   const messagesEnd = useRef(null)
   const chatContainerRef = useRef(null)
+  const convRetriedRef = useRef(false)
+  const convHandledRef = useRef(null)
 
   useEffect(() => {
     if (chatContainerRef.current) {
       chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight
     }
   }, [activeConversation, activeConversation?.messages?.length])
+
+  useEffect(() => {
+    const convId = searchParams.get('conv')
+    if (!convId) return
+    if (convHandledRef.current === convId) return
+    const target = conversations.find(c => c.id === convId)
+    if (target) {
+      convHandledRef.current = convId
+      openConversation(target)
+      setMobileView('chat')
+      setSearchParams({}, { replace: true })
+    } else if (!loading && !convRetriedRef.current) {
+      convRetriedRef.current = true
+      loadConversations()
+    }
+  }, [conversations, searchParams, loading, loadConversations, openConversation, setSearchParams])
 
   const handleOpenConversation = (conv) => {
     openConversation(conv)

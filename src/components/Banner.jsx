@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
+import { useNavigate } from 'react-router-dom'
 import '../components_css/banner.css'
 
 const BANNERS = [
@@ -9,6 +10,7 @@ const BANNERS = [
     subtitle: 'Bo\'yoq va plitkalarga 25% gacha chegirma',
     badge: 'Aksiya -25%',
     cta: 'Sotib olish',
+    category: 'paints',
   },
   {
     id: 2,
@@ -17,6 +19,7 @@ const BANNERS = [
     subtitle: 'Bosch, Makita, DeWalt — rasmiy kafolat bilan',
     badge: 'Yangi',
     cta: 'Ko\'rish',
+    category: 'tools',
   },
   {
     id: 3,
@@ -25,10 +28,12 @@ const BANNERS = [
     subtitle: 'Plumber, elektrik, usta — 500+ mutaxassis',
     badge: 'Xizmat',
     cta: 'Ustalar',
+    category: null, // null → /craftsmen sahifasiga o'tadi
   },
 ]
 
-function Banner() {
+function Banner({ onExplore }) {
+  const navigate = useNavigate()
   const [current, setCurrent] = useState(0)
   const [isPaused, setIsPaused] = useState(false)
 
@@ -46,6 +51,16 @@ function Banner() {
     return () => clearInterval(t)
   }, [next, isPaused])
 
+  // CTA tugmasi: kategoriya bo'lsa — mahsulotlarni shu kategoriya bilan ko'rsat,
+  // bo'lmasa — ustalar sahifasiga o't
+  const handleCta = (b) => {
+    if (b.category) {
+      onExplore?.(b.category)
+    } else {
+      navigate('/craftsmen')
+    }
+  }
+
   const b = BANNERS[current]
 
   return (
@@ -59,7 +74,7 @@ function Banner() {
         <span className="banner_badge">{b.badge}</span>
         <h2 className="banner_title">{b.title}</h2>
         <p className="banner_subtitle">{b.subtitle}</p>
-        <button className="banner_cta">{b.cta}</button>
+        <button className="banner_cta" onClick={() => handleCta(b)}>{b.cta}</button>
       </div>
 
       <div className="banner_dots">

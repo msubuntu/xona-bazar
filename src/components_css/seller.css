@@ -124,6 +124,30 @@
   color: var(--text-muted, #9ca3af);
 }
 
+/* ── Socials ── */
+.sp_socials {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+.sp_social_link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--bg-input, #f9fafb);
+  border: 1px solid var(--border, #e5e7eb);
+  color: var(--text, #1a1a2e);
+  transition: all 0.15s;
+  text-decoration: none;
+}
+.sp_social_link:hover {
+  border-color: var(--accent, #2bc32b);
+  color: var(--accent, #16a34a);
+}
+
 /* ── Actions ── */
 .sp_actions {
   display: flex;

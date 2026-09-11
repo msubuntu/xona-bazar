@@ -4,6 +4,7 @@ import { useCart } from '../context/CartContext.jsx'
 import { useAuth } from '../context/AuthContext.jsx'
 import { useMessages } from '../context/MessagesContext.jsx'
 import { useFavorites } from '../context/FavoritesContext.jsx'
+import { isPanelRole, panelDashboard } from './RoleRedirect.jsx'
 import LoginPrompt from './LoginPrompt.jsx'
 import '../components_css/bottomnav.css'
 
@@ -13,6 +14,8 @@ function BottomNav() {
   const { totalUnread } = useMessages()
   const { totalFavorites } = useFavorites()
   const [showLoginPrompt, setShowLoginPrompt] = useState(false)
+  const panelUser = isPanelRole(user)
+  const panelDash = panelDashboard(user)
 
   const handleMessagesClick = (e) => {
     if (!user) {
@@ -26,6 +29,17 @@ function BottomNav() {
   return (
     <>
       <nav className="bottom_nav">
+        {panelUser && (
+          <NavLink to={panelDash} className={activeClass}>
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>
+            </svg>
+            <span>{user.role === 'craftsman' ? 'Usta paneli' : 'Sotuvchi paneli'}</span>
+          </NavLink>
+        )}
+
+        {!panelUser && (
+        <>
         <NavLink to="/craftsmen" className={activeClass}>
           <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
@@ -70,6 +84,8 @@ function BottomNav() {
           </div>
           <span>Sevimli</span>
         </NavLink>
+        </>
+        )}
 
         <NavLink
           to="/messages"
