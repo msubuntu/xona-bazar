@@ -128,12 +128,19 @@ function UserPage() {
   useEffect(() => {
     if (!user) return
     const socket = getSocket()
-    const handler = (data) => {
+    const bookingHandler = (data) => {
       if (section === 'service-bookings') loadMyBookings(myBookingsFilter)
     }
-    socket.on('booking_updated', handler)
-    return () => socket.off('booking_updated', handler)
-  }, [user, section, myBookingsFilter, loadMyBookings])
+    const orderHandler = () => {
+      if (section === 'orders') loadOrders()
+    }
+    socket.on('booking_updated', bookingHandler)
+    socket.on('order_updated', orderHandler)
+    return () => {
+      socket.off('booking_updated', bookingHandler)
+      socket.off('order_updated', orderHandler)
+    }
+  }, [user, section, myBookingsFilter, loadMyBookings, loadOrders])
 
   const handleBookingAction = async (bookingId, action) => {
     setBookingAction(bookingId)

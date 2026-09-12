@@ -2,7 +2,7 @@ import { Router } from 'express'
 import Order from '../models/Order.js'
 import Product from '../models/Product.js'
 import { protect, authorize } from '../middleware/auth.js'
-import { notifyUser } from '../services/telegramBot.js'
+import { notifyUser, esc } from '../services/telegramBot.js'
 
 const router = Router()
 
@@ -113,10 +113,10 @@ router.post('/', protect, async (req, res) => {
     orderItems.forEach(item => {
       notifyUser(item.sellerId, [
         `<b>📦 Yangi buyurtma!</b>`,
-        `mijoz: ${buyerName}`,
-        `mahsulot: ${item.name} × ${item.qty}`,
+        `mijoz: ${esc(buyerName)}`,
+        `mahsulot: ${esc(item.name)} × ${item.qty}`,
         `summa: ${(item.price * item.qty).toLocaleString('uz-UZ')} so'm`,
-        `manzil: ${address?.city ? address.city + (address.street ? ', ' + address.street : '') : ''}`,
+        `manzil: ${address?.city ? esc(address.city) + (address.street ? ', ' + esc(address.street) : '') : ''}`,
         `holat: yangi buyurtma`,
       ].filter(Boolean).join('\n'))
     })
@@ -134,6 +134,29 @@ router.put('/:id/status', protect, authorize('seller', 'craftsman'), async (req,
     if (!order) return res.status(404).json({ message: 'Buyurtma topilmadi' })
     order.status = status
     await order.save()
+
+    const sellerItems = order.items.filter(item => item.sellerId.toString() === req.user._id.toString())
+    const statusMsgs = {
+      confirmed: 'tasdiqlandi ✅',
+      shipping: 'yetkazishga chiqdi 🚚',
+      delivered: 'yetkazib berildi 📦',
+      completed: 'yakunlandi ✅',
+      cancelled: 'bekor qilindi ❌',
+      pending: 'kutilmoqda',
+    }
+    notifyUser(order.userId, [
+      `<b>📦 Buyurtma holati yangilandi</b>`,
+      ...sellerItems.map(item => `mahsulot: ${esc(item.name)} x ${item.qty}`),
+      `holat: ${statusMsgs[status] || status}`,
+    ].filter(Boolean).join('\n'))
+
+    if (req.io && req.onlineUsers && req.onlineUsers.has(order.userId.toString())) {
+      req.io.to(req.onlineUsers.get(order.userId.toString())).emit('order_updated', {
+        orderId: order._id,
+        status,
+      })
+    }
+
     res.json({ order })
   } catch (err) {
     res.status(400).json({ message: err.message })

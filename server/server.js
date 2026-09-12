@@ -15,7 +15,7 @@ import sellerRoutes from './routes/sellers.js'
 import bookingRoutes from './routes/bookings.js'
 import addressRoutes from './routes/addresses.js'
 import Conversation from './models/Conversation.js'
-import { initTelegramBot, notifyUser } from './services/telegramBot.js'
+import { initTelegramBot, notifyUser, handleUpdate, esc } from './services/telegramBot.js'
 
 const app = express()
 const server = createServer(app)
@@ -53,6 +53,18 @@ app.use(cors({
   credentials: true,
 }))
 app.use(express.json())
+
+// ── Telegram webhook (BOT_WEBHOOK_URL o'rnatilgan bo'lsa ishlaydi) ──
+app.post('/telegram/webhook', (req, res) => {
+  const sent = req.headers['x-telegram-bot-api-secret-token']
+  const expected = process.env.BOT_WEBHOOK_SECRET
+  if (expected && sent !== expected) {
+    return res.status(403).json({ ok: false, error: 'forbidden' })
+  }
+  handleUpdate(req.body || {})
+  res.json({ ok: true })
+})
+
 app.use(mongoSanitize({ replaceWith: '_' }))
 
 const BLOCKED_EXT = ['.php', '.phtml', '.php3', '.php4', '.php5', '.js', '.mjs', '.html', '.htm', '.exe', '.bat', '.cmd', '.sh', '.bash', '.py', '.rb', '.pl', '.cgi', '.asp', '.aspx', '.jsp']
@@ -106,7 +118,7 @@ io.on('connection', (socket) => {
           })
         }
         if (uid !== senderId.toString()) {
-          notifyUser(uid, `<b>💬 Yangi xabar</b>\n${text}`)
+          notifyUser(uid, `<b>💬 Yangi xabar</b>\n${esc(text)}`)
         }
       })
     } catch (err) {

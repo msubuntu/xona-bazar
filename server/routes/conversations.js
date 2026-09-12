@@ -2,7 +2,7 @@ import { Router } from 'express'
 import Conversation from '../models/Conversation.js'
 import User from '../models/User.js'
 import { protect } from '../middleware/auth.js'
-import { notifyUser } from '../services/telegramBot.js'
+import { notifyUser, esc } from '../services/telegramBot.js'
 
 const router = Router()
 
@@ -99,7 +99,7 @@ router.post('/', protect, async (req, res) => {
     conversation.participants.forEach(pid => {
       const uid = pid.toString()
       if (uid !== req.user._id.toString()) {
-        notifyUser(uid, `<b>💬 Yangi xabar</b>\n${text}`)
+        notifyUser(uid, `<b>💬 Yangi xabar</b>\n${esc(text)}`)
       }
     })
 
@@ -145,7 +145,7 @@ router.post('/:id/messages', protect, async (req, res) => {
     conversation.participants.forEach(pid => {
       const pidStr = pid.toString()
       if (pidStr !== uid) {
-        notifyUser(pidStr, `<b>💬 Yangi xabar</b>\n${text}`)
+        notifyUser(pidStr, `<b>💬 Yangi xabar</b>\n${esc(text)}`)
       }
     })
 

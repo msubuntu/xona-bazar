@@ -2,7 +2,7 @@ import { Router } from 'express'
 import Booking from '../models/Booking.js'
 import User from '../models/User.js'
 import { protect, authorize } from '../middleware/auth.js'
-import { notifyUser } from '../services/telegramBot.js'
+import { notifyUser, esc } from '../services/telegramBot.js'
 
 const router = Router()
 
@@ -41,11 +41,11 @@ router.post('/', protect, async (req, res) => {
 
     notifyUser(craftsmanId, [
       `<b>🛠 Yangi so'rov (buyurtma)</b>`,
-      `mijoz: ${req.user.name || 'Mijoz'} (${phone || req.user.phone || '-'})`,
-      `xizmat: ${service}`,
+      `mijoz: ${esc(req.user.name) || 'Mijoz'} (${esc(phone || req.user.phone) || '-'}`,
+      `xizmat: ${esc(service)}`,
       `sana: ${new Date(date).toLocaleDateString('uz-UZ')}${time ? ' ' + time : ''}`,
-      address ? `manzil: ${address}` : null,
-      description ? `izoh: ${description}` : null,
+      address ? `manzil: ${esc(address)}` : null,
+      description ? `izoh: ${esc(description)}` : null,
     ].filter(Boolean).join('\n'))
 
     const populated = await booking.populate('craftsmanId', 'name phone avatar services')
@@ -186,7 +186,7 @@ router.put('/:id/status', protect, async (req, res) => {
     }
     notifyUser(notifyTarget, [
       `<b>🛠 Buyurtma holati yangilandi</b>`,
-      `xizmat: ${booking.service}`,
+      `xizmat: ${esc(booking.service)}`,
       `holat: ${statusMsgs[status] || status}`,
       booking.quotedPrice ? `narx taklifi: ${booking.quotedPrice.toLocaleString('uz-UZ')} so'm` : null,
     ].filter(Boolean).join('\n'))
@@ -238,8 +238,8 @@ router.put('/:id/price', protect, authorize('craftsman'), async (req, res) => {
 
     notifyUser(booking.userId, [
       `<b>💰 Narx taklifi</b>`,
-      `usta: ${populated.craftsmanId?.name || 'Usta'}`,
-      `xizmat: ${booking.service}`,
+      `usta: ${esc(populated.craftsmanId?.name) || 'Usta'}`,
+      `xizmat: ${esc(booking.service)}`,
       `narx: ${price.toLocaleString('uz-UZ')} so'm`,
     ].join('\n'))
 

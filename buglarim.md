@@ -212,3 +212,19 @@ Dinamik: `/product/:id`, `/seller/:id`, `/craftsman/:id`, `/messages?conv=`, `/?
 ---
 
 *Ushbu fayl yakuniy skan natijasi — keyingi tuzatishlar bosqichma-bosqich beriladi.*
+---
+
+## 8. Telegram bot yaxshilash (foydalanuvchi tanlagan tartibda — barchasi bajarildi ✅)
+1. **Webhook** — `POST /telegram/webhook` (`server.js`), `X-Telegram-Bot-Api-Secret-Token` tekshiruvi
+   (noto'g'ri/yetishmayotgan secret → 403). `BOT_WEBHOOK_URL`/`BOT_WEBHOOK_SECRET` `.env`da (ixtiyoriy);
+   lokal rivojlanishda poll avtomatik ishlaydi. `.env.example` yangilandi.
+2. **HTML-escape** — `esc()` (`telegramBot.js`), barcha foydalanuvchi kiritgan matnlarga qo'llandi
+   (mahsulot/xizmat/order/booking/xabar/ism/manzil; `server.js` socket, `conversations.js`, `orders.js`, `bookings.js`).
+3. **Inline keyboard** — `bj_*`/`ord_*` callback prefixlari; booking: accept/start/done/cancel/price,
+   order: accept/done/cancel; `pendingPriceInput` narx kiritish; tafsilotlar tugmalar bilan. 
+   XP: `telegramUpdateMiddleware` promise qaytarmas edi → `await` darhol yechilib testni o'ldirardi; tuzatildi.
+4. **Mijozlarga bildirishnoma** — `orders.js` `PUT /:id/status` endi xaridorga Telegram `notifyUser` yuboradi
+   (booking holati allaqachon xabar berardi) + `order_updated` socket event; `UserPage` listener qo'shildi.
+   E2E tekshirildi (confirmed → sendMessage yuboriladi).
+
+Qolgan takliflar (navbatdan tashqari, ixtiyoriy): fon holdat rasm/photo, pagination, qidiruv, bot i18n.
