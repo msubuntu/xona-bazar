@@ -2097,6 +2097,102 @@
   color: var(--mob-danger, #ef4444);
   margin-top: 5px;
 }
+.mob_input_wrap { position: relative; }
+.mob_input_wrap .mob_input { padding-right: 46px; }
+.mob_eye_btn {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: var(--mob-text-2);
+  padding: 6px;
+  cursor: pointer;
+}
+.mob_phone_wrap {
+  display: flex;
+  align-items: stretch;
+  border-radius: 12px;
+  border: 1px solid var(--mob-border);
+  background: var(--mob-bg2);
+  overflow: hidden;
+}
+.mob_phone_wrap:focus-within {
+  border-color: var(--mob-accent);
+  box-shadow: 0 0 0 3px rgba(52, 217, 123, 0.18);
+}
+.mob_phone_wrap .mob_prefix {
+  display: flex;
+  align-items: center;
+  padding: 0 6px 0 16px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--mob-text-2);
+  border-right: 1px solid var(--mob-border);
+  background: rgba(127, 127, 127, 0.08);
+}
+.mob_phone_wrap .mob_input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  box-shadow: none;
+  background: transparent;
+  border-radius: 0;
+}
+.mob_section_title {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--mob-text);
+  margin: 6px 0 12px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--mob-border);
+}
+.mob_chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.mob_chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 13px;
+  border-radius: 12px;
+  border: 1px solid var(--mob-border);
+  background: var(--mob-bg2);
+  color: var(--mob-text-2);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.15s, color 0.15s, border-color 0.15s, transform 0.1s;
+}
+.mob_chip:active { transform: scale(0.95); }
+.mob_chip_active {
+  background: var(--mob-accent);
+  border-color: var(--mob-accent);
+  color: #ffffff;
+}
+.mob_checkbox {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  font-size: 12px;
+  line-height: 1.55;
+  color: var(--mob-text-2);
+  margin-bottom: 14px;
+  cursor: pointer;
+}
+.mob_checkbox input { margin-top: 2px; accent-color: var(--mob-accent); }
+.mob_checkbox a { color: var(--mob-accent); text-decoration: underline; }
+select.mob_input { appearance: none; -webkit-appearance: none; }
 .mob_pform_row2 { display: flex; gap: 10px; }
 .mob_pform_row2 .mob_field { flex: 1; min-width: 0; }
 .mob_pform_row3 { display: flex; gap: 8px; }
