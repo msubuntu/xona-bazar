@@ -49,16 +49,30 @@ async function tgCall(method, payload = {}) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
   })
-  if (!res.ok) throw new Error(`TG ${method}: ${res.status}`)
-  return res.json()
+  const body = await res.json().catch(() => null)
+  if (!res.ok) {
+    const desc = body?.description || ''
+    throw new Error(`TG ${method}${res.status ? ' ' + res.status : ''}${desc ? ': ' + desc : ''}`)
+  }
+  return body
 }
 
 async function sendMessage(chatId, text, extra = {}) {
+  const preview = String(text).split('\n')[0].slice(0, 60)
   try {
     await tgCall('sendMessage', { chat_id: chatId, text, parse_mode: 'HTML', ...extra })
     return true
   } catch (err) {
-    console.error('Telegram sendMessage error:', err.message)
+    const msg = String(err.message || err)
+    console.error(`[sendMessage] chat ${chatId} -> "${preview}": ${msg}`)
+    if (msg.includes('parse')) {
+      try {
+        await tgCall('sendMessage', { chat_id: chatId, text: String(text), ...extra })
+        return true
+      } catch (err2) {
+        console.error('[sendMessage] plain retry ham ishlamadi:', String(err2.message || err2).slice(0, 200))
+      }
+    }
     return false
   }
 }
@@ -358,13 +372,18 @@ async function handleStatus(chatId, user) {
 }
 
 async function handleProducts(chatId, user, page = 1) {
-  const info = await buildListPage('products', user, page)
-  if (!info) {
-    await sendMessage(chatId, "Hozircha mahsulotlar yo'q.")
-    return
+  try {
+    const info = await buildListPage('products', user, page)
+    if (!info) {
+      await sendMessage(chatId, "Hozircha mahsulotlar yo'q.")
+      return
+    }
+    const kb = paginationInline('products', page, info.totalPages)
+    await sendMessage(chatId, info.text, kb ? { reply_markup: kb } : {})
+  } catch (err) {
+    console.error('[handleProducts] xato:', String(err.message || err))
+    await sendMessage(chatId, "Ro'yxatni olishda xato yuz berdi. Qayta urinib ko'ring: /productlar")
   }
-  const kb = paginationInline('products', page, info.totalPages)
-  await sendMessage(chatId, info.text, kb ? { reply_markup: kb } : {})
 }
 
 async function handleProduct(chatId, user, num) {
@@ -414,7 +433,7 @@ async function handleProduct(chatId, user, num) {
       await tgCall('sendPhoto', { chat_id: chatId, photo: urls[0], caption, parse_mode: 'HTML' })
     }
   } catch (err) {
-    console.error('Telegram product photo:', err.message)
+    console.error(`[Telegram product photo failed] product=${p._id} urls=${urls.length}: ${String(err.message || err)}`)
     await sendMessage(chatId, fullText)
   }
 }
