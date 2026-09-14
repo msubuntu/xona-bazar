@@ -608,17 +608,37 @@ async function poll() {
   setTimeout(poll, 1000)
 }
 
-export async function notifyUser(userId, text) {
+export async function notifyUser(userId, text, extra = {}) {
   if (!BOT_TOKEN) return false
   try {
     const user = await User.findById(userId).select('telegramChatId notifTelegram')
     if (!user || !user.telegramChatId || user.notifTelegram === false) return false
-    await sendMessage(user.telegramChatId, text)
+    await sendMessage(user.telegramChatId, text, extra)
     return true
   } catch (err) {
     console.error('Telegram notify error:', err.message)
     return false
   }
+}
+
+function newMessagePreview(rawText, max = 80) {
+  const out = String(rawText || '')
+    .split('\n').slice(0, 2)
+    .map(l => l.trim()).filter(Boolean)
+    .join(' / ')
+  return out.length > max ? out.slice(0, max - 3).trimEnd() + '...' : out
+}
+
+export function notifyChatMessage(userId, sender, conversationId, rawText) {
+  const name = esc((sender && (sender.name || sender.shopName)) || 'Foydalanuvchi')
+  const preview = newMessagePreview(rawText)
+  const text = `\u{1F4AC} <b>${name}</b> dan yangi xabar${preview ? `: "${esc(preview)}"` : ''}`
+  const extra = {
+    reply_markup: {
+      inline_keyboard: [[{ text: "\u{1F4AC} Suhbatga o'tish", url: `https://xona-bazar-1.onrender.com/messages?conv=${conversationId}` }]],
+    },
+  }
+  return notifyUser(userId, text, extra)
 }
 
 export async function notifyLowStock(sellerId, productName, level) {

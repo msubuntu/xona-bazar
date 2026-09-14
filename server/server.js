@@ -16,7 +16,8 @@ import sellerRoutes from './routes/sellers.js'
 import bookingRoutes from './routes/bookings.js'
 import addressRoutes from './routes/addresses.js'
 import Conversation from './models/Conversation.js'
-import { initTelegramBot, notifyUser, handleUpdate, esc } from './services/telegramBot.js'
+import User from './models/User.js'
+import { initTelegramBot, notifyChatMessage, handleUpdate } from './services/telegramBot.js'
 
 const app = express()
 
@@ -119,6 +120,8 @@ io.on('connection', (socket) => {
       conversation.lastTime = new Date()
       await conversation.save()
 
+      const senderDoc = await User.findById(senderId).select('name shopName').lean()
+
       conversation.participants.forEach(pid => {
         const uid = pid.toString()
         if (onlineUsers.has(uid)) {
@@ -128,7 +131,7 @@ io.on('connection', (socket) => {
           })
         }
         if (uid !== senderId.toString()) {
-          notifyUser(uid, `<b>💬 Yangi xabar</b>\n${esc(text)}`)
+          notifyChatMessage(uid, senderDoc, conversationId, text)
         }
       })
     } catch (err) {
