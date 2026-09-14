@@ -122,7 +122,7 @@ function bookingDetail(b) {
 function paginationInline(kind, page, totalPages) {
   const prev = page > 1 ? [{ text: '\u25C0\uFE0F', callback_data: `page:${kind}:${page - 1}` }] : []
   const next = page < totalPages ? [{ text: '\u25B6\uFE0F', callback_data: `page:${kind}:${page + 1}` }] : []
-  if (!prev.length && !next.length) return {}
+  if (!prev.length && !next.length) return null
   const mid = [{ text: `${page}/${totalPages}`, callback_data: 'page:noop:0' }]
   return { inline_keyboard: [[...prev, ...mid, ...next]] }
 }
@@ -363,7 +363,8 @@ async function handleProducts(chatId, user, page = 1) {
     await sendMessage(chatId, "Hozircha mahsulotlar yo'q.")
     return
   }
-  await sendMessage(chatId, info.text, { reply_markup: paginationInline('products', page, info.totalPages) })
+  const kb = paginationInline('products', page, info.totalPages)
+  await sendMessage(chatId, info.text, kb ? { reply_markup: kb } : {})
 }
 
 async function handleProduct(chatId, user, num) {
@@ -429,7 +430,8 @@ async function handleOrders(chatId, user, page = 1) {
     await sendMessage(chatId, user.role === 'seller' ? "Hozircha buyurtmalar yo'q." : "Hozircha so'rovlar yo'q.")
     return
   }
-  await sendMessage(chatId, info.text, { reply_markup: paginationInline(kind, page, info.totalPages) })
+  const kb = paginationInline(kind, page, info.totalPages)
+  await sendMessage(chatId, info.text, kb ? { reply_markup: kb } : {})
 }
 
 async function handleOrderDetail(chatId, user, num) {
@@ -1026,12 +1028,13 @@ registerCallback('page:', async ({ chatId, cq, arg }) => {
   const info = await buildListPage(kind, user, page)
   if (!info) return answerCallbackQuery(cq.id, "Bunday sahifa yo'q")
   try {
+    const kb = paginationInline(kind, page, info.totalPages)
     await tgCall('editMessageText', {
       chat_id: chatId,
       message_id: cq.message?.message_id,
       text: info.text,
       parse_mode: 'HTML',
-      reply_markup: paginationInline(kind, page, info.totalPages),
+      ...(kb ? { reply_markup: kb } : {}),
     })
   } catch (err) {
     console.error('Telegram editMessageText:', err.message)
