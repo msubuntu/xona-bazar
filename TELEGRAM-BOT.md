@@ -4,7 +4,7 @@
 
 | | |
 |---|---|
-| **Asosiy fayl** | `server/services/telegramBot.js` (773 qator) |
+| **Asosiy fayl** | `server/services/telegramBot.js` (965 qator) |
 | **Ishga tushiriladigan joy** | `server/server.js:31` → `initTelegramBot()` |
 | **Bot nomi** | `@XonaBazarBot` (`.env` → `BOT_USERNAME`) |
 | **Sozlama (konfig)** | `.env` → `BOT_TOKEN`, `BOT_WEBHOOK_URL`, `BOT_WEBHOOK_SECRET` |
@@ -51,18 +51,22 @@ Botda asosiy menyu tugmalari + yozma buyruqlar mavjud:
 | `/link KOD` | — | Akkauntni Telegram orqali ulash |
 | `/unlink` | — | Ulanishni bekor qilish |
 | `/holat` | 📊 Holat | Ishlar bo'yicha statistika |
-| `/productlar` | 📦 Mening mahsulotlarim | Sotuvchining mahsulotlari (20 ta) |
+| `/productlar` | 📦 Mening mahsulotlarim | Sotuvchining mahsulotlari (paginatsiya, 20 tadan) |
 | `/product 1` | — | Mahsulot tafsiloti (narx, ombor, variantlar, reyting) |
-| `/buyurtmalar` | 🛒 Buyurtmalar | Buyurtmalar / so'rovlar ro'yxati |
+| `/stock 1 150` | — | Mahsulot omborini yangilash (sotuvchi) |
+| `/buyurtmalar` | 🛒 Buyurtmalar | Buyurtmalar / so'rovlar ro'yxati (paginatsiya) |
 | `/buyurtma 1` | — | Buyurtma tafsiloti + boshqaruv tugmalari |
 | `/ishlar` | 🖼 Ishlarim | Ustaning tugatgan ishlari |
 | `/ish 1` | — | Ish tafsiloti |
+| `/broadcast matn` | — | Barcha ulangan foydalanuvchilarga xabar (faqat admin) |
 | `/yordam` | ❓ Yordam | Barcha buyruqlar ro'yxati |
 
 **Statistika (`/holat`):**
-- **Sotuvchi** uchun: mahsulotlar soni (faol/alohida), buyurtmalar (yangi/ochiq), reyting va baholar.
-- **Usta** uchun: so'rovlar, kutilyotgan, yakunlangan, bajarilgan ishlar, reyting.
+- **Sotuvchi** uchun: mahsulotlar soni (faol/alohida), buyurtmalar (yangi/ochiq), **bugungi va haftalik savdo summasi**, **top-5 mahsulotlar**, reyting va baholar.
+- **Usta** uchun: so'rovlar, kutilyotgan, yakunlangan, **bugungi/haftalik faollik**, bajarilgan ishlar, reyting.
 - Oddiy mijoz uchun: faqat sotuvchi/ustalar uchun degan xabar.
+
+**Paginatsiya:** `/productlar` va `/buyurtmalar` 20 tadadan ko'p bo'lsa, pastda **◀️ [sahifa/umumiy] ▶️** tugmalari chiqadi (`page:*` callback). `/productlar 3` / `/buyurtmalar 2` deb sahifa raqamini ham yozish mumkin.
 
 ---
 
@@ -104,11 +108,13 @@ Bot ichidan buyurtma/so'rov holatini o'zgartirish mumkin.
 | Hodisa | Foydalanuvchi | Joyi |
 |---|---|---|
 | Yangi buyurtma | Sotuvchiga | `routes/orders.js:114` |
+| **Ombor qolmog'i (STOCK_LOW_WARNING=5)** | **Sotuvchiga** | `routes/orders.js` (stock decrement) |
+| **Yangi sotuvchi/usta ro'yxatdan o'tishi** | **Admin(lar)ga** | `routes/auth.js` (register) |
 | Buyurtma holati o'zgarishi | Mijozga | `routes/orders.js:147` |
 | Yangi chat / suhbat xabari | Suhbatdoshga | `routes/conversations.js:102,148`, `server.js:131` |
 | Yangi so'rov (booking) | Ustaga | `routes/bookings.js:42` |
 | So'rov holati o'zgarishi | Mijozga | `routes/bookings.js:187,239` |
-| Narx taklifi yuborilishi | Mijozga | `services/telegramBot.js:754` |
+| Narx taklifi yuborilishi | Mijozga | `services/telegramBot.js` (order price flow) |
 | Booking holati o'zgarishi (tugma) | Mijozga | `services/telegramBot.js:695` |
 | Order holati o'zgarishi (tugma) | Mijozga | `services/telegramBot.js:731` |
 
@@ -118,12 +124,12 @@ Bot ichidan buyurtma/so'rov holatini o'zgartirish mumkin.
 
 - Webhook so'rovida `X-Telegram-Bot-Api-Secret-Token` tekshiriladi (`server.js:61-69`). Token mos kelmasa — 403.
 - Barcha matnlar `esc()` funksiyasi orqali HTML-zararsizlantiriladi (`&`, `<`, `>`, `"`).
-- Faqat ro'yxatdan o'tgan `callback` prefiks'lar ishlaydi (`bj_*`, `ord_*`).
+- Faqat ro'yxatdan o'tgan `callback` prefiks'lar ishlaydi (`bj_*`, `ord_*`, `page:*`).
 - Noma'lum buyruq/xabar — foydalanuvchiga yordam ko'rsatiladi.
 - Xabarlar uzunligi `truncate()` bilan 4000 belgiga (buyurtma tafsilotida 3500) cheklanadi.
 - `notifTelegram` o'chirilgan foydalanuvchiga xabar yuborilmaydi.
 
-**Admin funksiyalar yo'q** — bot faqat seller/usta/mijoz rollari uchun.
+**Admin:** `role: 'admin'` bo'lgan foydalanuvchi `/broadcast` bilan barcha ulanganlarga xabar yuborishi mumkin; yangi sotuvchi/usta ro'yxatdan o'tsa adminlarga avtomatik xabar boradi. Admin sayt paneli orqali emas, faqat DB/seed orqali o'rnatiladi (`scripts/seed-demo-users.js` → `demo-admin@xona.demo`).
 
 ---
 

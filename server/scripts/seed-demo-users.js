@@ -103,6 +103,11 @@ async function run() {
     verified: true, workingHours: '09:00 - 18:00',
   })
 
+  const admin = await User.create({
+    name: 'Demo Admin', email: 'demo-admin@xona.demo', phone: '+998901234503',
+    password: PASSWORD, role: 'admin',
+  })
+
   let created = 0
   for (const p of PRODUCTS) {
     const product = new Product({
@@ -121,11 +126,12 @@ async function run() {
     created++
   }
 
-  console.log(`OK: ${created} products, seller/buyer/craftsman created`)
+  console.log(`OK: ${created} products, seller/buyer/craftsman/admin created`)
   console.log('EMAILS (password: ' + PASSWORD + '):')
   console.log('  buyer     -> demo-buyer@xona.demo')
   console.log('  seller    -> demo-seller@xona.demo')
   console.log('  craftsman -> demo-craftsman@xona.demo')
+  console.log('  admin     -> demo-admin@xona.demo')
   console.log('To remove: node scripts/cleanup-test.js')
 
   await mongoose.disconnect()

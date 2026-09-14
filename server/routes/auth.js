@@ -3,7 +3,7 @@ import multer from 'multer'
 import User from '../models/User.js'
 import { generateToken, protect } from '../middleware/auth.js'
 import { rateLimit } from '../middleware/rate-limit.js'
-import { getBotConfig } from '../services/telegramBot.js'
+import { getBotConfig, notifyAdminAboutNewUser } from '../services/telegramBot.js'
 
 const upload = multer({
   storage: multer.diskStorage({
@@ -55,6 +55,8 @@ router.post('/register', rateLimit({ windowMs: 60_000, max: 10 }), async (req, r
 
     const user = await User.create(userData)
     const token = generateToken(user._id)
+
+    if (safeRole === 'seller' || safeRole === 'craftsman') notifyAdminAboutNewUser(user)
 
     res.status(201).json({ user, token })
   } catch (err) {

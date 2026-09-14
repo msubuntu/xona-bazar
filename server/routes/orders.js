@@ -2,7 +2,7 @@ import { Router } from 'express'
 import Order from '../models/Order.js'
 import Product from '../models/Product.js'
 import { protect, authorize } from '../middleware/auth.js'
-import { notifyUser, esc } from '../services/telegramBot.js'
+import { notifyUser, esc, notifyLowStock, STOCK_LOW_WARNING } from '../services/telegramBot.js'
 
 const router = Router()
 
@@ -80,9 +80,17 @@ router.post('/', protect, async (req, res) => {
           size: variant.size || '',
           sku: variant.sku || '',
         }
-        variant.stock = Math.max(0, (variant.stock != null ? variant.stock : 0) - item.qty)
+        const oldVStock = variant.stock != null ? variant.stock : 0
+        variant.stock = Math.max(0, oldVStock - item.qty)
+        if (variant.stock <= STOCK_LOW_WARNING && oldVStock > STOCK_LOW_WARNING) {
+          notifyLowStock(product.sellerId, `${product.name} (${(variant.color || variant.size || '').trim()})`, variant.stock)
+        }
       } else {
-        product.stock = Math.max(0, product.stock - item.qty)
+        const oldPStock = product.stock != null ? product.stock : 0
+        product.stock = Math.max(0, oldPStock - item.qty)
+        if (product.stock <= STOCK_LOW_WARNING && oldPStock > STOCK_LOW_WARNING) {
+          notifyLowStock(product.sellerId, product.name, product.stock)
+        }
       }
 
       orderItems.push({

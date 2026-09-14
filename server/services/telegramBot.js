@@ -33,6 +33,9 @@ const menu = {
   resize_keyboard: true,
 }
 
+const PAGE_SIZE = 20
+export const STOCK_LOW_WARNING = 5
+
 async function tgCall(method, payload = {}) {
   const res = await fetch(`${API}/${method}`, {
     method: 'POST',
@@ -46,8 +49,10 @@ async function tgCall(method, payload = {}) {
 async function sendMessage(chatId, text, extra = {}) {
   try {
     await tgCall('sendMessage', { chat_id: chatId, text, parse_mode: 'HTML', ...extra })
+    return true
   } catch (err) {
     console.error('Telegram sendMessage error:', err.message)
+    return false
   }
 }
 
@@ -67,10 +72,13 @@ const HELP_TEXT = [
   '<b>📦 /productlar</b> — mahsulotlar ro\'yxati (sotuvchi)',
   '<b>📦 /product 1</b> — mahsulot tafsiloti',
   '<b>🛒 /buyurtmalar</b> — buyurtmalar ro\'yxati',
+  '🔀 Ro\'yxatlar 20 tadan ko\'p bo\'lsa \u25C0 / \u25B6 tugmalar bilan sahifalanadi.',
   '<b>🛒 /buyurtma 1</b> — buyurtma tafsiloti',
+  '<b>📦 /stock 1 150</b> — mahsulot omborini yangilash (sotuvchi)',
   '<b>🖼 /ishlar</b> — tugatgan ishlar (usta)',
   '<b>🖼 /ish 1</b> — ish tafsiloti',
   '<b>🔗 /link KOD</b> — panel sozlamalaridan olingan kod bilan ulash',
+  '<b>📢 /broadcast matn</b> — barcha ulanganlarga xabar (admin)',
   '<b>🚫 /unlink</b> — ulanishni bekor qilish',
 ].join('\n')
 
@@ -102,6 +110,125 @@ function bookingDetail(b) {
     b.finalPrice ? `yakuniy narx: ${fmt(b.finalPrice)} so'm` : null,
     b.cancelReason ? `bekor sababi: ${esc(b.cancelReason)}` : null,
   ].filter(Boolean).join('\n'))
+}
+
+function paginationInline(kind, page, totalPages) {
+  const prev = page > 1 ? [{ text: '\u25C0\uFE0F', callback_data: `page:${kind}:${page - 1}` }] : []
+  const next = page < totalPages ? [{ text: '\u25B6\uFE0F', callback_data: `page:${kind}:${page + 1}` }] : []
+  if (!prev.length && !next.length) return {}
+  const mid = [{ text: `${page}/${totalPages}`, callback_data: 'page:noop:0' }]
+  return { inline_keyboard: [[...prev, ...mid, ...next]] }
+}
+
+export async function buildListPage(kind, user, page) {
+  const skip = (page - 1) * PAGE_SIZE
+  const pagesOf = (total) => Math.max(1, Math.ceil(total / PAGE_SIZE))
+  if (kind === 'products') {
+    const total = await Product.countDocuments({ sellerId: user._id })
+    if (!total) return null
+    const items = await Product.find({ sellerId: user._id }).sort({ createdAt: -1 }).skip(skip).limit(PAGE_SIZE)
+    if (!items.length) return null
+    const text = items.map((p, i) => productLine(p, skip + i + 1)).join('\n\n')
+    return {
+      text: `<b>\u{1F4E6} Mening mahsulotlarim (${total})</b>\n\n${truncate(text)}\n\nTafsilot: /product <sahifadagi raqam>`,
+      totalPages: pagesOf(total),
+    }
+  }
+  if (kind === 'orders' && user.role === 'seller') {
+    const total = await Order.countDocuments({ 'items.sellerId': user._id })
+    if (!total) return null
+    const items = await Order.find({ 'items.sellerId': user._id }).sort({ createdAt: -1 }).skip(skip).limit(PAGE_SIZE)
+    if (!items.length) return null
+    const text = items.map((o, i) => orderShort(o, skip + i + 1)).join('\n')
+    return {
+      text: `<b>\u{1F6D2} Buyurtmalar (${total})</b>\n\n${truncate(text)}\n\nTafsilot: /buyurtma <sahifadagi raqam>`,
+      totalPages: pagesOf(total),
+    }
+  }
+  if (kind === 'bookings' && user.role === 'craftsman') {
+    const total = await Booking.countDocuments({ craftsmanId: user._id })
+    if (!total) return null
+    const items = await Booking.find({ craftsmanId: user._id }).sort({ createdAt: -1 }).skip(skip).limit(PAGE_SIZE).populate('userId', 'name phone')
+    if (!items.length) return null
+    const text = items.map((b, i) => bookingShort(b, skip + i + 1)).join('\n')
+    return {
+      text: `<b>\u{1F6D2} So'rovlar / buyurtmalar (${total})</b>\n\n${truncate(text)}\n\nTafsilot: /buyurtma <sahifadagi raqam>`,
+      totalPages: pagesOf(total),
+    }
+  }
+  return null
+}
+
+export async function sellerSalesSince(userId, since) {
+  const res = await Order.aggregate([
+    { $match: { 'items.sellerId': userId, status: { $nin: ['cancelled'] }, createdAt: { $gte: since } } },
+    { $unwind: '$items' },
+    { $match: { 'items.sellerId': userId } },
+    { $group: { _id: null, total: { $sum: { $multiply: ['$items.price', '$items.qty'] } }, count: { $sum: 1 } } },
+  ])
+  return res[0] ? { total: res[0].total || 0, count: res[0].count || 0 } : { total: 0, count: 0 }
+}
+
+export async function topProducts(userId, limit = 5) {
+  return Order.aggregate([
+    { $match: { 'items.sellerId': userId, status: { $nin: ['cancelled'] } } },
+    { $unwind: '$items' },
+    { $match: { 'items.sellerId': userId } },
+    { $group: { _id: '$items.name', total: { $sum: { $multiply: ['$items.price', '$items.qty'] } }, qty: { $sum: '$items.qty' } } },
+    { $sort: { total: -1 } },
+    { $limit: limit },
+  ])
+}
+
+export function startOfToday() {
+  const d = new Date()
+  d.setHours(0, 0, 0, 0)
+  return d
+}
+
+async function handleStock(chatId, user, arg) {
+  if (user.role !== 'seller') {
+    await sendMessage(chatId, 'Bu buyruq faqat sotuvchilar uchun.')
+    return
+  }
+  const parts = (arg || '').trim().split(/\s+/)
+  const num = Number(parts[0])
+  const qty = Number(parts[1])
+  if (!parts.length || !Number.isInteger(num) || num < 1 || !Number.isInteger(qty) || qty < 0) {
+    await sendMessage(chatId, "Ishlatish: /stock <mahsulot_raqami> <yangi_miqdor>\nMasalan: /stock 3 150")
+    return
+  }
+  const products = await Product.find({ sellerId: user._id }).sort({ createdAt: -1 }).limit(200)
+  const p = products[num - 1]
+  if (!p) {
+    await sendMessage(chatId, "Bunday raqamli mahsulot yo'q. Ro'yxat: /productlar")
+    return
+  }
+  p.stock = qty
+  await p.save()
+  let msg = [`\u2705 <b>${esc(p.name)}</b>`, `ombor: ${p.stock} dona`].join('\n')
+  if (qty <= STOCK_LOW_WARNING) msg += `\n\u26A0\uFE0F Qoldiq past (chegara: ${STOCK_LOW_WARNING} dona) \u2014 sayt panelidan to'ldiring`
+  if (p.variants?.length) msg += "\n(ixtiyoriy: variantlar alohida, sayt panelida o'zgartiriladi)"
+  await sendMessage(chatId, msg)
+}
+
+async function handleBroadcast(chatId, user, arg) {
+  if (user.role !== 'admin') {
+    await sendMessage(chatId, '\u274C Bu buyruq faqat admin rolidagi foydalanuvchi uchun.')
+    return
+  }
+  const text = (arg || '').trim()
+  if (!text) {
+    await sendMessage(chatId, "Matn kiriting. Masalan: /broadcast Salom, Xona Bazar jamoasi!")
+    return
+  }
+  const targets = await User.find({ telegramChatId: { $ne: '', $exists: true } }).select('telegramChatId')
+  let ok = 0
+  const safeText = truncate(text, 3900)
+  for (const t of targets) {
+    if (await sendMessage(t.telegramChatId, safeText, mainMenu())) ok++
+  }
+  await sendMessage(chatId, `\u{1F4E2} Xabar yuborildi: ${ok}/${targets.length} ga`)
 }
 
 async function findUserByChatId(chatId) {
@@ -176,29 +303,43 @@ async function handleUnlink(chatId) {
 
 async function handleStatus(chatId, user) {
   if (user.role === 'seller') {
-    const [products, orders] = await Promise.all([
+    const [products, orders, active, newOrders, usersWithChat, todayS, weekS, top5] = await Promise.all([
       Product.countDocuments({ sellerId: user._id }),
       Order.countDocuments({ 'items.sellerId': user._id }),
+      Product.countDocuments({ sellerId: user._id, status: 'active' }),
+      Order.countDocuments({ 'items.sellerId': user._id, status: { $ne: 'completed' } }),
+      User.findById(user._id).select('reviewCount rating'),
+      sellerSalesSince(user._id, startOfToday()),
+      sellerSalesSince(user._id, new Date(Date.now() - 7 * 86400000)),
+      topProducts(user._id),
     ])
-    const active = await Product.countDocuments({ sellerId: user._id, status: 'active' })
-    const newOrders = await Order.countDocuments({ 'items.sellerId': user._id, status: { $ne: 'completed' } })
-    const usersWithChat = await User.findById(user._id).select('reviewCount rating')
-    await sendMessage(chatId, [
+    const lines = [
       `📊 <b>Holat</b> — ${esc(user.shopName || user.name)}`,
       `mahsulotlar: ${products} (faol: ${active})`,
       `buyurtmalar: ${orders} (yangi/ochiq: ${newOrders})`,
+      `bugungi savdo: ${fmt(todayS.total)} so'm (${todayS.count} ta pozitsiya)`,
+      `haftalik savdo: ${fmt(weekS.total)} so'm`,
       `reyting: ${usersWithChat?.rating || 0} (${usersWithChat?.reviewCount || 0} baho)`,
-    ].join('\n'))
+    ]
+    if (top5.length) {
+      lines.push('', '<b>Top-5 mahsulotlar:</b>')
+      top5.forEach((x, i) => lines.push(`${i + 1}. ${esc(x._id)} — ${fmt(x.total)} so'm (${x.qty} dona)`))
+    }
+    await sendMessage(chatId, lines.join('\n'))
   } else if (user.role === 'craftsman') {
-    const [bookings, completed] = await Promise.all([
+    const [bookings, completed, pending, weekAgo, todayAgo] = await Promise.all([
       Booking.countDocuments({ craftsmanId: user._id }),
       Booking.countDocuments({ craftsmanId: user._id, status: 'completed' }),
+      Booking.countDocuments({ craftsmanId: user._id, status: { $in: ['pending', 'quote_sent'] } }),
+      Booking.countDocuments({ craftsmanId: user._id, updatedAt: { $gte: new Date(Date.now() - 7 * 86400000) } }),
+      Booking.countDocuments({ craftsmanId: user._id, createdAt: { $gte: startOfToday() } }),
     ])
-    const pending = await Booking.countDocuments({ craftsmanId: user._id, status: { $in: ['pending', 'quote_sent'] } })
     await sendMessage(chatId, [
       `📊 <b>Holat</b> — ${esc(user.name)}`,
       `buyurtmalar (so'rovlar): ${bookings}`,
       `kutilyotgan: ${pending} | yakunlangan: ${completed}`,
+      `bugun kelgan so'rovlar: ${todayAgo}`,
+      `shu hafta yangilangan (ishlar): ${weekAgo}`,
       `bajarilgan ishlar: ${user.completedWorks?.length || 0}`,
       `reyting: ${user.rating || 0} (${user.reviewCount || 0} baho)`,
     ].join('\n'))
@@ -207,14 +348,13 @@ async function handleStatus(chatId, user) {
   }
 }
 
-async function handleProducts(chatId, user) {
-  const products = await Product.find({ sellerId: user._id }).sort({ createdAt: -1 }).limit(20)
-  if (!products.length) {
-    await sendMessage(chatId, 'Hozircha mahsulotlar yo\'q.')
+async function handleProducts(chatId, user, page = 1) {
+  const info = await buildListPage('products', user, page)
+  if (!info) {
+    await sendMessage(chatId, "Hozircha mahsulotlar yo'q.")
     return
   }
-  const text = products.map((p, i) => productLine(p, i + 1)).join('\n\n')
-  await sendMessage(chatId, `<b>📦 Mening mahsulotlarim (${products.length})</b>\n\n${truncate(text)}\n\nTafsilot uchun: <b>/product 1</b>`)
+  await sendMessage(chatId, info.text, { reply_markup: paginationInline('products', page, info.totalPages) })
 }
 
 async function handleProduct(chatId, user, num) {
@@ -244,26 +384,18 @@ async function handleProduct(chatId, user, num) {
   await sendMessage(chatId, truncate(text.join('\n')))
 }
 
-async function handleOrders(chatId, user) {
-  if (user.role === 'seller') {
-    const orders = await Order.find({ 'items.sellerId': user._id }).sort({ createdAt: -1 }).limit(20)
-    if (!orders.length) {
-      await sendMessage(chatId, 'Hozircha buyurtmalar yo\'q.')
-      return
-    }
-    const text = orders.map((o, i) => orderShort(o, i + 1)).join('\n')
-    await sendMessage(chatId, `<b>🛒 Buyurtmalar (${orders.length})</b>\n\n${truncate(text)}\n\nTafsilot uchun: <b>/buyurtma 1</b>`)
-  } else if (user.role === 'craftsman') {
-    const bookings = await Booking.find({ craftsmanId: user._id }).sort({ createdAt: -1 }).limit(20)
-    if (!bookings.length) {
-      await sendMessage(chatId, 'Hozircha so\'rovlar yo\'q.')
-      return
-    }
-    const text = bookings.map((b, i) => bookingShort(b, i + 1)).join('\n')
-    await sendMessage(chatId, `<b>🛒 So'rovlar / buyurtmalar (${bookings.length})</b>\n\n${truncate(text)}\n\nTafsilot uchun: <b>/buyurtma 1</b>`)
-  } else {
+async function handleOrders(chatId, user, page = 1) {
+  const kind = user.role === 'seller' ? 'orders' : user.role === 'craftsman' ? 'bookings' : null
+  if (!kind) {
     await sendMessage(chatId, 'Bu buyruq faqat sotuvchi va ustalar uchun.')
+    return
   }
+  const info = await buildListPage(kind, user, page)
+  if (!info) {
+    await sendMessage(chatId, user.role === 'seller' ? "Hozircha buyurtmalar yo'q." : "Hozircha so'rovlar yo'q.")
+    return
+  }
+  await sendMessage(chatId, info.text, { reply_markup: paginationInline(kind, page, info.totalPages) })
 }
 
 async function handleOrderDetail(chatId, user, num) {
@@ -412,13 +544,13 @@ async function dispatchMessage(chatId, msg) {
         await handleStatus(chatId, user)
         return
       case '/productlar':
-        await handleProducts(chatId, user)
+        await handleProducts(chatId, user, Math.max(1, Number(parsed.arg) || 1))
         return
       case '/product':
         await handleProduct(chatId, user, parsed.arg)
         return
       case '/buyurtmalar':
-        await handleOrders(chatId, user)
+        await handleOrders(chatId, user, Math.max(1, Number(parsed.arg) || 1))
         return
       case '/buyurtma':
         await handleOrderDetail(chatId, user, parsed.arg)
@@ -428,6 +560,12 @@ async function dispatchMessage(chatId, msg) {
         return
       case '/ish':
         await handleWorkDetail(chatId, user, parsed.arg)
+        return
+      case '/stock':
+        await handleStock(chatId, user, parsed.arg)
+        return
+      case '/broadcast':
+        await handleBroadcast(chatId, user, parsed.arg)
         return
       default:
         await sendMessage(chatId, 'Noma\'lum buyruq. Yordam: /yordam')
@@ -480,6 +618,36 @@ export async function notifyUser(userId, text) {
   } catch (err) {
     console.error('Telegram notify error:', err.message)
     return false
+  }
+}
+
+export async function notifyLowStock(sellerId, productName, level) {
+  return notifyUser(sellerId, [
+    `<b>⚠️ Ombor to'kilib boryapti</b>`,
+    `mahsulot: ${esc(productName)}`,
+    `qoldiq: ${level} dona`,
+    "Yangilash: /stock <raqam> <miqdor>",
+  ].join('\n'))
+}
+
+export async function notifyAdminAboutNewUser(newUser) {
+  if (!BOT_TOKEN) return
+  try {
+    const admins = await User.find({ role: 'admin' }).select('_id')
+    if (!admins.length) return
+    const roleLabel = newUser.role === 'seller' ? 'Sotuvchi' : newUser.role === 'craftsman' ? 'Usta' : ''
+    if (!roleLabel) return
+    const text = [
+      `<b>🆕 Yangi ${roleLabel} ro'yxatdan o'tdi</b>`,
+      `ism: ${esc(newUser.name)}`,
+      `email: ${esc(newUser.email)}`,
+      newUser.phone ? `telefon: ${esc(newUser.phone)}` : null,
+      newUser.shopName ? `do'kon: ${esc(newUser.shopName)}` : null,
+      newUser.services?.length ? `xizmatlar: ${esc(newUser.services.join(', '))}` : null,
+    ].filter(Boolean).join('\n')
+    for (const a of admins) notifyUser(a._id, text)
+  } catch (err) {
+    console.error('Telegram admin notify:', err.message)
   }
 }
 
@@ -770,4 +938,28 @@ for (const name of ['accept', 'cancel', 'start', 'done', 'price']) {
 for (const name of ['accept', 'cancel', 'done']) {
   registerCallback(`ord_${name}:`, (c) => handleOrderCallback(name, c.arg, c))
 }
+
+registerCallback('page:', async ({ chatId, cq, arg }) => {
+  const a = String(arg || '')
+  if (a.startsWith('noop')) return answerCallbackQuery(cq.id, '')
+  const [kind, ps, _extra] = a.split(':')
+  if (!['products', 'orders', 'bookings'].includes(kind)) return answerCallbackQuery(cq.id, '')
+  const user = await findUserByChatId(chatId)
+  if (!user) return answerCallbackQuery(cq.id, 'Akkaunt topilmadi')
+  const page = Math.max(1, Math.min(1000, Number(ps) || 1))
+  const info = await buildListPage(kind, user, page)
+  if (!info) return answerCallbackQuery(cq.id, "Bunday sahifa yo'q")
+  try {
+    await tgCall('editMessageText', {
+      chat_id: chatId,
+      message_id: cq.message?.message_id,
+      text: info.text,
+      parse_mode: 'HTML',
+      reply_markup: paginationInline(kind, page, info.totalPages),
+    })
+  } catch (err) {
+    console.error('Telegram editMessageText:', err.message)
+  }
+  await answerCallbackQuery(cq.id, '')
+})
 

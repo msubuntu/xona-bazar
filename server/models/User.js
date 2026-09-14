@@ -7,7 +7,7 @@ const userSchema = new mongoose.Schema({
   phone: { type: String, trim: true },
   password: { type: String, required: true, minlength: 6 },
   avatar: { type: String, default: '' },
-  role: { type: String, enum: ['buyer', 'seller', 'craftsman'], default: 'buyer' },
+  role: { type: String, enum: ['buyer', 'seller', 'craftsman', 'admin'], default: 'buyer' },
   shopName: { type: String, trim: true },
   location: { type: String, trim: true },
   lat: { type: Number },
