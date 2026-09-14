@@ -239,7 +239,7 @@ async function handleBroadcast(chatId, user, arg) {
 }
 
 async function findUserByChatId(chatId) {
-  return User.findOne({ telegramChatId: chatId })
+  return User.findOne({ telegramChatId: chatId }).sort({ updatedAt: -1 })
 }
 
 async function handleStart(chatId, firstName) {
@@ -265,7 +265,7 @@ async function handleStart(chatId, firstName) {
 async function handleLink(chatId, code, _firstName) {
   const codeTrim = (code || '').trim()
   if (!/^\d{6}$/.test(codeTrim)) {
-    await sendMessage(chatId, 'Kod 6 ta raqamdan iborat bo\'lishi kerak. Masalan: /link 123456')
+    await sendMessage(chatId, "Kod 6 ta raqamdan iborat bo'lishi kerak. Masalan: /link 123456")
     return
   }
   const user = await User.findOne({
@@ -273,13 +273,15 @@ async function handleLink(chatId, code, _firstName) {
     telegramLinkExpiry: { $gt: new Date() },
   })
   if (!user) {
-    await sendMessage(chatId, '❌ Kod noto\'g\'ri yoki muddati o\'tgan. Panel sozlamalaridan yangi kod oling va qayta urinib ko\'ring.')
+    await sendMessage(chatId, "❌ Kod noto'g'ri yoki muddati o'tgan. Panel sozlamalaridan yangi kod oling va qayta urinib ko'ring.")
     return
   }
+  let replaced = null
   const existing = await User.findOne({ telegramChatId: chatId, _id: { $ne: user._id } })
   if (existing) {
-    await sendMessage(chatId, '⚠️ Bu Telegram akkauntingiz boshqa akkauntga ulangan. Avval /unlink ni yuboring.')
-    return
+    replaced = { name: existing.name, role: existing.role }
+    existing.telegramChatId = ''
+    await existing.save()
   }
   user.telegramChatId = String(chatId)
   user.telegramLinkCode = undefined
@@ -288,10 +290,11 @@ async function handleLink(chatId, code, _firstName) {
 
   const roleMsg = user.role === 'seller' ? 'Sotuvchi' : user.role === 'craftsman' ? 'Usta' : 'Xona Bazar'
   await sendMessage(chatId, [
-    `✅ Ulanish muvaffaqiyatli!`,
+    '✅ Ulanish muvaffaqiyatli!',
     `Akkaunt: <b>${esc(user.name)}</b> (${roleMsg})`,
+    replaced ? `(oldingi: <b>${esc(replaced.name)}</b> akkauntidan ajratildi)` : null,
     '',
-    'Endi saytdagi yangi buyurtmalar, suhbatlar va so\'rovlar to\'g\'risidagi xabarlar shu yerga keladi.',
+    "Endi saytdagi yangi buyurtmalar, suhbatlar va so'rovlar to'g'risidagi xabarlar shu yerga keladi.",
     '',
     HELP_TEXT,
   ].join('\n'), mainMenu())
@@ -300,12 +303,11 @@ async function handleLink(chatId, code, _firstName) {
 async function handleUnlink(chatId) {
   const user = await findUserByChatId(chatId)
   if (!user) {
-    await sendMessage(chatId, 'Siz hali hech qanday akkauntga ulanmagansiz.')
+    await sendMessage(chatId, "Siz hali hech qanday akkauntga ulanmagansiz.")
     return
   }
-  user.telegramChatId = ''
-  await user.save()
-  await sendMessage(chatId, '🚫 Ulanish bekor qilindi. Qayta ulash uchun sayt sozlamalaridan yangi kod oling.')
+  await User.updateMany({ telegramChatId: chatId }, { $set: { telegramChatId: '' } })
+  await sendMessage(chatId, "🚫 Ulanish bekor qilindi. Qayta ulash uchun sayt sozlamalaridan yangi kod oling.")
 }
 
 async function handleStatus(chatId, user) {
@@ -631,7 +633,7 @@ async function poll() {
     if (data.ok && Array.isArray(data.result)) {
       for (const update of data.result) {
         pollOffset = update.update_id + 1
-        handleUpdate(update)
+        await handleUpdate(update)
       }
     }
   } catch (err) {
@@ -780,6 +782,28 @@ export const handleUpdate = telegramUpdateMiddleware(async (update) => {
     await dispatchMessage(String(update.message.chat.id), update.message)
   }
 })
+
+export async function dedupeTelegramChats() {
+  try {
+    const dups = await User.aggregate([
+      { $match: { telegramChatId: { $ne: '', $exists: true } } },
+      { $group: { _id: '$telegramChatId', ids: { $push: '$_id' } } },
+      { $match: { _id: { $ne: null }, 'ids.1': { $exists: true } } },
+    ])
+    for (const d of dups) {
+      const keep = await User.findOne({ _id: { $in: d.ids } }).sort({ updatedAt: -1 }).select('_id')
+      if (!keep) continue
+      const toClear = d.ids.filter(id => id.toString() !== keep._id.toString())
+      const r = await User.updateMany(
+        { _id: { $in: toClear }, telegramChatId: d._id },
+        { $set: { telegramChatId: '' } }
+      )
+      if (r.modifiedCount) console.log(`Telegram dedupe: chat ${d._id} -> ${keep._id} (${r.modifiedCount} cleaned)`)
+    }
+  } catch (err) {
+    console.error('Telegram dedupe xato:', err.message)
+  }
+}
 
 export async function initTelegramBot() {
   if (!BOT_TOKEN) {

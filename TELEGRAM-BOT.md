@@ -4,7 +4,7 @@
 
 | | |
 |---|---|
-| **Asosiy fayl** | `server/services/telegramBot.js` (965 qator) |
+| **Asosiy fayl** | `server/services/telegramBot.js` (1041 qator) |
 | **Ishga tushiriladigan joy** | `server/server.js:31` → `initTelegramBot()` |
 | **Bot nomi** | `@XonaBazarBot` (`.env` → `BOT_USERNAME`) |
 | **Sozlama (konfig)** | `.env` → `BOT_TOKEN`, `BOT_WEBHOOK_URL`, `BOT_WEBHOOK_SECRET` |
@@ -36,7 +36,9 @@ Bot sotuvchi/usta akkauntiga Telegram orqali ulanadi:
 
 **Nazorat qoidalari:**
 - Kod noto'g'ri yoki muddati o'tgan bo'lsa — xato xabari.
-- Bitta Telegram akkaunt bitta sayt akkauntiga ulanishi mumkin.
+- **Bitta Telegram akkaunt bitta sayt akkauntiga ulanishi mumkin.** Yangi `/link` bilan ulashda oldingi akkauntning ulanishi avtomatik bekor qilinadi (xabarda ko'rsatiladi).
+- `/unlink` — ushbu chatga ulangan **barcha** akkauntlarni ajratadi.
+- Server ishga tushganda `dedupeTelegramChats()` nostandart holatlarni tozalaydi (bir chat→bir akkaunt kafolati).
 - Kod faqat 6 ta raqam bo'lishi shart (`/^\d{6}$/`).
 
 ---

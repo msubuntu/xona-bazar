@@ -17,7 +17,7 @@ import bookingRoutes from './routes/bookings.js'
 import addressRoutes from './routes/addresses.js'
 import Conversation from './models/Conversation.js'
 import User from './models/User.js'
-import { initTelegramBot, notifyChatMessage, handleUpdate } from './services/telegramBot.js'
+import { initTelegramBot, notifyChatMessage, handleUpdate, dedupeTelegramChats } from './services/telegramBot.js'
 
 const app = express()
 
@@ -28,6 +28,7 @@ const io = new Server(server, { cors: { origin: CLIENT_URLS, credentials: true }
 const onlineUsers = new Map()
 
 await connectDB()
+await dedupeTelegramChats()
 
 initTelegramBot()
 
