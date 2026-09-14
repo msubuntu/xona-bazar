@@ -68,6 +68,8 @@ Botda asosiy menyu tugmalari + yozma buyruqlar mavjud:
 
 **Paginatsiya:** `/productlar` va `/buyurtmalar` 20 tadadan ko'p bo'lsa, pastda **◀️ [sahifa/umumiy] ▶️** tugmalari chiqadi (`page:*` callback). `/productlar 3` / `/buyurtmalar 2` deb sahifa raqamini ham yozish mumkin.
 
+**Rasmlar:** `/product 1` tafsilotida mahsulot rasmi yuboriladi — bitta rasm bo'lsa `sendPhoto`, bir nechta bo'lsa `sendMediaGroup` (sarlavha faqat birinchi rasmda). `/productlar` ro'yxati **fakrat matnli** — thumbnail yuborilmaydi (past yuklama). Rasm URL'lar asosi `PUBLIC_URL` env'idan (default: `https://xona-bazar.onrender.com`) olinadi, tashqi URL'lar o'zicha ishlatiladi.
+
 ---
 
 ## 3. Inline tugmalar orqali boshqaruv

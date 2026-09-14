@@ -24,6 +24,13 @@ export function esc(value) {
   return String(value ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
 }
 
+const IMAGE_BASE = (process.env.PUBLIC_URL || 'https://xona-bazar.onrender.com').replace(/\/+$/, '')
+function imageUrl(path) {
+  if (!path) return null
+  if (path.startsWith('http://') || path.startsWith('https://')) return path
+  return IMAGE_BASE + (path.startsWith('/') ? path : '/' + path)
+}
+
 const menu = {
   keyboard: [
     ['📊 Holat'],
@@ -381,7 +388,32 @@ async function handleProduct(chatId, user, num) {
     })
   }
   if (p.description) text.push('', esc(p.description))
-  await sendMessage(chatId, truncate(text.join('\n')))
+
+  const fullText = truncate(text.join('\n'))
+  const pool = Array.isArray(p.images) && p.images.filter(Boolean).length ? p.images : [p.image]
+  const urls = pool.filter(Boolean).map(imageUrl).filter(Boolean)
+
+  if (!urls.length) {
+    await sendMessage(chatId, fullText)
+    return
+  }
+
+  const caption = truncate(fullText, 1024)
+  try {
+    if (urls.length > 1) {
+      const media = urls.slice(0, 10).map((u, i) => ({
+        type: 'photo',
+        media: u,
+        ...(i === 0 ? { caption, parse_mode: 'HTML' } : {}),
+      }))
+      await tgCall('sendMediaGroup', { chat_id: chatId, media })
+    } else {
+      await tgCall('sendPhoto', { chat_id: chatId, photo: urls[0], caption, parse_mode: 'HTML' })
+    }
+  } catch (err) {
+    console.error('Telegram product photo:', err.message)
+    await sendMessage(chatId, fullText)
+  }
 }
 
 async function handleOrders(chatId, user, page = 1) {
