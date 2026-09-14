@@ -151,7 +151,7 @@ export async function buildListPage(kind, user, page) {
     if (!items.length) return null
     const text = items.map((p, i) => productLine(p, skip + i + 1)).join('\n\n')
     return {
-      text: `<b>\u{1F4E6} Mening mahsulotlarim (${total})</b>\n\n${truncate(text)}\n\nTafsilot: /product <sahifadagi raqam>`,
+      text: `<b>\u{1F4E6} Mening mahsulotlarim (${total})</b>\n\n${truncate(text)}\n\nTafsilot: /product &lt;sahifadagi raqam&gt;`,
       totalPages: pagesOf(total),
     }
   }
@@ -162,7 +162,7 @@ export async function buildListPage(kind, user, page) {
     if (!items.length) return null
     const text = items.map((o, i) => orderShort(o, skip + i + 1)).join('\n')
     return {
-      text: `<b>\u{1F6D2} Buyurtmalar (${total})</b>\n\n${truncate(text)}\n\nTafsilot: /buyurtma <sahifadagi raqam>`,
+      text: `<b>\u{1F6D2} Buyurtmalar (${total})</b>\n\n${truncate(text)}\n\nTafsilot: /buyurtma &lt;sahifadagi raqam&gt;`,
       totalPages: pagesOf(total),
     }
   }
@@ -173,7 +173,7 @@ export async function buildListPage(kind, user, page) {
     if (!items.length) return null
     const text = items.map((b, i) => bookingShort(b, skip + i + 1)).join('\n')
     return {
-      text: `<b>\u{1F6D2} So'rovlar / buyurtmalar (${total})</b>\n\n${truncate(text)}\n\nTafsilot: /buyurtma <sahifadagi raqam>`,
+      text: `<b>\u{1F6D2} So'rovlar / buyurtmalar (${total})</b>\n\n${truncate(text)}\n\nTafsilot: /buyurtma &lt;sahifadagi raqam&gt;`,
       totalPages: pagesOf(total),
     }
   }
