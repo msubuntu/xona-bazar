@@ -6,6 +6,7 @@ import cors from 'cors'
 import helmet from 'helmet'
 import mongoSanitize from 'express-mongo-sanitize'
 import { resolve } from 'path'
+import { mkdirSync } from 'fs'
 import connectDB from './config/db.js'
 import authRoutes from './routes/auth.js'
 import productRoutes from './routes/products.js'
@@ -18,6 +19,8 @@ import Conversation from './models/Conversation.js'
 import { initTelegramBot, notifyUser, handleUpdate, esc } from './services/telegramBot.js'
 
 const app = express()
+
+mkdirSync(resolve('uploads'), { recursive: true })
 const server = createServer(app)
 const CLIENT_URLS = (process.env.CLIENT_URL || 'http://localhost:5173').split(',').map(s => s.trim()).filter(Boolean)
 const io = new Server(server, { cors: { origin: CLIENT_URLS, credentials: true } })
@@ -85,7 +88,14 @@ app.use('/api/addresses', addressRoutes)
 app.get('/api/health', (req, res) => res.json({ status: 'ok' }))
 
 app.use((err, req, res, next) => {
-  if (err.code === 'LIMIT_FILE_SIZE') return res.status(413).json({ message: 'Fayl hajmi chegaradan oshib ketdi' })
+  if (err && err.name === 'MulterError') {
+    const msg =
+      err.code === 'LIMIT_FILE_SIZE' ? 'Fayl hajmi chegaradan oshib ketdi' :
+      err.code === 'LIMIT_FILE_COUNT' ? "Fayllar soni chegaradan oshib ketdi" :
+      err.code === 'LIMIT_UNEXPECTED_FILE' ? "Fayl maydoni noto'g'ri" :
+      'Fayl yuklashda xato yuz berdi'
+    return res.status(400).json({ message: msg })
+  }
   if (err.message?.includes('Ruxsat etilmagan fayl turi')) return res.status(400).json({ message: err.message })
   next(err)
 })

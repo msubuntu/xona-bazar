@@ -184,9 +184,11 @@ function SellerDashboard() {
     }
   }, [user])
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
-    return () => { imagePreviews.forEach(p => { if (p.startsWith('blob:')) URL.revokeObjectURL(p) }) }
-  }, [imagePreviews])
+    const urls = imagePreviews.filter(p => p.startsWith('blob:'))
+    return () => { urls.forEach(u => URL.revokeObjectURL(u)) }
+  }, [])
 
   const filteredProducts = myProducts.filter(p =>
     p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
