@@ -164,6 +164,7 @@ function Header() {
     <>
         <header>
             <div className="logo" onClick={() => { setSelectedCraftsman(null); setSelectedSeller(null); navigate(panelUser ? panelDash : '/') }} style={{ cursor: 'pointer' }}>
+                <img src="/logo.png" alt="Xona Bazar" className="logo_img" />
                 <span>Xona</span><p>Bazar</p>
             </div>
             {!panelUser && (

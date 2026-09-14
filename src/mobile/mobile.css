@@ -160,15 +160,12 @@
   white-space: nowrap;
 }
 
-.mob_logo_badge {
+.mob_logo_img {
   width: 32px;
   height: 32px;
-  border-radius: 10px;
-  display: grid;
-  place-items: center;
-  font-size: 16px;
-  background: var(--mob-accent);
-  color: #ffffff;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
 }
 
 .mob_header_right {
