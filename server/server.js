@@ -18,6 +18,7 @@ import addressRoutes from './routes/addresses.js'
 import Conversation from './models/Conversation.js'
 import User from './models/User.js'
 import { initTelegramBot, notifyChatMessage, handleUpdate, dedupeTelegramChats } from './services/telegramBot.js'
+import { watcher } from './middleware/watcher.js'
 
 const app = express()
 
@@ -82,6 +83,7 @@ app.use((req, res, next) => {
   next()
 })
 app.use(mongoSanitize({ replaceWith: '_' }))
+app.use(watcher)
 
 const BLOCKED_EXT = ['.php', '.phtml', '.php3', '.php4', '.php5', '.js', '.mjs', '.html', '.htm', '.exe', '.bat', '.cmd', '.sh', '.bash', '.py', '.rb', '.pl', '.cgi', '.asp', '.aspx', '.jsp']
 app.use('/uploads', (req, res, next) => {
