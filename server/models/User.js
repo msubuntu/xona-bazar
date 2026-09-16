@@ -33,6 +33,7 @@ const userSchema = new mongoose.Schema({
   notifPromo: { type: Boolean, default: false },
   notifTelegram: { type: Boolean, default: true },
   telegramChatId: { type: String, trim: true, default: '' },
+  telegramId: { type: String, trim: true },
   telegramLinkCode: { type: String, trim: true },
   telegramLinkExpiry: { type: Date },
   twoFactor: { type: Boolean, default: false },

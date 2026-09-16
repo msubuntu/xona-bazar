@@ -1,5 +1,6 @@
 import { Router } from 'express'
 import multer from 'multer'
+import crypto from 'crypto'
 import User from '../models/User.js'
 import { generateToken, protect } from '../middleware/auth.js'
 import { rateLimit } from '../middleware/rate-limit.js'
@@ -21,6 +22,15 @@ const upload = multer({
 })
 
 const router = Router()
+
+// Telegram Login Widget uchun bot username (public — widget render qilish uchun)
+router.get('/telegram/config', (req, res) => {
+  const bot = getBotConfig()
+  res.json({
+    botUsername: bot.username,
+    botTokenSet: bot.tokenSet,
+  })
+})
 
 const loginEmailKey = (req) => {
   const email = String(req.body?.email || '').trim().toLowerCase()
@@ -188,6 +198,64 @@ router.post('/telegram/unlink', protect, async (req, res) => {
     res.json({ success: true })
   } catch (err) {
     res.status(500).json({ message: err.message })
+  }
+})
+
+router.post('/telegram/login', rateLimit({ windowMs: 60_000, max: 30 }), async (req, res) => {
+  try {
+    const { id, first_name, last_name, username, auth_date, hash, role, shopName, location, description, lat, lng, services, experience, district, priceRange, photo_url } = req.body || {}
+    if (!id || !hash) return res.status(400).json({ message: 'Telegram ma\'lumotlari to\'liq emas' })
+
+    const secret = crypto.createHash('sha256').update(process.env.BOT_TOKEN || '').digest()
+    const dataCheckString = Object.entries({ auth_date, first_name, id, last_name, username, photo_url })
+      .filter(([, v]) => v !== undefined && v !== null && v !== '')
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([k, v]) => `${k}=${v}`)
+      .join('\n')
+
+    const hmac = crypto.createHmac('sha256', secret).update(dataCheckString).digest('hex')
+    if (hmac !== hash) return res.status(401).json({ message: 'Telegram hash noto\'g\'ri' })
+
+    const authAge = Math.floor(Date.now() / 1000) - Number(auth_date || 0)
+    if (authAge > 86400) return res.status(401).json({ message: 'Telegram session muddati tugagan. Qayta kiring' })
+
+    const telegramId = String(id)
+    let user = await User.findOne({ telegramId })
+
+    if (!user) {
+      const email = `tg_${telegramId}@xona-bazar.local`
+      const password = `${telegramId}_${crypto.randomBytes(12).toString('hex')}`
+      const ALLOWED_ROLES = ['buyer', 'seller', 'craftsman']
+      const safeRole = ALLOWED_ROLES.includes(role) ? role : 'buyer'
+      const userName = first_name || username || 'Telegram foydalanuvchi'
+      const userData = {
+        name: userName,
+        email,
+        password,
+        role: safeRole,
+        telegramId,
+        telegramChatId: telegramId,
+        avatar: photo_url || '',
+      }
+      if (safeRole === 'seller') {
+        Object.assign(userData, { shopName: shopName || '', location: location || '', description: description || '' })
+        if (lat !== undefined && lat !== '') userData.lat = Number(lat)
+        if (lng !== undefined && lng !== '') userData.lng = Number(lng)
+      } else if (safeRole === 'craftsman') {
+        Object.assign(userData, { services: services || [], experience: experience || '', district: district || '', priceRange: priceRange || '' })
+      }
+      user = await User.create(userData)
+      if (safeRole === 'seller' || safeRole === 'craftsman') notifyAdminAboutNewUser(user)
+    } else {
+      user.telegramChatId = telegramId
+      if (first_name && !user.name?.startsWith('Telegram')) user.name = user.name || first_name
+      await user.save()
+    }
+
+    const token = generateToken(user._id)
+    res.json({ user, token })
+  } catch (err) {
+    res.status(400).json({ message: err.message })
   }
 })
 

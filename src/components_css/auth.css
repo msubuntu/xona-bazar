@@ -143,6 +143,22 @@
   background: var(--border, #e5e7eb);
 }
 
+/* ── Telegram Login Widget ── */
+.auth_tg_widget {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 8px;
+  min-height: 52px;
+}
+
+.auth_tg_hint {
+  text-align: center;
+  font-size: 12px;
+  color: var(--text-muted, #9ca3af);
+  margin-bottom: 16px;
+  line-height: 1.35;
+}
+
 /* ── Form ── */
 .auth_form {
   display: flex;

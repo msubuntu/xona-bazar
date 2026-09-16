@@ -31,6 +31,8 @@ export const api = {
       if (body instanceof FormData) return request('/auth/profile', { method: 'PUT', body })
       return request('/auth/profile', { method: 'PUT', body: JSON.stringify(body) })
     },
+    telegramLogin: (body) => request('/auth/telegram/login', { method: 'POST', body: JSON.stringify(body) }),
+    telegramConfig: () => request('/auth/telegram/config'),
     telegramStatus: () => request('/auth/telegram/status'),
     telegramLinkCode: () => request('/auth/telegram/link-code', { method: 'POST', body: JSON.stringify({}) }),
     telegramUnlink: () => request('/auth/telegram/unlink', { method: 'POST', body: JSON.stringify({}) }),

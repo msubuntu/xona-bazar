@@ -57,6 +57,23 @@ export function AuthProvider({ children }) {
     }
   }, [])
 
+  const telegramLogin = useCallback(async (data) => {
+    setLoading(true)
+    setError(null)
+    try {
+      const { user, token } = await api.auth.telegramLogin(data)
+      setToken(token)
+      setUser(user)
+      setShowAuth(false)
+      return user
+    } catch (err) {
+      setError(err.message)
+      throw err
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
   const logout = useCallback(() => {
     setToken(null)
     setUser(null)
@@ -113,7 +130,7 @@ export function AuthProvider({ children }) {
   return (
     <AuthContext.Provider value={{
       user, showAuth, authMode, loading, error,
-      login, register, logout, updateProfile,
+      login, register, telegramLogin, logout, updateProfile,
       openLogin, openRegister, switchMode,
       setShowAuth, setError
     }}>
