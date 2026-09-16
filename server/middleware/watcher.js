@@ -7,7 +7,7 @@ const ALERT_COOLDOWN_MS = 60000
 const SQL_RE = /(\bunion\b|\bselect\b|\bdrop\b|\bdelete\b|insert\s+into\b|--|'\s*or\s*'|or\s+1\s*=\s*1)/i
 const XSS_RE = /<script|javascript:|onerror\s*=|onclick\s*=|onload\s*=|<\s*(img|iframe|svg|embed)|alert\s*\(/i
 const TRAVERSAL_RE = /\.\.\/|\.\.%2f|%2e%2e/i
-const PRIVATE_PATH_RE = /\/admin\b|\/\.env\b|\/config\b|\/wp-admin|\/\.git\b|\/\.ssh\b|\/server-status/i
+const PRIVATE_PATH_RE = /^\/(admin(?:[\/?.]|$)|\.env(?:\/?|$)|config(?:\/|$)|wp-admin(?:\/?|$)|\.git(?:\/|$)|\.ssh(?:\/|$)|server-status(?:\/|$))/i
 
 const hitLog = new Map()
 const alertSeen = new Map()
