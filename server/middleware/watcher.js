@@ -17,10 +17,10 @@ function esc(value) {
 }
 
 export async function notifyAdmin(text) {
-  const token = process.env.BOT_TOKEN || ''
+  const token = process.env.ADMIN_BOT_TOKEN || process.env.BOT_TOKEN || ''
   const chatId = process.env.ADMIN_CHAT_ID || ''
   if (!token || !chatId) {
-    console.warn('[watcher] notifyAdmin: BOT_TOKEN / ADMIN_CHAT_ID sozlanmagan')
+    console.warn('[watcher] notifyAdmin: ADMIN_BOT_TOKEN / ADMIN_CHAT_ID sozlanmagan')
     return false
   }
   try {
