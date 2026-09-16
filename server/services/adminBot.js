@@ -20,7 +20,11 @@ async function tgCall(method, payload = {}) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
     })
-    return await res.json()
+    const data = await res.json()
+    if (!data?.ok) {
+      console.error(`[adminBot] ${method} xato:`, res.status, data?.description || '')
+    }
+    return data
   } catch (err) {
     console.error('[adminBot] tgCall:', err.message)
     return null
