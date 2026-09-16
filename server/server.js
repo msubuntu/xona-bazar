@@ -38,10 +38,11 @@ const cspDirectives = {
   defaultSrc: ["'self'"],
   scriptSrc: isProd ? ["'self'"] : ["'self'", "'unsafe-inline'"],
   styleSrc: ["'self'", "'unsafe-inline'", "https://unpkg.com", "https://fonts.googleapis.com"],
-  imgSrc: ["'self'", "data:", "blob:", "https://*.tile.openstreetmap.org", "https://unpkg.com"],
   fontSrc: ["'self'", "https://fonts.gstatic.com"],
   connectSrc: ["'self'", "ws:", "wss:"],
   frameSrc: ["'none'"],
+  frameAncestors: ["'none'"],
+  imgSrc: ["'self'", "data:", "blob:", "https://*.tile.openstreetmap.org", "https://unpkg.com", "https://images.unsplash.com"],
   objectSrc: ["'none'"],
   baseUri: ["'self'"],
   formAction: ["'self'"],
@@ -52,6 +53,10 @@ app.use(helmet({
   contentSecurityPolicy: { directives: cspDirectives },
   crossOriginEmbedderPolicy: false,
   crossOriginResourcePolicy: { policy: 'cross-origin' },
+  hsts: { maxAge: 31536000, includeSubDomains: true, preload: true },
+  frameguard: { action: 'deny' },
+  referrerPolicy: { policy: 'no-referrer' },
+  permittedCrossDomainPolicies: { permittedPolicies: 'none' },
 }))
 app.use(cors({
   origin: (origin, cb) => cb(null, !origin || CLIENT_URLS.includes(origin)),
@@ -70,6 +75,12 @@ app.post('/telegram/webhook', (req, res) => {
   res.json({ ok: true })
 })
 
+app.use((req, res, next) => {
+  if (req.path.startsWith('/api')) {
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate')
+  }
+  next()
+})
 app.use(mongoSanitize({ replaceWith: '_' }))
 
 const BLOCKED_EXT = ['.php', '.phtml', '.php3', '.php4', '.php5', '.js', '.mjs', '.html', '.htm', '.exe', '.bat', '.cmd', '.sh', '.bash', '.py', '.rb', '.pl', '.cgi', '.asp', '.aspx', '.jsp']
