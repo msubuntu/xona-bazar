@@ -726,8 +726,28 @@ export async function notifyAdminAboutNewUser(newUser) {
   }
 }
 
-export function getBotConfig() {
-  return { tokenSet: Boolean(BOT_TOKEN), username: BOT_USERNAME || '' }
+let botUsernameCache = process.env.BOT_USERNAME || ''
+let botUsernameCacheAt = 0
+
+async function resolveBotUsername() {
+  if (!BOT_TOKEN) return BOT_USERNAME
+  if (botUsernameCache && Date.now() - botUsernameCacheAt < 3600_000) return botUsernameCache
+  try {
+    const res = await fetch(`${API}/getMe`)
+    const data = await res.json()
+    if (data?.ok && data.result?.username) {
+      botUsernameCache = data.result.username
+      botUsernameCacheAt = Date.now()
+    }
+  } catch (err) {
+    console.error('Telegram getMe xato:', err.message)
+  }
+  return botUsernameCache
+}
+
+export async function getBotConfig() {
+  const username = await resolveBotUsername()
+  return { tokenSet: Boolean(BOT_TOKEN), username: username ? `@${username.replace(/^@/, '')}` : '' }
 }
 
 // ── webhook ──

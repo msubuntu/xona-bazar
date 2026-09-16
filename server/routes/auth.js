@@ -24,8 +24,8 @@ const upload = multer({
 const router = Router()
 
 // Telegram Login Widget uchun bot username (public — widget render qilish uchun)
-router.get('/telegram/config', (req, res) => {
-  const bot = getBotConfig()
+router.get('/telegram/config', async (req, res) => {
+  const bot = await getBotConfig()
   res.json({
     botUsername: bot.username,
     botTokenSet: bot.tokenSet,
@@ -161,7 +161,7 @@ router.post('/telegram/link-code', protect, async (req, res) => {
     user.telegramLinkExpiry = new Date(Date.now() + 10 * 60 * 1000)
     await user.save()
 
-    const bot = getBotConfig()
+    const bot = await getBotConfig()
     res.json({
       code,
       expiresIn: 10,
@@ -178,7 +178,7 @@ router.post('/telegram/link-code', protect, async (req, res) => {
 
 // ── Telegram bot: ulanish holati ──
 router.get('/telegram/status', protect, async (req, res) => {
-  const bot = getBotConfig()
+  const bot = await getBotConfig()
   res.json({
     linked: Boolean(req.user.telegramChatId),
     chatId: req.user.telegramChatId || '',
