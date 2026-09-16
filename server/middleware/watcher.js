@@ -11,6 +11,34 @@ const PRIVATE_PATH_RE = /\/admin\b|\/\.env\b|\/config\b|\/wp-admin|\/\.git\b|\/\
 
 const hitLog = new Map()
 const alertSeen = new Map()
+const blockedIps = new Set()
+const alertHistory = []
+const MAX_ALERT_HISTORY = 50
+
+function pushAlert(text) {
+  alertHistory.push({ time: new Date(), text })
+  if (alertHistory.length > MAX_ALERT_HISTORY) alertHistory.shift()
+}
+
+export function isBlockedIp(ip) {
+  return ip ? blockedIps.has(ip) : false
+}
+
+export function blockIp(ip) {
+  blockedIps.add(ip)
+}
+
+export function unblockIp(ip) {
+  blockedIps.delete(ip)
+}
+
+export function getBlockedIps() {
+  return [...blockedIps]
+}
+
+export function getRecentAlerts(limit = 5) {
+  return alertHistory.slice(-limit)
+}
 
 function esc(value) {
   return String(value ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
@@ -23,6 +51,7 @@ export async function notifyAdmin(text) {
     console.warn('[watcher] notifyAdmin: ADMIN_BOT_TOKEN / ADMIN_CHAT_ID sozlanmagan')
     return false
   }
+  pushAlert(text)
   try {
     const res = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
       method: 'POST',
@@ -52,6 +81,11 @@ export function watcher(req, res, next) {
   const url = String(req.originalUrl || req.url || '')
   const method = req.method
   const source = `${method} ${url}`
+
+  if (isBlockedIp(ip)) {
+    pushAlert(`🚫 Bloklangan IP dan so'rov bloklandi: ${ip} — ${source.slice(0, 100)}`)
+    return res.status(403).json({ message: 'Access denied' })
+  }
 
   const entry = hitLog.get(ip) || { times: [] }
   entry.times = entry.times.filter(t => now - t < WINDOW_MS)

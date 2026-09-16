@@ -18,6 +18,7 @@ import addressRoutes from './routes/addresses.js'
 import Conversation from './models/Conversation.js'
 import User from './models/User.js'
 import { initTelegramBot, notifyChatMessage, handleUpdate, dedupeTelegramChats } from './services/telegramBot.js'
+import { initAdminBot } from './services/adminBot.js'
 import { watcher } from './middleware/watcher.js'
 
 const app = express()
@@ -32,6 +33,7 @@ await connectDB()
 await dedupeTelegramChats()
 
 initTelegramBot()
+initAdminBot()
 
 const isProd = process.env.NODE_ENV === 'production'
 
