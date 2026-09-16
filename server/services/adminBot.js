@@ -2,6 +2,7 @@ import 'dotenv/config'
 import { getServerMetrics } from './metrics.js'
 import { blockIp, unblockIp, getBlockedIps, getRecentAlerts, notifyAdmin } from '../middleware/watcher.js'
 import User from '../models/User.js'
+import Product from '../models/Product.js'
 import { esc } from './telegramBot.js'
 
 const ADMIN_TOKEN = process.env.ADMIN_BOT_TOKEN || ''
@@ -41,7 +42,7 @@ function menuKeyboard() {
       keyboard: [
         [{ text: '🖥 /status' }, { text: '📋 /logs' }],
         [{ text: '📢 /broadcast' }, { text: '🚫 /blocked' }],
-        [{ text: '❓ /yordam' }],
+        [{ text: '🧪 /seed-demo' }, { text: '❓ /yordam' }],
       ],
       resize_keyboard: true,
     },
@@ -55,6 +56,7 @@ const COMMANDS = [
   { command: 'block', description: '🚫 IP bloklash (masalan: /block 1.2.3.4)' },
   { command: 'unblock', description: '🔓 IP blokdan chiqarish' },
   { command: 'blocked', description: '🚫 Bloklangan IP ro\'yxati' },
+  { command: 'seed-demo', description: '🧪 Demo foydalanuvchilar va mahsulotlar' },
   { command: 'yordam', description: '❓ Yordam' },
 ]
 
@@ -69,6 +71,7 @@ async function handleHelp() {
       '/block <ip> — IP bloklash',
       '/unblock <ip> — IP blokdan chiqarish',
       '/blocked — bloklangan IP ro\'yxati',
+      '/seed-demo — demo foydalanuvchilar va mahsulotlar',
     ].join('\n'),
     menuKeyboard()
   )
@@ -163,6 +166,56 @@ async function handleBlocked() {
     : 'Hozircha bloklangan IP yo\'q.')
 }
 
+const SEED_PASSWORD = 'Demo1234'
+
+const SEED_PRODUCTS = [
+  { name: 'Demo Akril bo\'yoq Aqua (9L)', brand: 'TashAkril', category: 'paints', price: 850000, stock: 14, description: 'Fasad va ichki ishlar uchun suv bazali akril bo\'yoq. 9 litrlik chelak.' },
+  { name: 'Demo Keramik plitka 60x60', brand: 'FerganaTile', category: 'tiles', price: 45000, stock: 60, description: 'Pol uchun keramik plitka, o\'lcham 60x60 sm.' },
+  { name: 'Demo Dush kolonkasi to\'plami', brand: 'AlfaPlast', category: 'plumbing', price: 320000, stock: 9, description: 'Zanglamaydigan po\'latdan kolonna + shlang + uya.' },
+  { name: 'Demo Rozetka to\'plami (5 dona)', brand: 'Ekler', category: 'electrical', price: 60000, stock: 25, description: 'Ichki o\'rnatma rozetka, 16A. Oq rang, 5 dona.' },
+  { name: 'Demo Perforator uchi 6mm', brand: 'UstaTools', category: 'tools', price: 18000, stock: 40, description: 'SDS-plus perforator uchi, beton uchun, 6 mm.' },
+  { name: 'Demo Sement M400 50kg', brand: 'QarshiSement', category: 'building', price: 62000, stock: 120, description: 'Portlandsement M400, 50 kg qop.' },
+  { name: 'Demo Ovqatlanish stoli 1.2m', brand: 'MebelPlus', category: 'furniture', price: 480000, stock: 6, description: 'To\'rt kishilik ovqatlanish stoli, laminat yuzali.' },
+  { name: 'Demo Ichki eshik MDF', brand: 'EshikUsta', category: 'doors', price: 390000, stock: 8, description: 'Ichki eshik MDF, oq, o\'lcham 200x80 sm.' },
+]
+
+async function handleSeedDemo() {
+  await sendAdmin('⏳ Demo foydalanuvchilar yaratilmoqda...')
+  try {
+    const accounts = [
+      { name: 'Demo Do\'konchi', email: 'demo-seller@xona.demo', phone: '+998901234500', role: 'seller', shopName: 'Demo Do\'kon', location: 'Toshkent, Chilonzor', description: 'Demo do\'kon — sinab ko\'rish uchun.', verified: true },
+      { name: 'Demo Xaridor', email: 'demo-buyer@xona.demo', phone: '+998901234501', role: 'buyer' },
+      { name: 'Demo Usta', email: 'demo-craftsman@xona.demo', phone: '+998901234502', role: 'craftsman', services: ['plumber', 'electrician', 'installer'], experience: '5 yil', district: 'Toshkent, Chilonzor', verified: true },
+      { name: 'Demo Admin', email: 'demo-admin@xona.demo', phone: '+998901234503', role: 'admin' },
+    ]
+    let created = 0
+    for (const a of accounts) {
+      const existed = await User.findOne({ email: a.email })
+      if (!existed) { await User.create({ ...a, password: SEED_PASSWORD }); created++ }
+    }
+    const seller = await User.findOne({ email: 'demo-seller@xona.demo' })
+    const existingProducts = await Product.countDocuments({ sellerId: seller._id })
+    if (existingProducts === 0) {
+      for (const p of SEED_PRODUCTS) {
+        await Product.create({ ...p, sellerId: seller._id, images: ['/placeholder.png'], status: 'active', sold: Math.floor(Math.random() * 40), rating: +(3.8 + Math.random() * 1.1).toFixed(1) })
+      }
+    }
+    await sendAdmin(
+      `✅ <b>Demo tayyor!</b>\n\n` +
+      `Foydalanuvchilar: ${created} yangi\n` +
+      `Mahsulotlar: ${existingProducts === 0 ? SEED_PRODUCTS.length : existingProducts} (mavjud)\n\n` +
+      `<b>Hisoblar (parol: ${SEED_PASSWORD}):</b>\n` +
+      `• seller: demo-seller@xona.demo\n` +
+      `• buyer: demo-buyer@xona.demo\n` +
+      `• usta: demo-craftsman@xona.demo\n` +
+      `• admin: demo-admin@xona.demo`
+    )
+  } catch (err) {
+    console.error('[adminBot] seed-demo:', err)
+    await sendAdmin(`❌ Xato: ${esc(err.message)}`)
+  }
+}
+
 async function dispatch(text) {
   const clean = (text || '').trim().replace(/@\w+/, '').trim()
   if (!clean.startsWith('/')) {
@@ -193,6 +246,9 @@ async function dispatch(text) {
       break
     case '/blocked':
       await handleBlocked()
+      break
+    case '/seed-demo':
+      await handleSeedDemo()
       break
     default:
       await sendAdmin('Noma\'lum buyruq. /yordam')
