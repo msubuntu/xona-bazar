@@ -2,6 +2,8 @@ import React, { useState } from 'react'
 import { useAuth } from '../context/AuthContext.jsx'
 import { useSettings } from '../context/SettingsContext.jsx'
 import { SERVICE_TYPES, DISTRICTS } from '../data/craftsmen.js'
+import TelegramLoginButton from '../components/TelegramLoginButton.jsx'
+import '../mobile/mobile.css'
 
 let openHandler = null
 export function openLoginSheet() {
@@ -151,6 +153,8 @@ export default function MobileAuthSheet() {
 
         {mode === 'login' ? (
           <>
+            <TelegramLoginButton className="mob_tg_block" hintClassName="mob_tg_hint" />
+            <div className="mob_tg_divider"><span>yoki</span></div>
             <div className="mob_field">
               <label className="mob_label">{t('email')}</label>
               <input className="mob_input" type="email" placeholder="email@misol.uz" value={loginForm.email}

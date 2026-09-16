@@ -1,49 +1,10 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useRef, useCallback } from 'react'
 import { useAuth } from '../context/AuthContext.jsx'
 import { useSettings } from '../context/SettingsContext.jsx'
 import { SERVICE_TYPES, DISTRICTS } from '../data/craftsmen.js'
 import { getGeoErrorMessage } from '../services/geo'
-import { api } from '../services/api'
+import TelegramLoginButton from './TelegramLoginButton.jsx'
 import '../components_css/auth.css'
-
-function TelegramLoginButton() {
-  const { telegramLogin } = useAuth()
-  const containerRef = useRef(null)
-
-  useEffect(() => {
-    let cancelled = false
-    ;(async () => {
-      try {
-        const { botUsername } = await api.auth.telegramConfig()
-        if (cancelled || !botUsername || !containerRef.current) return
-
-        const clean = botUsername.replace(/^@/, '')
-        window.TelegramLoginWidget = {
-          dataOnload: () => {},
-          dataAuth: (user) => {
-            telegramLogin({ ...user, role: 'buyer' }).catch(() => {})
-          },
-        }
-        containerRef.current.innerHTML = ''
-        const script = document.createElement('script')
-        script.async = true
-        script.src = 'https://telegram.org/js/telegram-widget.js?22'
-        script.setAttribute('data-telegram-login', clean)
-        script.setAttribute('data-size', 'large')
-        script.setAttribute('data-radius', '8')
-        script.setAttribute('data-request-access', 'write')
-        script.setAttribute('data-onauth', 'TelegramLoginWidget.dataAuth(user)')
-        script.setAttribute('data-userpic', 'false')
-        containerRef.current.appendChild(script)
-      } catch (err) {
-        console.warn('Telegram login widget:', err.message)
-      }
-    })()
-    return () => { cancelled = true }
-  }, [telegramLogin])
-
-  return <div className="auth_tg_widget" ref={containerRef}></div>
-}
 
 function AuthModal() {
   const { showAuth, authMode, login, register, switchMode, setShowAuth, loading, error } = useAuth()
@@ -292,9 +253,7 @@ function AuthModal() {
           <span>{t('or')}</span>
         </div>
 
-        <TelegramLoginButton />
-
-        <div className="auth_tg_hint">Telegram orqali tez kirish — telefon raqami tasdiqlangan, parol shart emas</div>
+        <TelegramLoginButton hintClassName="auth_tg_hint_desktop" />
 
         {error && <div className="auth_error_global" style={{ color: '#ef4444', textAlign: 'center', fontSize: 13, marginBottom: 8 }}>{error}</div>}
 

@@ -919,6 +919,38 @@
 
 .mob_textarea { min-height: 90px; resize: vertical; }
 
+.mob_tg_block .auth_tg_widget {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 8px;
+  min-height: 46px;
+}
+
+.mob_tg_hint {
+  text-align: center;
+  font-size: 12px;
+  color: var(--mob-text-2, #9ca3af);
+  margin-bottom: 16px;
+  line-height: 1.35;
+}
+
+.mob_tg_divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 2px 0 16px;
+  color: var(--mob-text-2, #9ca3af);
+  font-size: 12px;
+}
+
+.mob_tg_divider::before,
+.mob_tg_divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--mob-border, #e5e7eb);
+}
+
 /* ═══════ MODAL / SHEET ═══════ */
 .mob_overlay {
   position: fixed;
