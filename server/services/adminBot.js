@@ -27,8 +27,47 @@ async function tgCall(method, payload = {}) {
   }
 }
 
-async function sendAdmin(text) {
-  await tgCall('sendMessage', { chat_id: ADMIN_CHAT_ID, text, parse_mode: 'HTML' })
+async function sendAdmin(text, extra = {}) {
+  await tgCall('sendMessage', { chat_id: ADMIN_CHAT_ID, text, parse_mode: 'HTML', ...extra })
+}
+
+function menuKeyboard() {
+  return {
+    reply_markup: {
+      keyboard: [
+        [{ text: '🖥 /status' }, { text: '📋 /logs' }],
+        [{ text: '📢 /broadcast' }, { text: '🚫 /blocked' }],
+        [{ text: '❓ /yordam' }],
+      ],
+      resize_keyboard: true,
+    },
+  }
+}
+
+const COMMANDS = [
+  { command: 'status', description: '🖥 Server va foydalanuvchilar holati' },
+  { command: 'logs', description: '📋 Oxirgi 5 ta xavfsizlik ogohlantirishi' },
+  { command: 'broadcast', description: '📢 Barcha foydalanuvchilarga xabar' },
+  { command: 'block', description: '🚫 IP bloklash (masalan: /block 1.2.3.4)' },
+  { command: 'unblock', description: '🔓 IP blokdan chiqarish' },
+  { command: 'blocked', description: '🚫 Bloklangan IP ro\'yxati' },
+  { command: 'yordam', description: '❓ Yordam' },
+]
+
+async function handleHelp() {
+  await sendAdmin(
+    [
+      '<b>Xona Bazar admin bot</b>',
+      '',
+      '/status — server va foydalanuvchilar holati',
+      '/logs — oxirgi 5 ta xavfsizlik ogohlantirishi',
+      '/broadcast <matn> — barcha foydalanuvchilarga xabar',
+      '/block <ip> — IP bloklash',
+      '/unblock <ip> — IP blokdan chiqarish',
+      '/blocked — bloklangan IP ro\'yxati',
+    ].join('\n'),
+    menuKeyboard()
+  )
 }
 
 async function handleStatus() {
@@ -114,19 +153,10 @@ async function handleUnblock(arg) {
   await sendAdmin(`✅ IP blokdan chiqarildi: <code>${esc(ip)}</code>`)
 }
 
-async function handleHelp() {
-  await sendAdmin(
-    [
-      '<b>Xona Bazar admin bot</b>',
-      '',
-      '/status — server va foydalanuvchilar holati',
-      '/logs — oxirgi 5 ta xavfsizlik ogohlantirishi',
-      '/broadcast <matn> — barcha foydalanuvchilarga xabar',
-      '/block <ip> — IP bloklash',
-      '/unblock <ip> — IP blokdan chiqarish',
-      '/blocked — bloklangan IP ro\'yxati',
-    ].join('\n')
-  )
+async function handleBlocked() {
+  await sendAdmin(getBlockedIps().length
+    ? '🚫 Bloklangan IP: ' + getBlockedIps().map(ip => `<code>${esc(ip)}</code>`).join(', ')
+    : 'Hozircha bloklangan IP yo\'q.')
 }
 
 async function dispatch(text) {
@@ -158,9 +188,7 @@ async function dispatch(text) {
       await handleUnblock(arg)
       break
     case '/blocked':
-      await sendAdmin(getBlockedIps().length
-        ? '🚫 Bloklangan IP: ' + getBlockedIps().map(ip => `<code>${esc(ip)}</code>`).join(', ')
-        : 'Hozircha bloklangan IP yo\'q.')
+      await handleBlocked()
       break
     default:
       await sendAdmin('Noma\'lum buyruq. /yordam')
@@ -203,6 +231,12 @@ export async function initAdminBot() {
   }
   if (!ADMIN_CHAT_ID) {
     console.log('Admin bot: ADMIN_CHAT_ID sozlanmagan — xabar qabul qilmaydi')
+  }
+  try {
+    await tgCall('setMyCommands', { commands: COMMANDS })
+    console.log('Admin bot: komandalar ro\'yxatdan o\'tkazildi')
+  } catch (err) {
+    console.error('Admin bot: setMyCommands xato:', err.message)
   }
   running = true
   setTimeout(poll, 500)
