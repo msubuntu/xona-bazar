@@ -14,6 +14,12 @@ import { PasswordModal, TwoFactorModal } from './SettingsModals'
 import '../components_css/seller-dashboard-v2.css'
 
 const INITIAL_FORM = { name: '', brand: '', category: 'paints', description: '', price: '', oldPrice: '', stock: '' }
+const DEFAULT_PRODUCT_FEATURES = [
+  { icon: '🏠', label: 'Do\'kondan oling', desc: 'O\'zingiz qulay vaqtda olib keting' },
+  { icon: '🔄', label: '7 kun qaytarish', desc: 'Mahsulotni qaytarish imkoniyati' },
+  { icon: '🛡️', label: 'Kafolat', desc: 'Sifat va ishonch kafolati' },
+  { icon: '💬', label: 'Maslahat', desc: 'Mutaxassislardan bepul maslahat' },
+]
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024
 const MAX_VIDEO_SIZE = 100 * 1024 * 1024
 const MIN_IMAGES = 4
@@ -82,6 +88,7 @@ function SellerDashboard() {
   const [searchQuery, setSearchQuery] = useState('')
 
   const [form, setForm] = useState(INITIAL_FORM)
+  const [features, setFeatures] = useState([])
   const [formStep, setFormStep] = useState(1)
   const [formErrors, setFormErrors] = useState({})
   const [imageFiles, setImageFiles] = useState([])
@@ -197,6 +204,7 @@ function SellerDashboard() {
 
   const resetForm = () => {
     setForm(INITIAL_FORM)
+    setFeatures(DEFAULT_PRODUCT_FEATURES)
     setFormStep(1)
     setFormErrors({})
     imagePreviews.forEach(p => { if (p.startsWith('blob:')) URL.revokeObjectURL(p) })
@@ -229,6 +237,7 @@ function SellerDashboard() {
       oldPrice: product.oldPrice || '',
       stock: product.stock || '',
     })
+    setFeatures((product.features && product.features.length > 0) ? product.features.map(f => ({ icon: f.icon || '', label: f.label || '', desc: f.desc || '' })) : DEFAULT_PRODUCT_FEATURES)
     const rawImages = (product.images && product.images.length > 0) ? product.images : (product.image ? [product.image] : [])
     const existingImages = rawImages.filter(Boolean)
     setImageFiles([])
@@ -391,6 +400,21 @@ function SellerDashboard() {
     }))
   }
 
+  // ── Features (pd_features — xaridorni jalb qiluvchi afzalliklar) ──
+  const updateFeature = (idx, key, value) => {
+    setFeatures(prev => prev.map((f, i) => i === idx ? ({ ...f, [key]: value }) : f))
+  }
+
+  const removeFeature = (idx) => {
+    setFeatures(prev => prev.filter((_, i) => i !== idx))
+  }
+
+  const addFeature = () => {
+    setFeatures(prev => [...prev, { icon: '✅', label: '', desc: '' }])
+  }
+
+  const FEATURE_ICONS = ['✅', '🏠', '🔄', '🛡️', '💬', '🚚', '📦', '💰', '⭐', '🔩', '👷', '🎨']
+
 
   const validateStep = (step) => {
     const errors = {}
@@ -398,6 +422,14 @@ function SellerDashboard() {
       if (!form.name.trim()) errors.name = t('enterProductName')
       if (!form.brand.trim()) errors.brand = t('enterBrand')
       if (!form.description.trim()) errors.description = t('enterDescription')
+      // Features: majburiy, kamida 2 ta (label to'ldirilgan holatda)
+      const validFeatures = features.filter(f => f.label && f.label.trim())
+      if (validFeatures.length < 2) {
+        errors.features = t('minFeatures2')
+      } else {
+        const emptyDesc = validFeatures.find(f => !f.desc || !f.desc.trim())
+        if (emptyDesc) errors.features = t('featureDescRequired')
+      }
     }
     if (step === 2) {
       if (hasVariants) {
@@ -440,6 +472,10 @@ function SellerDashboard() {
     fd.append('price', Number(form.price))
     if (form.oldPrice) fd.append('oldPrice', Number(form.oldPrice))
     fd.append('stock', Number(form.stock) || 0)
+    const cleanedFeatures = features
+      .filter(f => f.label && f.label.trim())
+      .map(f => ({ icon: f.icon || '', label: f.label.trim(), desc: (f.desc || '').trim() }))
+    fd.append('features', JSON.stringify(cleanedFeatures))
     imageFiles.forEach(f => fd.append('images', f))
     if (editProduct) {
       const keptExisting = imagePreviews.filter(p => !p.startsWith('blob:'))
@@ -655,6 +691,35 @@ function SellerDashboard() {
         <label>{t('shortDescription')} *</label>
         <textarea rows={3} value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} placeholder={t('shortDescriptionPlaceholder')} />
         {formErrors.description && <span className="sdv2-field-error">{formErrors.description}</span>}
+      </div>
+
+      <div className="sdv2-form-field">
+        <label>{t('productFeatures')} <span style={{ color: '#ef4444' }}>*</span> <small>(kamida 2 ta)</small></label>
+        <div className="sdv2-features-list">
+          {features.map((f, idx) => (
+            <div className="sdv2-feature-row" key={idx}>
+              <div className="sdv2-feature-icon">
+                <input type="text" value={f.icon} maxLength={4}
+                  onChange={e => updateFeature(idx, 'icon', e.target.value)}
+                  placeholder="🎁" />
+              </div>
+              <div className="sdv2-feature-inputs">
+                <input type="text" value={f.label} placeholder="Masalan: Do\'kondan oling"
+                  onChange={e => updateFeature(idx, 'label', e.target.value)} />
+                <input type="text" value={f.desc} placeholder="Qisqa tushuntirish"
+                  onChange={e => updateFeature(idx, 'desc', e.target.value)} />
+              </div>
+              <button type="button" className="sdv2-feature-remove" onClick={() => removeFeature(idx)} title={t('delete')}>
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </button>
+            </div>
+          ))}
+        </div>
+        <button type="button" className="sdv2-feature-add-btn" onClick={addFeature}>
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          {t('addFeature')}
+        </button>
+        {formErrors.features && <span className="sdv2-field-error">{formErrors.features}</span>}
       </div>
     </div>
   )

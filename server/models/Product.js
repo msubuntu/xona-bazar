@@ -19,6 +19,13 @@ const productSchema = new mongoose.Schema({
   sellerId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   description: { type: String, default: '' },
   specs: { type: Map, of: String, default: {} },
+  features: [
+    {
+      icon: { type: String, default: '' },
+      label: { type: String, required: true },
+      desc: { type: String, default: '' },
+    }
+  ],
   stock: { type: Number, default: 0 },
   sold: { type: Number, default: 0 },
   rating: { type: Number, default: 0 },

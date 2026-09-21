@@ -147,12 +147,14 @@ function ProductDetail() {
     }
   }
 
-  const features = [
+  const DEFAULT_FEATURES = [
     { icon: '🏠', label: t('pickupFree'), desc: t('pickupFreeDesc') },
     { icon: '🔄', label: t('return7'), desc: t('return7Desc') },
     { icon: '🛡️', label: t('warranty'), desc: t('warrantyDesc') },
     { icon: '💬', label: t('consultation'), desc: t('consultationDesc') },
   ]
+
+  const features = (p.features && p.features.length > 0) ? p.features : DEFAULT_FEATURES
 
   return (
     <div className="pd">

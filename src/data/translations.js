@@ -1,6 +1,10 @@
 const translations = {
   uz: {
     search: 'Qidirish... (bo\'yoq, plitka, asbob...)',
+    productFeatures: 'Mahsulot afzalliklari',
+    minFeatures2: 'Kamida 2 ta afzallik to\'ldirilishi shart',
+    featureDescRequired: 'Har bir afzallik uchun tushuntirish kiriting',
+    addFeature: 'Afzallik qo\'shish',
     login: 'Kirish',
     logout: 'Chiqish',
     profile: 'Shaxsiy kabinet',
@@ -761,6 +765,10 @@ const translations = {
   },
   ru: {
     search: 'Поиск... (краска, плитка, инструмент...)',
+    productFeatures: 'Преимущества товара',
+    minFeatures2: 'Необходимо заполнить минимум 2 преимущества',
+    featureDescRequired: 'Введите описание для каждого преимущества',
+    addFeature: 'Добавить преимущество',
     login: 'Войти',
     logout: 'Выйти',
     profile: 'Личный кабинет',
@@ -1522,6 +1530,10 @@ const translations = {
 
   en: {
     search: 'Search... (paint, tiles, tools...)',
+    productFeatures: 'Product features',
+    minFeatures2: 'At least 2 features are required',
+    featureDescRequired: 'Enter a description for each feature',
+    addFeature: 'Add feature',
     login: 'Login',
     logout: 'Logout',
     profile: 'My Profile',

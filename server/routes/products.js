@@ -43,6 +43,22 @@ function parseVariants(raw) {
   } catch { return [] }
 }
 
+// Features: min 2 ta, har biri label talab qiladi
+function parseFeatures(raw) {
+  if (!raw) return []
+  try {
+    const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw
+    if (!Array.isArray(parsed)) return []
+    return parsed
+      .filter(f => f && f.label && String(f.label).trim())
+      .map(f => ({
+        icon: f.icon ? String(f.icon).trim() : '',
+        label: String(f.label).trim(),
+        desc: f.desc ? String(f.desc).trim() : '',
+      }))
+  } catch { return [] }
+}
+
 function effectivePrice(product) {
   if (product.variants && product.variants.length > 0) {
     return Math.min(...product.variants.map(v => v.price))
@@ -152,6 +168,12 @@ router.post('/', protect, authorize('seller', 'craftsman'), upload.fields([
       return { ...v, image: imgs[0] || v.image || '', images: imgs.length ? imgs : (v.image ? [v.image] : []) }
     })
 
+    // Features: majburiy, kamida 2 ta
+    const features = parseFeatures(req.body.features)
+    if (features.length < 2) {
+      return res.status(400).json({ message: 'Kamida 2 ta xususiyat (features) qo\'shish majburiy' })
+    }
+
     const productData = {
       name, brand, category,
       price: Number(price),
@@ -163,6 +185,7 @@ router.post('/', protect, authorize('seller', 'craftsman'), upload.fields([
       images: imageFiles,
       video: videoFile,
       variants,
+      features,
     }
 
     if (variants.length > 0) {
@@ -198,6 +221,15 @@ router.put('/:id', protect, authorize('seller', 'craftsman'), upload.fields([
     if (description !== undefined) product.description = description
     if (stock !== undefined) product.stock = Number(stock)
     if (status) product.status = status
+
+    // Features: majburiy, kamida 2 ta
+    if (req.body.features !== undefined) {
+      const features = parseFeatures(req.body.features)
+      if (features.length < 2) {
+        return res.status(400).json({ message: 'Kamida 2 ta xususiyat (features) qo\'shish majburiy' })
+      }
+      product.features = features
+    }
 
     // ── Asosiy rasmlar ──
     if (files.images && files.images.length > 0) {
