@@ -1,0 +1,226 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap');
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { width:1200px; height:630px; overflow:hidden; font-family:'Inter',sans-serif; }
+  .wrap {
+    width:1200px; height:630px;
+    background:
+      radial-gradient(ellipse 1100px 500px at 15% 20%, rgba(34,197,94,0.35) 0%, transparent 70%),
+      radial-gradient(ellipse 600px 400px at 85% 80%, rgba(22,163,74,0.25) 0%, transparent 70%),
+      linear-gradient(135deg, #052e16 0%, #0a4a23 40%, #14532d 70%, #166534 100%);
+    position:relative; overflow:hidden;
+    display:flex; align-items:center; justify-content:center;
+  }
+
+  /* decorative circles */
+  .wrap::before {
+    content:''; position:absolute; width:420px; height:420px; border-radius:50%;
+    border:1.5px solid rgba(255,255,255,0.06); top:-80px; right:-60px;
+  }
+  .wrap::after {
+    content:''; position:absolute; width:300px; height:300px; border-radius:50%;
+    border:1.5px solid rgba(255,255,255,0.05); bottom:-50px; left:-40px;
+  }
+
+  .grid {
+    display:grid; grid-template-columns: 1.1fr 0.9fr;
+    gap:50px; padding:0 70px; width:100%; height:100%;
+    align-items:center; position:relative; z-index:1;
+  }
+
+  .left { display:flex; flex-direction:column; gap:22px; }
+
+  .badge {
+    display:inline-flex; align-items:center; gap:8px;
+    background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.15);
+    border-radius:30px; padding:7px 16px; width:fit-content;
+    font-size:13px; font-weight:600; color:rgba(255,255,255,0.85); backdrop-filter:blur(4px);
+  }
+  .badge .dot { width:8px; height:8px; border-radius:50%; background:#4ade80; animation:pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+  h1 {
+    font-size:52px; font-weight:900; line-height:1.1; color:#fff;
+    letter-spacing:-1.5px;
+  }
+  h1 span { color:#4ade80; }
+  h1 em { font-style:normal; color:rgba(255,255,255,0.65); font-weight:600; font-size:44px; }
+
+  .desc {
+    font-size:19px; color:rgba(255,255,255,0.65); line-height:1.55; font-weight:400;
+  }
+  .desc b { color:#fff; font-weight:600; }
+
+  .features {
+    display:flex; gap:14px; margin-top:2px;
+  }
+  .feat {
+    display:flex; align-items:center; gap:8px;
+    background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.1);
+    border-radius:12px; padding:9px 16px;
+    color:rgba(255,255,255,0.9); font-size:14px; font-weight:600;
+  }
+  .feat .icon { font-size:17px; }
+
+  .cta-row { display:flex; gap:14px; margin-top:8px; align-items:center; }
+  .cta {
+    display:inline-flex; align-items:center; gap:10px;
+    background:#22c55e; color:#fff; font-size:17px; font-weight:800;
+    padding:14px 32px; border-radius:14px;
+    box-shadow:0 0 30px rgba(34,197,94,0.4), 0 4px 16px rgba(0,0,0,0.2);
+    text-decoration:none;
+  }
+  .cta-white {
+    background:rgba(255,255,255,0.12); border:1px solid rgba(255,255,255,0.2);
+    backdrop-filter:blur(4px);
+  }
+
+  /* right side - phone mockup */
+  .right { display:flex; justify-content:center; align-items:center; position:relative; }
+
+  .phone-frame {
+    width:260px; height:520px; background:#1a1a1a;
+    border-radius:32px; border:3px solid rgba(255,255,255,0.12);
+    box-shadow:0 30px 80px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.05);
+    overflow:hidden; position:relative;
+    display:flex; flex-direction:column; padding:8px 0 0 0;
+  }
+  .phone-notch {
+    width:120px; height:26px; background:#000; margin:0 auto 0;
+    border-radius:0 0 18px 18px; position:relative; z-index:2;
+  }
+  .phone-screen {
+    flex:1; background:#fff; border-radius:0 0 28px 28px;
+    overflow:hidden; display:flex; flex-direction:column;
+    position:relative; margin:0 0 3px 0;
+  }
+  .phone-header {
+    background:linear-gradient(135deg, #22c55e, #16a34a);
+    padding:16px 14px 14px; color:#fff; position:relative;
+  }
+  .phone-header .logo-text { font-size:15px; font-weight:800; }
+  .phone-header .sub-text { font-size:10px; color:rgba(255,255,255,0.8); margin-top:2px; }
+  .phone-body { padding:10px; flex:1; }
+  .phone-card {
+    background:#f9fafb; border-radius:10px; padding:10px;
+    margin-bottom:8px; border:1px solid #e5e7eb;
+  }
+  .phone-card .img {
+    width:100%; height:50px; border-radius:8px;
+    background:linear-gradient(135deg, #e5e7eb, #d1d5db);
+    margin-bottom:8px; display:flex; align-items:center; justify-content:center;
+    font-size:20px;
+  }
+  .phone-card .name { font-size:11px; font-weight:700; color:#111; }
+  .phone-card .price { font-size:10px; color:#16a34a; font-weight:700; margin-top:2px; }
+  .phone-card .rating { font-size:9px; color:#f59e0b; margin-top:2px; }
+  .phone-bottom-bar {
+    display:flex; justify-content:space-around; padding:8px 0;
+    border-top:1px solid #e5e7eb; background:#fff;
+    border-radius:0 0 28px 28px;
+  }
+  .phone-tab { width:28px; height:28px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:14px; }
+  .phone-tab.active { background:#dcfce7; }
+
+  /* floating badges */
+  .float-badge {
+    position:absolute; background:rgba(255,255,255,0.95);
+    border-radius:16px; padding:10px 16px;
+    box-shadow:0 8px 30px rgba(0,0,0,0.15); font-size:13px; font-weight:700;
+    display:flex; align-items:center; gap:8px;
+    animation:float 3s ease-in-out infinite;
+  }
+  @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-6px)} }
+  .float-1 { top:60px; right:20px; color:#16a34a; animation-delay:0s; }
+  .float-2 { bottom:90px; right:30px; color:#2563eb; animation-delay:0.5s; }
+
+  .foot-badge {
+    position:absolute; bottom:20px; left:70px;
+    display:flex; gap:10px; align-items:center; z-index:2;
+  }
+  .foot-tag {
+    background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.12);
+    border-radius:8px; padding:5px 12px; color:rgba(255,255,255,0.6);
+    font-size:12px; font-weight:600; backdrop-filter:blur(4px);
+  }
+</style></head>
+<body>
+<div class="wrap">
+
+  <div class="grid">
+    <div class="left">
+      <div class="badge"><div class="dot"></div> yangi versiya ishga tushdi</div>
+
+      <h1>Xona <span>Bazar</span><br/><em>Tamirlash oson!</em></h1>
+
+      <p class="desc">
+        Barcha qurilish materiallari va professional ustalar<br/>
+        <b>bir platformada</b> — tez, oson va qulay
+      </p>
+
+      <div class="features">
+        <div class="feat"><span class="icon">🎨</span> Bo'yoq & plitka</div>
+        <div class="feat"><span class="icon">🔧</span> Asboblar</div>
+        <div class="feat"><span class="icon">👷</span> Ustalar</div>
+        <div class="feat"><span class="icon">📱</span> Onlayn buyurtma</div>
+      </div>
+
+      <div class="cta-row">
+        <a class="cta" href="https://t.me/xona_bazarbot">💬 Telegramda sinab ko'ring</a>
+        <a class="cta cta-white" href="https://xona-bazar-1.onrender.com">🌐 Saytga o'tish</a>
+      </div>
+    </div>
+
+    <div class="right">
+      <div class="float-badge float-1">⭐ 4.8 reyting</div>
+      <div class="float-badge float-2">🚀 Yetkazib berish</div>
+
+      <div class="phone-frame">
+        <div class="phone-notch"></div>
+        <div class="phone-screen">
+          <div class="phone-header">
+            <div class="logo-text">Xona Bazar</div>
+            <div class="sub-text">qurilish materiallari</div>
+          </div>
+          <div class="phone-body">
+            <div class="phone-card">
+              <div class="img">🎨</div>
+              <div class="name">Akril bo'yoq 9L</div>
+              <div class="price">850 000 so'm</div>
+              <div class="rating">⭐ 4.8 • 14 ta sotilgan</div>
+            </div>
+            <div class="phone-card">
+              <div class="img">📐</div>
+              <div class="name">Keramik plitka 60x60</div>
+              <div class="price">45 000 so'm</div>
+              <div class="rating">⭐ 4.9 • 60 ta sotilgan</div>
+            </div>
+            <div class="phone-card">
+              <div class="img">🔧</div>
+              <div class="name">Perforator uchi 6mm</div>
+              <div class="price">18 000 so'm</div>
+              <div class="rating">⭐ 4.7 • 40 ta sotilgan</div>
+            </div>
+          </div>
+          <div class="phone-bottom-bar">
+            <div class="phone-tab active">🏠</div>
+            <div class="phone-tab">🔍</div>
+            <div class="phone-tab">🛒</div>
+            <div class="phone-tab">👤</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="foot-badge">
+    <span class="foot-tag">🔒 Xavfsiz to'lov</span>
+    <span class="foot-tag">⚡ Tez yetkazish</span>
+    <span class="foot-tag">💯 Sifat kafolati</span>
+  </div>
+
+</div>
+</body></html>

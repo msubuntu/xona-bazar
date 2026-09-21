@@ -1,0 +1,61 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { width:1200px; height:630px; overflow:hidden; font-family:'Segoe UI',Arial,sans-serif; background:#fff; }
+  .wrap { position:relative; width:1200px; height:630px; display:flex; }
+  .left { width:62%; padding:50px 46px 36px 58px; background:
+     radial-gradient(1100px 460px at 0% 0%, #a06bff 0%, transparent 60%),
+     radial-gradient(800px 460px at 100% 100%, #5a2bd8 0%, transparent 55%),
+     linear-gradient(160deg, #6d35e6 0%, #4a1cb0 100%);
+     color:#fff; position:relative; overflow:hidden; }
+  .left::after { content:''; position:absolute; right:-130px; top:-130px; width:380px; height:380px; border-radius:50%;
+     background:rgba(255,255,255,.06); }
+  .left::before { content:''; position:absolute; right:-200px; top:110px; width:380px; height:380px; border-radius:50%;
+     background:rgba(255,255,255,.05); }
+  .brand { display:flex; align-items:center; gap:18px; }
+  .brand img { width:64px; height:64px; border-radius:50%; border:4px solid #fff; object-fit:cover; box-shadow:0 8px 24px rgba(0,0,0,.25); }
+  .brand b { font-size:36px; font-weight:800; letter-spacing:-1px; text-shadow:0 3px 12px rgba(0,0,0,.25); }
+  .brand span { display:block; font-size:19px; font-weight:600; color:#e9ddff; margin-top:2px; text-shadow:0 2px 8px rgba(0,0,0,.2); }
+  .headline { margin-top:50px; font-size:50px; font-weight:800; line-height:1.14; letter-spacing:-1.2px; text-shadow:0 4px 20px rgba(0,0,0,.3); }
+  .sub { margin-top:16px; font-size:26px; font-weight:600; color:#f0e9ff; line-height:1.4; }
+  .sub small { display:block; font-size:21px; font-weight:500; color:#cbb9ff; margin-top:4px; }
+  .divider { margin:26px 0 0; width:100px; height:5px; border-radius:3px; background:linear-gradient(90deg,#47bfff,#a06bff); }
+  .cta { margin-top:28px; display:inline-block; padding:15px 36px; border-radius:14px; background:#fff; color:#4a1cb0;
+     font-size:26px; font-weight:800; box-shadow:0 10px 30px rgba(0,0,0,.25); }
+  .cta small { display:block; font-size:18px; font-weight:600; color:#6d35e6; margin-top:3px; }
+  .right { width:38%; background:#ffffff; display:flex; flex-direction:column; justify-content:center; gap:18px; padding:40px 34px 36px 0; }
+  .photo { position:relative; width:100%; height:128px; border-radius:20px; overflow:hidden; box-shadow:0 12px 30px rgba(0,0,0,.12); border:1px solid #eee6ff; }
+  .photo img { width:100%; height:100%; object-fit:cover; }
+  .photo b { position:absolute; left:12px; bottom:10px; background:rgba(74,28,176,.92); color:#fff; font-size:15px; font-weight:700;
+     padding:6px 12px; border-radius:18px; }
+  .foot { position:absolute; left:58px; bottom:22px; display:flex; gap:24px; align-items:center; }
+  .foot a { color:#dcc9ff; font-size:20px; font-weight:700; text-decoration:none; display:flex; align-items:center; gap:9px; }
+  .foot a b { color:#fff; }
+  .foot .tg { background:rgba(255,255,255,.16); padding:7px 16px; border-radius:26px; }
+</style></head>
+<body>
+<div class="wrap">
+  <div class="left">
+    <div class="brand">
+      <img src="logo.png" alt="logo">
+      <div><b>Xona Bazar</b><span>qurilish materiallari • ustalar</span></div>
+    </div>
+    <div class="headline">Uyingizni tamirlashni<br/>boshlash vaqti keldi!</div>
+    <div class="sub">Bo'yoq, plitka, mebel va ehtiyot qismlar
+      <small>professionallardan sifatli xizmat</small>
+    </div>
+    <div class="divider"></div>
+    <div class="cta">💙 Onlayn buyurtma bering<small>telegram orqali tez kirish</small></div>
+    <div class="foot">
+      <a class="tg" href="https://t.me/xona_bazarbot"><b>@xona_bazarbot</b></a>
+      <a href="https://xona-bazar-1.onrender.com"><b>xona-bazar-1.onrender.com</b></a>
+    </div>
+  </div>
+  <div class="right">
+    <div class="photo"><img src="tile.jpg" alt=""><b>Plitka 60x60 📐</b></div>
+    <div class="photo"><img src="paint.jpg" alt=""><b>Bo'yoq 9L 🎨</b></div>
+    <div class="photo"><img src="tool.jpg" alt=""><b>Asboblar 🔧</b></div>
+  </div>
+</div>
+</body></html>
