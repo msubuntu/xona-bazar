@@ -14,7 +14,7 @@ const STATUS_CHIP = {
   delivered: 'mob_chip_green', completed: 'mob_chip_green', cancelled: 'mob_chip_red',
 }
 const STATUS_FLOW = ['pending', 'confirmed', 'completed']
-const INITIAL_FORM = { name: '', brand: '', category: 'paints', description: '', price: '', oldPrice: '', stock: '' }
+const INITIAL_FORM = { name: '', brand: '', category: 'flooring', description: '', price: '', oldPrice: '', stock: '' }
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024
 const MAX_VIDEO_SIZE = 100 * 1024 * 1024
 const MIN_IMAGES = 4
@@ -32,14 +32,14 @@ export default function MobileSellerDashboard() {
   const { dark, toggleTheme } = useTheme()
 
   const CATEGORIES = [
-    { value: 'paints', label: t('paints') },
+    { value: 'flooring', label: t('flooring') },
+    { value: 'walls', label: t('walls') },
+    { value: 'ceiling', label: t('ceiling') },
     { value: 'tiles', label: t('tiles') },
+    { value: 'doors', label: t('doors') },
     { value: 'plumbing', label: t('plumbing') },
     { value: 'electrical', label: t('electrical') },
-    { value: 'tools', label: t('tools') },
-    { value: 'building', label: t('building') },
     { value: 'furniture', label: t('furniture') },
-    { value: 'doors', label: t('doors') },
   ]
 
   const TABS = [
@@ -264,7 +264,7 @@ export default function MobileSellerDashboard() {
     setForm({
       name: product.name || '',
       brand: product.brand || '',
-      category: product.category || 'paints',
+      category: product.category || 'flooring',
       description: product.description || '',
       price: product.price || '',
       oldPrice: product.oldPrice || '',

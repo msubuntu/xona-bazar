@@ -13,7 +13,7 @@ import { REVIEWS_ENABLED } from '../data/flags'
 import { PasswordModal, TwoFactorModal } from './SettingsModals'
 import '../components_css/seller-dashboard-v2.css'
 
-const INITIAL_FORM = { name: '', brand: '', category: 'paints', description: '', price: '', oldPrice: '', stock: '' }
+const INITIAL_FORM = { name: '', brand: '', category: 'flooring', description: '', price: '', oldPrice: '', stock: '' }
 const DEFAULT_PRODUCT_FEATURES = [
   { icon: '🏠', label: 'Do\'kondan oling', desc: 'O\'zingiz qulay vaqtda olib keting' },
   { icon: '🔄', label: '7 kun qaytarish', desc: 'Mahsulotni qaytarish imkoniyati' },
@@ -30,14 +30,14 @@ function SellerDashboard() {
   const { user, updateProfile } = useAuth()
   const { t, convertPrice, lang, setLang } = useSettings()
   const CATEGORIES = [
-    { value: 'paints', label: t('catPaints') },
+    { value: 'flooring', label: t('catFlooring') },
+    { value: 'walls', label: t('catWalls') },
+    { value: 'ceiling', label: t('catCeiling') },
     { value: 'tiles', label: t('catTiles') },
+    { value: 'doors', label: t('catDoors') },
     { value: 'plumbing', label: t('catPlumbing') },
     { value: 'electrical', label: t('catElectrical') },
-    { value: 'tools', label: t('catTools') },
-    { value: 'building', label: t('catBuilding') },
     { value: 'furniture', label: t('catFurniture') },
-    { value: 'doors', label: t('catDoors') },
   ]
   const SECTIONS = [
     { id: 'overview', label: t('overview'), icon: '\u{1F4CA}' },
@@ -231,7 +231,7 @@ function SellerDashboard() {
     setForm({
       name: product.name || '',
       brand: product.brand || '',
-      category: product.category || 'paints',
+      category: product.category || 'flooring',
       description: product.description || '',
       price: product.price || '',
       oldPrice: product.oldPrice || '',

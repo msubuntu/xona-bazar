@@ -169,12 +169,12 @@ async function handleBlocked() {
 const SEED_PASSWORD = 'Demo1234'
 
 const SEED_PRODUCTS = [
-  { name: 'Demo Akril bo\'yoq Aqua (9L)', brand: 'TashAkril', category: 'paints', price: 850000, stock: 14, description: 'Fasad va ichki ishlar uchun suv bazali akril bo\'yoq. 9 litrlik chelak.' },
+  { name: 'Demo Akril bo\'yoq Aqua (9L)', brand: 'TashAkril', category: 'walls', price: 850000, stock: 14, description: 'Fasad va ichki ishlar uchun suv bazali akril bo\'yoq. 9 litrlik chelak.' },
   { name: 'Demo Keramik plitka 60x60', brand: 'FerganaTile', category: 'tiles', price: 45000, stock: 60, description: 'Pol uchun keramik plitka, o\'lcham 60x60 sm.' },
   { name: 'Demo Dush kolonkasi to\'plami', brand: 'AlfaPlast', category: 'plumbing', price: 320000, stock: 9, description: 'Zanglamaydigan po\'latdan kolonna + shlang + uya.' },
   { name: 'Demo Rozetka to\'plami (5 dona)', brand: 'Ekler', category: 'electrical', price: 60000, stock: 25, description: 'Ichki o\'rnatma rozetka, 16A. Oq rang, 5 dona.' },
-  { name: 'Demo Perforator uchi 6mm', brand: 'UstaTools', category: 'tools', price: 18000, stock: 40, description: 'SDS-plus perforator uchi, beton uchun, 6 mm.' },
-  { name: 'Demo Sement M400 50kg', brand: 'QarshiSement', category: 'building', price: 62000, stock: 120, description: 'Portlandsement M400, 50 kg qop.' },
+  { name: 'Demo Gipsokarton varag\'i 120x250', brand: 'GipBoard', category: 'ceiling', price: 95000, stock: 40, description: 'Shift va devor uchun gipsokarton varag\'i, namlikka chidamli.' },
+  { name: 'Demo Laminat SPC (2.2 m²)', brand: 'Tarkett', category: 'flooring', price: 189000, stock: 120, description: 'SPC laminat, 32-sinf, namlikka chidamli. Paket 2.2 m².' },
   { name: 'Demo Ovqatlanish stoli 1.2m', brand: 'MebelPlus', category: 'furniture', price: 480000, stock: 6, description: 'To\'rt kishilik ovqatlanish stoli, laminat yuzali.' },
   { name: 'Demo Ichki eshik MDF', brand: 'EshikUsta', category: 'doors', price: 390000, stock: 8, description: 'Ichki eshik MDF, oq, o\'lcham 200x80 sm.' },
 ]

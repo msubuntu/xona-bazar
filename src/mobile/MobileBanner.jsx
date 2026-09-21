@@ -10,7 +10,7 @@ const BANNERS = [
     subtitleKey: 'banner1Subtitle',
     badgeKey: 'banner1Badge',
     ctaKey: 'banner1Cta',
-    category: 'paints',
+    category: 'walls',
     to: null,
   },
   {
@@ -20,7 +20,7 @@ const BANNERS = [
     subtitleKey: 'banner2Subtitle',
     badgeKey: 'banner2Badge',
     ctaKey: 'banner2Cta',
-    category: 'tools',
+    category: 'electrical',
     to: null,
   },
   {

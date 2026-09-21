@@ -3,15 +3,14 @@ import '../components_css/kategories.css'
 
 const CATEGORIES = [
   { id: 'all', label: 'Hammasi', icon: '' },
-  { id: 'paints', label: 'Bo\'yoqlar', icon: '' },
-  { id: 'tiles', label: 'G\'isht va Plitka', icon: '' },
-  { id: 'plumbing', label: 'Sanitariya', icon: '' },
-  { id: 'electrical', label: 'Elektr', icon: '' },
-  { id: 'tools', label: 'Asboblar', icon: '' },
-  { id: 'building', label: 'Qurilish', icon: '' },
-  { id: 'furniture', label: 'Mebel', icon: '' },
-  { id: 'doors', label: 'Eshik va Deraza', icon: '' },
-  { id: 'landscape', label: 'Landshaft', icon: '' },
+  { id: 'flooring', label: 'Pol qoplamalari', icon: '🟫' },
+  { id: 'walls', label: 'Devor materiallari', icon: '🎨' },
+  { id: 'ceiling', label: 'Shift materiallari', icon: '⬜' },
+  { id: 'tiles', label: 'Plitka va keramika', icon: '🧱' },
+  { id: 'doors', label: 'Eshiklar', icon: '🚪' },
+  { id: 'plumbing', label: 'Santexnika', icon: '🚿' },
+  { id: 'electrical', label: 'Elektrika va yoritish', icon: '💡' },
+  { id: 'furniture', label: 'Mebel va dekor', icon: '🛋️' },
 ]
 
 function Kategories({ selected, onSelect, categories = null }) {

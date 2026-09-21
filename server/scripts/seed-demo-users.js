@@ -16,7 +16,7 @@ const PASSWORD = 'Demo1234'
 
 const PRODUCTS = [
   {
-    name: 'Demo Akril bo\'yoq Aqua (9L)', brand: 'TashAkril', category: 'paints', price: 850000,
+    name: 'Demo Akril bo\'yoq Aqua (9L)', brand: 'TashAkril', category: 'walls', price: 850000,
     description: 'Fasad va ichki ishlar uchun suv bazali akril bo\'yoq. 9 litrlik chelak.',
     stock: 14, image: IMAGES[0],
     variants: [
@@ -45,13 +45,13 @@ const PRODUCTS = [
     stock: 25, image: IMAGES[3],
   },
   {
-    name: 'Demo Perforator uchi 6mm', brand: 'UstaTools', category: 'tools', price: 18000,
-    description: 'SDS-plus perforator uchi, beton uchun, 6 mm.',
+    name: 'Demo Gipsokarton varag\'i 120x250', brand: 'GipBoard', category: 'ceiling', price: 95000,
+    description: 'Shift va devor uchun gipsokarton varag\'i, 120x250 sm, namlikka chidamli.',
     stock: 40, image: IMAGES[0],
   },
   {
-    name: 'Demo Sement M400 50kg', brand: 'QarshiSement', category: 'building', price: 62000,
-    description: 'Portlandsement M400, 50 kg qop.',
+    name: 'Demo Laminat SPC (2.2 m²)', brand: 'Tarkett', category: 'flooring', price: 189000,
+    description: 'SPC laminat, 32-sinf, namlikka chidamli. Paket 2.2 m².',
     stock: 120, image: IMAGES[1],
   },
   {
@@ -65,8 +65,8 @@ const PRODUCTS = [
     stock: 8, image: IMAGES[3],
   },
   {
-    name: 'Demo Suniy maysa 2x4m', brand: 'GreenZone', category: 'landscape', price: 189000,
-    description: 'Yopiq maysa qoplamasi, o\'lcham 2x4 m, 10 mm.',
+    name: 'Demo Parda to\'plami (tuval)', brand: 'Dekor', category: 'furniture', price: 145000,
+    description: 'Zich parda matosi, 2.8x3 m, to\'q kulrang. Kir yuvish mashinasida yuviladi.',
     stock: 12, image: IMAGES[0],
   },
 ]
