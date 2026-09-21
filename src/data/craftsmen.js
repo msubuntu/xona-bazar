@@ -1,12 +1,12 @@
 const SERVICE_TYPES = [
-  { id: 'plumber', label: 'Santexnika', icon: '🔧' },
-  { id: 'electrician', label: 'Elektrik', icon: '⚡' },
-  { id: 'painter', label: 'Bo\'yoqchi', icon: '🎨' },
-  { id: 'tiler', label: 'Kafelchik', icon: '🧱' },
-  { id: 'carpenter', label: 'Stolar', icon: '🪚' },
-  { id: 'welder', label: 'Payvandchi', icon: '🔥' },
-  { id: 'installer', label: 'O\'rnatuvchi', icon: '🔨' },
-  { id: 'cleaner', label: 'Tozalash', icon: '🧹' },
+  { id: 'plumber', label: 'Santexnik', icon: '🔧', desc: 'Quvur, unitaz, smesitel, dush' },
+  { id: 'electrician', label: 'Elektrik', icon: '⚡', desc: 'Sim, rozetka, yoritish, panel' },
+  { id: 'painter', label: 'Bo\'yoqchi va shpaklyovkachi', icon: '🎨', desc: 'Devor/shift bo\'yash, shpaklyovka' },
+  { id: 'tiler', label: 'Kafelchi', icon: '🧱', desc: 'Pol va devor plitkasi' },
+  { id: 'floorer', label: 'Pol ustasi', icon: '🪵', desc: 'Laminat, linoleum, SPC yotqizish' },
+  { id: 'drywaller', label: 'Gipsokartonchi / Shift ustasi', icon: '🛠️', desc: 'Gipsokarton, cho\'ziluvchi shift' },
+  { id: 'carpenter', label: 'Stolar va eshik ustasi', icon: '🪚', desc: 'Eshik o\'rnatish, mebel yig\'ish' },
+  { id: 'cleaner', label: 'Tozalash xizmati', icon: '🧹', desc: 'Ta\'mirdan keyin tozalash' },
 ]
 
 const DISTRICTS = [

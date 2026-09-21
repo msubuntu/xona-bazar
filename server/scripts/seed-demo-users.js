@@ -98,7 +98,7 @@ async function run() {
   const craftsman = await User.create({
     name: 'Demo Usta', email: 'demo-craftsman@xona.demo', phone: '+998901234502',
     password: PASSWORD, role: 'craftsman',
-    services: ['plumber', 'electrician', 'installer'],
+    services: ['plumber', 'electrician', 'floorer'],
     experience: '5 yil', district: 'Toshkent, Chilonzor', priceRange: '100 000 - 500 000 so\'m',
     verified: true, workingHours: '09:00 - 18:00',
   })

@@ -185,7 +185,7 @@ async function handleSeedDemo() {
     const accounts = [
       { name: 'Demo Do\'konchi', email: 'demo-seller@xona.demo', phone: '+998901234500', role: 'seller', shopName: 'Demo Do\'kon', location: 'Toshkent, Chilonzor', description: 'Demo do\'kon — sinab ko\'rish uchun.', verified: true },
       { name: 'Demo Xaridor', email: 'demo-buyer@xona.demo', phone: '+998901234501', role: 'buyer' },
-      { name: 'Demo Usta', email: 'demo-craftsman@xona.demo', phone: '+998901234502', role: 'craftsman', services: ['plumber', 'electrician', 'installer'], experience: '5 yil', district: 'Toshkent, Chilonzor', verified: true },
+      { name: 'Demo Usta', email: 'demo-craftsman@xona.demo', phone: '+998901234502', role: 'craftsman', services: ['plumber', 'electrician', 'floorer'], experience: '5 yil', district: 'Toshkent, Chilonzor', verified: true },
       { name: 'Demo Admin', email: 'demo-admin@xona.demo', phone: '+998901234503', role: 'admin' },
     ]
     let created = 0
