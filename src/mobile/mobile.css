@@ -772,6 +772,31 @@
 
 .mob_empty_title { font-size: 16px; font-weight: 700; color: var(--mob-text); margin-bottom: 6px; }
 
+.mob_didyoumean {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 12px 16px 4px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: var(--mob-bg1);
+  border: 1px solid var(--mob-accent);
+  color: var(--mob-text);
+}
+
+.mob_didyoumean button {
+  border: none;
+  background: var(--mob-accent);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 800;
+  padding: 7px 14px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
 .mob_empty_btn {
   margin-top: 16px;
   padding: 12px 22px;

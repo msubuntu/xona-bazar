@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useSearchParams, useNavigate } from 'react-router-dom'
 import { useSettings } from '../context/SettingsContext.jsx'
 import { api } from '../services/api'
 import MobileHeader from './MobileHeader.jsx'
@@ -13,6 +13,7 @@ import { CATEGORIES } from '../components/kategories.jsx'
 const PAGE_SIZE = 24
 
 export default function MobileHome() {
+  const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const { t } = useSettings()
   const [selectedCategory, setSelectedCategory] = useState('all')
@@ -24,6 +25,7 @@ export default function MobileHome() {
   const [loadingMore, setLoadingMore] = useState(false)
   const [hasMore, setHasMore] = useState(true)
   const [error, setError] = useState(null)
+  const [didYouMean, setDidYouMean] = useState(null)
   const pageRef = useRef(1)
   const debounceRef = useRef(null)
   const sentinelRef = useRef(null)
@@ -59,6 +61,7 @@ export default function MobileHome() {
       const normalized = normalize(data.products)
       pageRef.current = pageNum
       setHasMore(pageNum < data.pages)
+      setDidYouMean(data.didYouMean || null)
       setApiProducts(prev => append ? [...prev, ...normalized] : normalized)
     } catch (err) {
       console.error('Mobile home load error:', err)
@@ -85,6 +88,7 @@ export default function MobileHome() {
         if (cancelled) return
         const normalized = normalize(data.products)
         setHasMore(1 < data.pages)
+        setDidYouMean(data.didYouMean || null)
         setApiProducts(normalized)
       } catch (err) {
         if (cancelled) return
@@ -135,6 +139,15 @@ export default function MobileHome() {
       </div>
 
       <MobileBanner onExplore={setSelectedCategory} />
+
+      {didYouMean && (
+        <div className="mob_didyoumean">
+          <span style={{ opacity: 0.75, fontSize: 13 }}>
+            <strong style={{ opacity: 1 }}>"{searchQuery}"</strong>&nbsp;topilmadi. Demoqchisiz:
+          </span>
+          <button onClick={() => { setDidYouMean(null); setSearchQuery(didYouMean) }}>"{didYouMean}"</button>
+        </div>
+      )}
 
       <div className="mob_cats">
         {CATEGORIES.map(cat => (

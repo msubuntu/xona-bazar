@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
-import { Routes, Route, useSearchParams } from 'react-router-dom'
+import { Routes, Route, useSearchParams, useNavigate } from 'react-router-dom'
 import './App.css'
 import { useSettings } from './context/SettingsContext.jsx'
 import { api } from './services/api'
@@ -30,10 +30,12 @@ import useIsMobile from "./mobile/useIsMobile"
 import MobileApp from "./mobile/MobileApp"
 
 function HomePage() {
+  const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const [loading, setLoading] = useState(true)
   const [apiProducts, setApiProducts] = useState([])
   const [apiError, setApiError] = useState(null)
+  const [didYouMean, setDidYouMean] = useState(null)
   const { t } = useSettings()
   const [selectedCategory, setSelectedCategory] = useState('all')
   const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || '')
@@ -77,6 +79,7 @@ function HomePage() {
       pageRef.current = pageNum
       setPage(pageNum)
       setHasMore(pageNum < data.pages)
+      setDidYouMean(data.didYouMean || null)
       setApiProducts(prev => append ? [...prev, ...normalized] : normalized)
     } catch (err) {
       console.error('API products load error:', err)
@@ -153,6 +156,28 @@ function HomePage() {
         <h2 className="mb-4 text-xl font-bold" style={{ color: 'var(--text, #1f2937)' }}>
           {selectedCategory === 'all' ? t('popularProducts') : selectedCategory}
         </h2>
+        {didYouMean && (
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px',
+            padding: '10px 14px', borderRadius: '10px', fontSize: '14px',
+            background: 'var(--accent-bg, rgba(43,195,43,0.08))', color: 'var(--text, #1f2937)',
+            border: '1px solid var(--accent, #2bc32b)',
+          }}>
+            <span>🔍</span>
+            <span>
+              <strong>"{searchQuery}"</strong> topilmadi. Demoqchisiz:
+            </span>
+            <button
+              onClick={() => { navigate(`/?q=${encodeURIComponent(didYouMean)}`) }}
+              style={{
+                border: 'none', background: 'var(--accent, #2bc32b)', color: '#fff',
+                padding: '5px 12px', borderRadius: '7px', fontSize: '13px', fontWeight: 700, cursor: 'pointer',
+              }}
+            >
+              {didYouMean}
+            </button>
+          </div>
+        )}
         {filteredProducts.length === 0 && !loading ? (
           <div style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--text-muted, #9ca3af)' }}>
             <svg xmlns="http://www.w3.org/2000/svg" width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">

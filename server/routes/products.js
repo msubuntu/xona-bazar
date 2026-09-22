@@ -66,6 +66,56 @@ function effectivePrice(product) {
   return product.price
 }
 
+// Levenshtein masofa: 2 ta so'z qanchalik yaqinligini hisoblash.
+// "lempa" → "lampa" = 1 (bitta harf almashgan)
+function levenshtein(a, b) {
+  const m = a.length, n = b.length
+  if (!m) return n
+  if (!n) return m
+  const dp = Array.from({ length: m + 1 }, () => new Array(n + 1).fill(0))
+  for (let i = 0; i <= m; i++) dp[i][0] = i
+  for (let j = 0; j <= n; j++) dp[0][j] = j
+  for (let i = 1; i <= m; i++) {
+    for (let j = 1; j <= n; j++) {
+      const cost = a[i - 1] === b[j - 1] ? 0 : 1
+      dp[i][j] = Math.min(dp[i - 1][j] + 1, dp[i][j - 1] + 1, dp[i - 1][j - 1] + cost)
+    }
+  }
+  return dp[m][n]
+}
+
+// 0 natija bo'lganida: eng yaqin mahsulot nomi/brendini topish.
+// Masofa kichik bo'lgan (<=2) taklif qaytaradi.
+async function suggestCorrection(rawQuery, limit = 200) {
+  const q = String(rawQuery || '').trim().toLowerCase()
+  if (q.length < 3) return null
+
+  const samples = await Product.find({ status: 'active' })
+    .select('name brand')
+    .lean()
+    .limit(limit)
+
+  const queryWords = q.split(/\s+/).filter(w => w.length >= 3)
+
+  let best = null
+  let bestDist = Infinity
+  for (const p of samples) {
+    const words = `${p.name} ${p.brand}`.toLowerCase()
+      .replace(/[^a-zа-яёўқғҳ',.\s-]/gi, ' ') // o'zbekcha harflar + lotin
+      .split(/\s+/)
+    for (const qw of queryWords) {
+      for (const w of words) {
+        if (!w || Math.abs(w.length - qw.length) > 2) continue
+        const dist = levenshtein(qw, w)
+        if (dist < bestDist) { bestDist = dist; best = w }
+      }
+    }
+  }
+
+  if (best && bestDist <= 2) return best
+  return null
+}
+
 const router = Router()
 
 router.get('/', async (req, res) => {
@@ -84,11 +134,28 @@ router.get('/', async (req, res) => {
     else if (sort === 'popular') sortObj = { sold: -1 }
 
     const total = await Product.countDocuments(filter)
-    const rawProducts = await Product.find(filter)
+    let rawProducts = await Product.find(filter)
       .sort(sortObj)
       .skip((page - 1) * limit)
       .limit(Number(limit))
       .populate('sellerId', 'name avatar color shopName rating lat lng location workingHours')
+
+    let didYouMean = null
+
+    // Qidiruv hech narsa topmasa — harf xatosiga "Did you mean" taklifi
+    if (search && rawProducts.length === 0) {
+      const suggestion = await suggestCorrection(search)
+      if (suggestion && suggestion !== String(search).trim().toLowerCase()) {
+        const corrected = await Product.find({ $text: { $search: suggestion }, status: 'active' })
+          .sort({ sold: -1 })
+          .limit(Number(limit))
+          .populate('sellerId', 'name avatar color shopName rating lat lng location workingHours')
+        if (corrected.length > 0) {
+          didYouMean = suggestion
+          rawProducts = corrected
+        }
+      }
+    }
 
     const products = rawProducts.map(doc => {
       const p = doc.toObject()
@@ -96,7 +163,7 @@ router.get('/', async (req, res) => {
       return p
     })
 
-    res.json({ products, total, page: Number(page), pages: Math.ceil(total / limit) })
+    res.json({ products, total: didYouMean ? products.length : total, page: Number(page), pages: 1, didYouMean })
   } catch (err) {
     res.status(500).json({ message: err.message })
   }
