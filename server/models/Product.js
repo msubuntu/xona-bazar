@@ -47,7 +47,10 @@ const productSchema = new mongoose.Schema({
   ],
 }, { timestamps: true })
 
-productSchema.index({ name: 'text', brand: 'text' })
+productSchema.index(
+  { name: 'text', brand: 'text', description: 'text', 'features.label': 'text', 'features.desc': 'text' },
+  { name: 'product_text', weights: { name: 10, brand: 5, description: 3, 'features.label': 2, 'features.desc': 1 } }
+)
 productSchema.index({ category: 1 })
 productSchema.index({ sellerId: 1 })
 
