@@ -5,6 +5,7 @@ import { useSettings } from '../context/SettingsContext.jsx'
 import { useTheme } from '../context/ThemeContext.jsx'
 import { REVIEWS_ENABLED } from '../data/flags'
 import { subcategoriesFor } from '../data/subcategories'
+import { specFieldsFor } from '../data/category-features'
 import { api } from '../services/api'
 import MobileHeader from './MobileHeader.jsx'
 import { PasswordModal, TwoFactorModal } from '../components/SettingsModals.jsx'
@@ -97,6 +98,7 @@ export default function MobileSellerDashboard() {
   const [form, setForm] = useState(INITIAL_FORM)
   const [formStep, setFormStep] = useState(1)
   const [formErrors, setFormErrors] = useState({})
+  const [specs, setSpecs] = useState({})
   const [imageFiles, setImageFiles] = useState([])
   const [imagePreviews, setImagePreviews] = useState([])
   const [videoFile, setVideoFile] = useState(null)
@@ -244,6 +246,7 @@ export default function MobileSellerDashboard() {
     setForm(INITIAL_FORM)
     setFormStep(1)
     setFormErrors({})
+    setSpecs({})
     imagePreviews.forEach(p => { if (p.startsWith('blob:')) URL.revokeObjectURL(p) })
     setImageFiles([])
     setImagePreviews([])
@@ -276,6 +279,7 @@ export default function MobileSellerDashboard() {
       oldPrice: product.oldPrice || '',
       stock: product.stock || '',
     })
+    setSpecs((product.specs && typeof product.specs === 'object') ? Object.fromEntries(Object.entries(product.specs).filter(([, v]) => v != null && String(v).trim() !== '')) : {})
     const rawImages = (product.images && product.images.length > 0) ? product.images : (product.image ? [product.image] : [])
     setImagePreviews(rawImages.filter(Boolean))
     setVideoPreview(product.video || '')
@@ -425,6 +429,11 @@ export default function MobileSellerDashboard() {
       if (!form.description.trim()) errors.description = t('enterDescription')
     }
     if (step === 2) {
+      const specFields = specFieldsFor(form.category)
+      const missingSpecs = specFields.filter(f => f.required && !(specs[f.key] || '').trim())
+      if (missingSpecs.length > 0) {
+        errors.specs = t('specRequiredError')
+      }
       if (hasVariants) {
         if (variants.length === 0) {
           errors.variants = t('addAtLeastOneVariant')
@@ -466,6 +475,7 @@ export default function MobileSellerDashboard() {
     fd.append('description', form.description.trim())
     fd.append('price', Number(form.price))
     if (form.oldPrice) fd.append('oldPrice', Number(form.oldPrice))
+    fd.append('specs', JSON.stringify(specs))
     fd.append('stock', Number(form.stock) || 0)
     imageFiles.forEach(f => fd.append('images', f))
     if (editProduct) {
@@ -689,6 +699,27 @@ export default function MobileSellerDashboard() {
 
   const renderFormStep2 = () => (
     <div className="mob_pform_fields">
+      <div className="mob_pform_section">
+        <div className="mob_pform_section_title">
+          <span>{t('specSectionTitle')}</span>
+          <small>{t('specRequiredHint')}</small>
+        </div>
+        <div className="mob_pform_row2">
+          {specFieldsFor(form.category).map(field => (
+            <div className="mob_field" key={field.key}>
+              <label className="mob_input_label">{t(field.labelKey)}{field.required && <span style={{ color: '#ef4444' }}> *</span>}</label>
+              <input
+                className="mob_input"
+                type="text"
+                value={specs[field.key] || ''}
+                onChange={e => setSpecs(prev => ({ ...prev, [field.key]: e.target.value }))}
+                placeholder={t(field.placeholderKey)}
+              />
+            </div>
+          ))}
+        </div>
+        {formErrors.specs && <span className="mob_field_error" style={{ display: 'block' }}>{formErrors.specs}</span>}
+      </div>
       <div className="mob_pform_variant_toggle">
         <span className={`mob_toggle${hasVariants ? ' on' : ''}`} onClick={toggleHasVariants}>
           <span className="mob_toggle_thumb" />

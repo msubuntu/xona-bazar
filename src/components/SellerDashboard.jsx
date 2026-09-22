@@ -11,6 +11,7 @@ import Footer from './Footer'
 import LocationPicker from './LocationPicker'
 import { REVIEWS_ENABLED } from '../data/flags'
 import { subcategoriesFor } from '../data/subcategories'
+import { specFieldsFor } from '../data/category-features'
 import { PasswordModal, TwoFactorModal } from './SettingsModals'
 import '../components_css/seller-dashboard-v2.css'
 
@@ -90,6 +91,7 @@ function SellerDashboard() {
 
   const [form, setForm] = useState(INITIAL_FORM)
   const [features, setFeatures] = useState([])
+  const [specs, setSpecs] = useState({})
   const [formStep, setFormStep] = useState(1)
   const [formErrors, setFormErrors] = useState({})
   const [imageFiles, setImageFiles] = useState([])
@@ -206,6 +208,7 @@ function SellerDashboard() {
   const resetForm = () => {
     setForm(INITIAL_FORM)
     setFeatures(DEFAULT_PRODUCT_FEATURES)
+    setSpecs({})
     setFormStep(1)
     setFormErrors({})
     imagePreviews.forEach(p => { if (p.startsWith('blob:')) URL.revokeObjectURL(p) })
@@ -240,6 +243,7 @@ function SellerDashboard() {
       stock: product.stock || '',
     })
     setFeatures((product.features && product.features.length > 0) ? product.features.map(f => ({ icon: f.icon || '', label: f.label || '', desc: f.desc || '' })) : DEFAULT_PRODUCT_FEATURES)
+    setSpecs((product.specs && typeof product.specs === 'object') ? Object.fromEntries(Object.entries(product.specs).filter(([, v]) => v != null && String(v).trim() !== '')) : {})
     const rawImages = (product.images && product.images.length > 0) ? product.images : (product.image ? [product.image] : [])
     const existingImages = rawImages.filter(Boolean)
     setImageFiles([])
@@ -434,6 +438,11 @@ function SellerDashboard() {
       }
     }
     if (step === 2) {
+      const specFields = specFieldsFor(form.category)
+      const missingSpecs = specFields.filter(f => f.required && !(specs[f.key] || '').trim())
+      if (missingSpecs.length > 0) {
+        errors.specs = t('specRequiredError')
+      }
       if (hasVariants) {
         if (variants.length === 0) {
           errors.variants = t('addAtLeastOneVariant')
@@ -475,6 +484,7 @@ function SellerDashboard() {
     fd.append('price', Number(form.price))
     if (form.oldPrice) fd.append('oldPrice', Number(form.oldPrice))
     fd.append('stock', Number(form.stock) || 0)
+    fd.append('specs', JSON.stringify(specs))
     const cleanedFeatures = features
       .filter(f => f.label && f.label.trim())
       .map(f => ({ icon: f.icon || '', label: f.label.trim(), desc: (f.desc || '').trim() }))
@@ -742,6 +752,26 @@ function SellerDashboard() {
 
   const renderFormStep2 = () => (
     <div className="sdv2-step-fields">
+      <div className="sdv2-specs-section">
+        <div className="sdv2-specs-title">
+          <span>{t('specSectionTitle')}</span>
+          <small>{t('specRequiredHint')}</small>
+        </div>
+        <div className="sdv2-form-row">
+          {specFieldsFor(form.category).map(field => (
+            <div className="sdv2-form-field" key={field.key}>
+              <label>{t(field.labelKey)}{field.required && <span style={{ color: '#ef4444' }}> *</span>}</label>
+              <input
+                type="text"
+                value={specs[field.key] || ''}
+                onChange={e => setSpecs(prev => ({ ...prev, [field.key]: e.target.value }))}
+                placeholder={t(field.placeholderKey)}
+              />
+            </div>
+          ))}
+        </div>
+        {formErrors.specs && <span className="sdv2-field-error">{formErrors.specs}</span>}
+      </div>
       <div className="sdv2-variant-toggle">
         <label className="sdv2-toggle-label">
           <span className="sdv2-toggle-track" data-active={hasVariants} onClick={toggleHasVariants}>

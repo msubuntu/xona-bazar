@@ -70,6 +70,20 @@ function effectivePrice(product) {
   return product.price
 }
 
+// Specs (asosiy xususiyatlar): { key: "value", ... } kabi ob'ekt
+function parseSpecs(raw) {
+  if (!raw) return {}
+  try {
+    const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return {}
+    return Object.fromEntries(
+      Object.entries(parsed)
+        .filter(([, v]) => v !== undefined && v !== null && String(v).trim() !== '')
+        .map(([k, v]) => [String(k).trim(), String(v).trim()])
+    )
+  } catch { return {} }
+}
+
 // Levenshtein masofa: 2 ta so'z qanchalik yaqinligini hisoblash.
 // "lempa" → "lampa" = 1 (bitta harf almashgan)
 function levenshtein(a, b) {
@@ -164,6 +178,9 @@ router.get('/', async (req, res) => {
     const products = rawProducts.map(doc => {
       const p = doc.toObject()
       if ((!p.images || p.images.length === 0) && p.image) p.images = [p.image]
+      if (p.specs && typeof p.specs === 'object' && !Array.isArray(p.specs)) {
+        p.specs = p.specs instanceof Map ? Object.fromEntries(p.specs) : p.specs
+      }
       return p
     })
 
@@ -242,6 +259,11 @@ router.get('/:id', async (req, res) => {
       })
     }
 
+    // specs Map bo'lib kelishini oldini olish: JS obyektiga aylantirish
+    if (p.specs && typeof p.specs === 'object' && !Array.isArray(p.specs)) {
+      p.specs = p.specs instanceof Map ? Object.fromEntries(p.specs) : p.specs
+    }
+
     res.json({ product: p })
   } catch (err) {
     res.status(500).json({ message: err.message })
@@ -256,6 +278,7 @@ router.post('/', protect, authorize('seller', 'craftsman'), upload.fields([
   try {
     const { name, brand, category, subcategory, price, oldPrice, description, stock } = req.body
     const files = req.files || {}
+    const specs = parseSpecs(req.body.specs)
     const imageFiles = (files.images || []).map(f => `/uploads/${f.filename}`)
     const videoFile = (files.video && files.video[0]) ? `/uploads/${files.video[0].filename}` : ''
 
@@ -288,6 +311,7 @@ router.post('/', protect, authorize('seller', 'craftsman'), upload.fields([
       video: videoFile,
       variants,
       features,
+      specs,
     }
 
     if (variants.length > 0) {
@@ -324,6 +348,7 @@ router.put('/:id', protect, authorize('seller', 'craftsman'), upload.fields([
     if (description !== undefined) product.description = description
     if (stock !== undefined) product.stock = Number(stock)
     if (status) product.status = status
+    if (req.body.specs !== undefined) product.specs = parseSpecs(req.body.specs)
 
     // Features: majburiy, kamida 2 ta
     if (req.body.features !== undefined) {

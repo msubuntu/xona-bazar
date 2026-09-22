@@ -13,6 +13,7 @@ import LoginPrompt from './LoginPrompt'
 import ReviewForm from './ReviewForm'
 import StoreMap from './StoreMap'
 import { SUBCATEGORIES } from '../data/subcategories'
+import { specFieldsFor } from '../data/category-features'
 import { REVIEWS_ENABLED } from '../data/flags'
 import NearbyStores from './NearbyStores'
 import '../components_css/productdetail.css'
@@ -427,6 +428,11 @@ function ProductDetail() {
               <table className="pd_specs">
                 <tbody>
                   <tr><td>{t('brand')}</td><td>{p.brand}</td></tr>
+                  {specFieldsFor(p.category).map(field => {
+                    const value = p.specs && typeof p.specs === 'object' ? p.specs[field.key] : ''
+                    if (!value || !String(value).trim()) return null
+                    return <tr key={field.key}><td>{t(field.labelKey)}</td><td>{String(value)}</td></tr>
+                  })}
                   <tr><td>{t('productName')}</td><td>{p.name}</td></tr>
                   {REVIEWS_ENABLED && <><tr><td>{t('rating')}</td><td>{p.rating} / 5</td></tr><tr><td>{t('reviewsCount')}</td><td>{p.reviews.length.toLocaleString()}</td></tr></>}
                   <tr><td>{t('price')}</td><td>{convertPrice(displayPrice)}</td></tr>
