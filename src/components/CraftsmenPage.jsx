@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useSettings } from '../context/SettingsContext.jsx'
 import { useSeller } from '../context/SellerContext.jsx'
@@ -17,6 +17,7 @@ function CraftsmenPage() {
   const [serviceFilter, setServiceFilter] = useState('all')
   const [districtFilter, setDistrictFilter] = useState('all')
   const [localSearch, setLocalSearch] = useState(searchParams.get('q') || '')
+  const [debouncedSearch, setDebouncedSearch] = useState(searchParams.get('q') || '')
   const [sort, setSort] = useState(REVIEWS_ENABLED ? 'rating' : 'experience')
   const [apiCraftsmen, setApiCraftsmen] = useState([])
   const [loading, setLoading] = useState(true)
@@ -24,16 +25,27 @@ function CraftsmenPage() {
 
   useEffect(() => {
     setLocalSearch(searchParams.get('q') || '')
+    setDebouncedSearch(searchParams.get('q') || '')
   }, [searchParams])
+
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(localSearch), 300)
+    return () => clearTimeout(timer)
+  }, [localSearch])
 
   useEffect(() => {
     let cancelled = false
     setLoading(true)
-    api.sellers.list({ role: 'craftsman' })
+    setApiError(null)
+    const params = { role: 'craftsman' }
+    if (serviceFilter !== 'all') params.service = serviceFilter
+    if (districtFilter !== 'all') params.district = districtFilter
+    if (debouncedSearch.trim()) params.search = debouncedSearch.trim()
+    if (sort) params.sort = sort
+    api.sellers.list(params)
       .then(data => {
         if (cancelled) return
-        const normalized = (data.sellers || []).map(normalizeCraftsman)
-        setApiCraftsmen(normalized)
+        setApiCraftsmen((data.sellers || []).map(normalizeCraftsman))
         setApiError(null)
       })
       .catch(err => {
@@ -43,56 +55,14 @@ function CraftsmenPage() {
       })
       .finally(() => { if (!cancelled) setLoading(false) })
     return () => { cancelled = true }
-  }, [])
+  }, [serviceFilter, districtFilter, debouncedSearch, sort])
 
-  const allCraftsmen = apiCraftsmen
-
-  const matchCraftsman = (c, q) => {
-    const services = (c.services || []).map(sId => {
-      const st = SERVICE_TYPES.find(s => s.id === sId)
-      return (st ? st.label : sId).toLowerCase()
-    }).join(' ')
-    return (c.name || '').toLowerCase().includes(q)
-      || (c.description || '').toLowerCase().includes(q)
-      || (c.district || '').toLowerCase().includes(q)
-      || services.includes(q)
-  }
-
-  const filtered = useMemo(() => {
-    let result = [...allCraftsmen]
-
-    if (serviceFilter !== 'all') {
-      result = result.filter(c => c.services.includes(serviceFilter))
-    }
-
-    if (districtFilter !== 'all') {
-      result = result.filter(c => c.district === districtFilter)
-    }
-
-    const q = localSearch.trim().toLowerCase()
-    if (q) {
-      result = result.filter(c => matchCraftsman(c, q))
-    }
-
-    switch (sort) {
-      case 'rating': result.sort((a, b) => (b.rating || 0) - (a.rating || 0)); break
-      case 'reviews': result.sort((a, b) => (b.reviewCount || 0) - (a.reviewCount || 0)); break
-      case 'experience': result.sort((a, b) => parseInt(b.experience) - parseInt(a.experience)); break
-      case 'jobs': result.sort((a, b) => (b.completedJobs || 0) - (a.completedJobs || 0)); break
-      default: break
-    }
-
-    return result
-  }, [allCraftsmen, serviceFilter, districtFilter, localSearch, sort])
+  const filtered = apiCraftsmen
 
   const [searchOpen, setSearchOpen] = useState(false)
 
-  // Qidiruv oynasi uchun natijalar: nom, tavsif, tuman va xizmat nomi bo'yicha
-  const searchResults = useMemo(() => {
-    const q = localSearch.trim().toLowerCase()
-    if (!q) return allCraftsmen
-    return allCraftsmen.filter(c => matchCraftsman(c, q))
-  }, [allCraftsmen, localSearch])
+  // Qidiruv oynasi uchun natijalar — server serverda hisoblanadi
+  const searchResults = apiCraftsmen
 
   const selectFromSearch = (c) => { openCraftsman(c); setSearchOpen(false) }
 
@@ -161,6 +131,8 @@ function CraftsmenPage() {
               <div className="cp_filter_field">
                 <label>{t('sortBy')}</label>
                 <select value={sort} onChange={e => setSort(e.target.value)}>
+                  {REVIEWS_ENABLED && <option value="rating">{t('sortByRating')}</option>}
+                  {REVIEWS_ENABLED && <option value="reviews">{t('sortByReviews')}</option>}
                   <option value="experience">{t('sortExperience')}</option>
                   <option value="jobs">{t('sortJobs')}</option>
                 </select>

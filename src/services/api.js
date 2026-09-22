@@ -43,6 +43,7 @@ export const api = {
       const q = new URLSearchParams(params).toString()
       return request(`/products?${q}`)
     },
+    suggestions: (q) => request(`/products/suggestions?q=${encodeURIComponent(q)}`),
     get: (id) => request(`/products/${id}`),
     create: (body) => {
       if (body instanceof FormData) return request('/products', { method: 'POST', body })

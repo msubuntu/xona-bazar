@@ -22,6 +22,7 @@ export default function MobileCraftsmen() {
   const [debouncedSearch, setDebouncedSearch] = useState(localSearch)
   const [sort, setSort] = useState(REVIEWS_ENABLED ? 'rating' : 'experience')
   const [cr, setCr] = useState([])
+  const [counts, setCounts] = useState({ total: 0, services: {}, districts: {} })
   const [loading, setLoading] = useState(true)
   const [apiError, setApiError] = useState(null)
 
@@ -36,26 +37,30 @@ export default function MobileCraftsmen() {
   useEffect(() => {
     let cancelled = false
     setLoading(true)
-    api.sellers.list({ role: 'craftsman' })
-      .then(data => { if (!cancelled) { setCr((data.sellers || []).map(normalizeCraftsman)); setApiError(null) } })
+    setApiError(null)
+    const params = { role: 'craftsman' }
+    if (serviceFilter !== 'all') params.service = serviceFilter
+    if (districtFilter !== 'all') params.district = districtFilter
+    if (debouncedSearch.trim()) params.search = debouncedSearch.trim()
+    if (sort) params.sort = sort
+    api.sellers.list(params)
+      .then(data => {
+        if (!cancelled) {
+          setCr((data.sellers || []).map(normalizeCraftsman))
+          setCounts(data.counts || { total: 0, services: {}, districts: {} })
+          setApiError(null)
+        }
+      })
       .catch(err => { if (!cancelled) { setApiError(err.message || 'Xatolik yuz berdi'); setCr([]) } })
       .finally(() => { if (!cancelled) setLoading(false) })
     return () => { cancelled = true }
-  }, [])
+  }, [debouncedSearch, serviceFilter, districtFilter, sort])
 
-  const availableDistricts = useMemo(() => [...new Set(cr.map(c => c.district).filter(Boolean))], [cr])
+  const availableDistricts = useMemo(() => Object.keys(counts.districts || {}), [counts.districts])
 
-  const serviceCounts = useMemo(() => {
-    const m = {}
-    cr.forEach(c => (c.services || []).forEach(sid => { m[sid] = (m[sid] || 0) + 1 }))
-    return m
-  }, [cr])
+  const serviceCounts = useMemo(() => counts.services || {}, [counts.services])
 
-  const districtCounts = useMemo(() => {
-    const m = {}
-    cr.forEach(c => { if (c.district) m[c.district] = (m[c.district] || 0) + 1 })
-    return m
-  }, [cr])
+  const districtCounts = useMemo(() => counts.districts || {}, [counts.districts])
 
   const districtOptions = useMemo(() => [...new Set([...DISTRICTS, ...availableDistricts])], [availableDistricts])
   const tashkentDistricts = districtOptions.filter(d => d.startsWith('Toshkent, '))
@@ -92,38 +97,11 @@ export default function MobileCraftsmen() {
     </button>
   )
 
-  const filtered = useMemo(() => {
-    let result = [...cr]
-    if (serviceFilter !== 'all') result = result.filter(c => c.services.includes(serviceFilter))
-    if (districtFilter !== 'all') result = result.filter(c => c.district === districtFilter)
-    if (debouncedSearch.trim()) {
-      const q = debouncedSearch.toLowerCase()
-      result = result.filter(c => (c.name || '').toLowerCase().includes(q) || (c.description || '').toLowerCase().includes(q))
-    }
-    const s = { rating: (a,b) => (b.rating||0)-(a.rating||0), reviews: (a,b) => (b.reviewCount||0)-(a.reviewCount||0), experience: (a,b) => parseInt(b.experience)-parseInt(a.experience), jobs: (a,b) => (b.completedJobs||0)-(a.completedJobs||0) }
-    if (s[sort]) result.sort(s[sort])
-    return result
-  }, [cr, serviceFilter, districtFilter, debouncedSearch, sort])
+  const filtered = cr
 
   const [searchOpen, setSearchOpen] = useState(false)
 
-  const matchCraftsman = (c, q) => {
-    const services = (c.services || []).map(sId => {
-      const st = SERVICE_TYPES.find(s => s.id === sId)
-      return (st ? st.label : sId).toLowerCase()
-    }).join(' ')
-    return (c.name || '').toLowerCase().includes(q)
-      || (c.description || '').toLowerCase().includes(q)
-      || (c.district || '').toLowerCase().includes(q)
-      || services.includes(q)
-  }
-
-  // Qidiruv oynasi uchun natijalar: nom, tavsif, tuman va xizmat nomi bo'yicha
-  const searchResults = useMemo(() => {
-    const q = localSearch.trim().toLowerCase()
-    if (!q) return cr
-    return cr.filter(c => matchCraftsman(c, q))
-  }, [cr, localSearch])
+  const searchResults = cr
 
   const selectFromSearch = (c) => { openCraftsman(c); setSearchOpen(false) }
 
@@ -172,13 +150,13 @@ export default function MobileCraftsmen() {
           <div className="mob_drop">
             <div className="mob_drop_header">
               <span>{t('selectBookingService')}</span>
-              <span className="mob_drop_header_hint">{cr.length} {t('craftsmenLabel')}</span>
+              <span className="mob_drop_header_hint">{counts.filtered} {t('craftsmenLabel')}</span>
             </div>
             <div className="mob_drop_scroll">
               <button className={`mob_drop_item${serviceFilter === 'all' ? ' mob_drop_item_active' : ''}`} onClick={() => selectService('all')}>
                 <span className="mob_drop_emoji">✨</span>
                 <span className="mob_drop_name">{t('allLabel')}</span>
-                <span className="mob_drop_count">{cr.length}</span>
+                <span className="mob_drop_count">{counts.filtered}</span>
                 {checkSvg(serviceFilter === 'all')}
               </button>
               {SERVICE_TYPES.map(s => (
@@ -207,7 +185,7 @@ export default function MobileCraftsmen() {
               <button className={`mob_drop_item${districtFilter === 'all' ? ' mob_drop_item_active' : ''}`} onClick={() => selectDistrict('all')}>
                 <span className="mob_drop_emoji">🗺️</span>
                 <span className="mob_drop_name">{t('allDistricts')}</span>
-                <span className="mob_drop_count">{cr.length}</span>
+                <span className="mob_drop_count">{counts.filtered}</span>
                 {checkSvg(districtFilter === 'all')}
               </button>
               {districtQuery.trim() ? (

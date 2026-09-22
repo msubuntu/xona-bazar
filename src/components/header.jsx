@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useMemo } from "react"
+import React, { useState, useRef, useEffect } from "react"
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useCart } from '../context/CartContext.jsx'
 import { useAuth } from '../context/AuthContext.jsx'
@@ -7,26 +7,8 @@ import { useMessages } from '../context/MessagesContext.jsx'
 import { useFavorites } from '../context/FavoritesContext.jsx'
 import { useSeller } from '../context/SellerContext.jsx'
 import { isPanelRole, panelDashboard } from './RoleRedirect.jsx'
+import { api } from '../services/api'
 import '../components_css/header.css'
-
-const SEARCH_SUGGESTIONS = [
-  "Bo'yoq lateks 10L",
-  "Plitka granit 60x60",
-  "Bosch perforator",
-  "Vanna kranlari",
-  "Rozetka + uzilgich",
-  "Laminat pol 8mm",
-  "Ishchi eshik oq",
-  "Penoplast izolyatsiya",
-  "Sement 50 kg",
-  "Armatura 12mm",
-  "LED lampalar",
-  "Kanizatsiya trubasi",
-  "Mikser kran",
-  "Quruq qorishma",
-  "Shpaklyovka",
-  "Gipsokarton",
-]
 
 function Header() {
     const navigate = useNavigate()
@@ -44,6 +26,8 @@ function Header() {
     const [showSuggestions, setShowSuggestions] = useState(false)
     const [selectedIdx, setSelectedIdx] = useState(-1)
     const [inputValue, setInputValue] = useState(searchParams.get('q') || '')
+    const [suggestions, setSuggestions] = useState([])
+    const suggestAbort = useRef(null)
     const menuRef = useRef(null)
     const searchRef = useRef(null)
     const inputRef = useRef(null)
@@ -52,12 +36,24 @@ function Header() {
       setInputValue(searchParams.get('q') || '')
     }, [searchParams])
 
-    const suggestions = useMemo(() => {
-        if (!inputValue || inputValue.length < 1) return []
-        const q = inputValue.toLowerCase()
-        return SEARCH_SUGGESTIONS
-            .filter(s => s.toLowerCase().includes(q))
-            .slice(0, 7)
+    useEffect(() => {
+      if (!inputValue || inputValue.trim().length < 2) {
+        setSuggestions([])
+        if (suggestAbort.current) suggestAbort.current.abort()
+        return
+      }
+      const timer = setTimeout(() => {
+        if (suggestAbort.current) suggestAbort.current.abort()
+        const controller = new AbortController()
+        suggestAbort.current = controller
+        ;(async () => {
+          try {
+            const data = await api.products.suggestions(inputValue.trim())
+            setSuggestions((data.suggestions || []).slice(0, 7))
+          } catch { setSuggestions([]) }
+        })()
+      }, 250)
+      return () => clearTimeout(timer)
     }, [inputValue])
 
     useEffect(() => {
@@ -115,7 +111,8 @@ function Header() {
         setTimeout(() => inputRef.current?.focus(), 50)
     }
 
-    const selectSuggestion = (text) => {
+    const selectSuggestion = (s) => {
+        const text = typeof s === 'string' ? s : (s.text || s.name || '')
         setInputValue(text)
         setShowSuggestions(false)
         setSelectedIdx(-1)
@@ -204,7 +201,7 @@ function Header() {
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                     <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
                                 </svg>
-                                <span>{highlightMatch(s, inputValue)}</span>
+                                <span>{highlightMatch(typeof s === 'string' ? s : (s.text || ''), inputValue)}</span>
                             </button>
                         ))}
                     </div>

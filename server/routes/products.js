@@ -24,6 +24,10 @@ const upload = multer({
   },
 })
 
+function escapeRegex(str) {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
 function parseVariants(raw) {
   if (!raw) return []
   try {
@@ -164,6 +168,37 @@ router.get('/', async (req, res) => {
     })
 
     res.json({ products, total: didYouMean ? products.length : total, page: Number(page), pages: 1, didYouMean })
+  } catch (err) {
+    res.status(500).json({ message: err.message })
+  }
+})
+
+// Header autocomplete: real mahsulot nomi/brendidan takliflar
+router.get('/suggestions', async (req, res) => {
+  try {
+    const q = String(req.query.q || '').trim()
+    if (!q) return res.json({ suggestions: [] })
+
+    const regex = new RegExp(escapeRegex(q), 'i')
+    const docs = await Product.find({
+      status: 'active',
+      $or: [
+        { name: { $regex: regex } },
+        { brand: { $regex: regex } },
+        { name: { $regex: q.toLowerCase(), $options: 'i' } },
+      ],
+    })
+      .select('name brand category')
+      .sort({ sold: -1, createdAt: -1 })
+      .limit(10)
+      .lean()
+
+    const suggestions = docs.map(p => ({
+      text: p.brand ? `${p.brand} ${p.name}` : p.name,
+      name: p.name,
+      brand: p.brand || '',
+    }))
+    res.json({ suggestions })
   } catch (err) {
     res.status(500).json({ message: err.message })
   }

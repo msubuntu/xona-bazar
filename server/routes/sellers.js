@@ -35,6 +35,30 @@ function escapeRegex(str) {
   return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 }
 
+// Usta xizmat turlari: label → id. Foydalanuvchi "santexnik" yozsa
+// server ham 'santexnik' kalit so'zi bilan 'plumber' id'li ustani topa oladi.
+const SERVICE_LABEL_TO_ID = {
+  santexnik: ['plumber'],
+  santexnika: ['plumber'],
+  elektrik: ['electrician'],
+  'bo\'yoqchi': ['painter'],
+  'bo\'yash': ['painter'],
+  shpaklyovka: ['painter'],
+  shpaklevka: ['painter'],
+  kafelchi: ['tiler'],
+  kafel: ['tiler'],
+  plitka: ['tiler'],
+  'pol ustasi': ['floorer'],
+  laminat: ['floorer'],
+  linoleum: ['floorer'],
+  gipsokarton: ['drywaller'],
+  shift: ['drywaller'],
+  stolar: ['carpenter'],
+  eshik: ['carpenter'],
+  mebel: ['carpenter'],
+  tozalash: ['cleaner'],
+}
+
 // ── Craftsman dashboard summary ──
 router.get('/me/craftsman-dashboard', protect, authorize('craftsman'), async (req, res) => {
   try {
@@ -304,17 +328,47 @@ router.get('/:id/reviews', rateLimit({ windowMs: 60000, max: 120 }), async (req,
 
 router.get('/', async (req, res) => {
   try {
-    const { role = 'seller', district, service, search } = req.query
+    const { role = 'seller', district, service, search, sort = 'rating' } = req.query
     const filter = { role }
 
     if (district) filter.district = district
     if (service) filter.services = service
-    if (search) filter.$or = [
-      { name: { $regex: escapeRegex(search), $options: 'i' } },
-      { shopName: { $regex: escapeRegex(search), $options: 'i' } },
-    ]
+    if (search) {
+      const q = String(search).trim().toLowerCase()
+      const or = [
+        { name: { $regex: escapeRegex(q), $options: 'i' } },
+        { shopName: { $regex: escapeRegex(q), $options: 'i' } },
+        { description: { $regex: escapeRegex(q), $options: 'i' } },
+      ]
+      const serviceIds = new Set(SERVICE_LABEL_TO_ID[q] || [])
+      if (serviceIds.size) or.push({ services: { $in: [...serviceIds] } })
+      filter.$or = or
+    }
 
-    const sellers = await User.find(filter).select('-password').sort({ rating: -1 }).lean()
+    const sortMap = { rating: { rating: -1 }, experience: { experience: -1 }, jobs: { completedJobs: -1 }, reviews: { reviewCount: -1 }, name: { name: 1 } }
+    const totalSellers = await User.countDocuments(filter)
+    const sellers = await User.find(filter).select('-password').sort(sortMap[sort] || sortMap.rating).lean()
+
+    // Server-side count'lar: dropdown'lardagi sonlar uchun
+    // barcha ustalarni yuklamasdan agregatsiya hisoblanadi.
+    const aggCounts = await User.aggregate([
+      { $match: { role } },
+      { $facet: {
+        services: [
+          { $unwind: '$services' },
+          { $group: { _id: '$services', count: { $sum: 1 } } },
+        ],
+        districts: [
+          { $match: { district: { $type: 'string', $ne: '' } } },
+          { $group: { _id: '$district', count: { $sum: 1 } } },
+        ],
+      } },
+    ])
+    const counts = {
+      total: await User.countDocuments({ role }),
+      services: Object.fromEntries(aggCounts[0].services.map(s => [s._id, s.count])),
+      districts: Object.fromEntries(aggCounts[0].districts.map(d => [d._id, d.count])),
+    }
 
     // Har bir do'kon uchun aktiv mahsulotlari (kategoriya + narx) biriktiriladi.
     // Xaritalardagi "Mahsulotlar" bo'limi shu ma'lumot orqali
@@ -338,7 +392,7 @@ router.get('/', async (req, res) => {
       products: productsBySeller[String(s._id)] || [],
     }))
 
-    res.json({ sellers: result })
+    res.json({ sellers: result, counts: { ...counts, filtered: totalSellers } })
   } catch (err) {
     res.status(500).json({ message: err.message })
   }
