@@ -10,10 +10,11 @@ import Header from './header'
 import Footer from './Footer'
 import LocationPicker from './LocationPicker'
 import { REVIEWS_ENABLED } from '../data/flags'
+import { subcategoriesFor } from '../data/subcategories'
 import { PasswordModal, TwoFactorModal } from './SettingsModals'
 import '../components_css/seller-dashboard-v2.css'
 
-const INITIAL_FORM = { name: '', brand: '', category: 'flooring', description: '', price: '', oldPrice: '', stock: '' }
+const INITIAL_FORM = { name: '', brand: '', category: 'flooring', subcategory: '', description: '', price: '', oldPrice: '', stock: '' }
 const DEFAULT_PRODUCT_FEATURES = [
   { icon: '🏠', label: 'Do\'kondan oling', desc: 'O\'zingiz qulay vaqtda olib keting' },
   { icon: '🔄', label: '7 kun qaytarish', desc: 'Mahsulotni qaytarish imkoniyati' },
@@ -232,6 +233,7 @@ function SellerDashboard() {
       name: product.name || '',
       brand: product.brand || '',
       category: product.category || 'flooring',
+      subcategory: product.subcategory || '',
       description: product.description || '',
       price: product.price || '',
       oldPrice: product.oldPrice || '',
@@ -468,6 +470,7 @@ function SellerDashboard() {
     fd.append('name', form.name.trim())
     fd.append('brand', form.brand.trim())
     fd.append('category', form.category)
+    fd.append('subcategory', form.subcategory || '')
     fd.append('description', form.description.trim())
     fd.append('price', Number(form.price))
     if (form.oldPrice) fd.append('oldPrice', Number(form.oldPrice))
@@ -634,6 +637,10 @@ function SellerDashboard() {
   }
 
   const categoryLabel = (val) => CATEGORIES.find(c => c.value === val)?.label || val
+  const subcategoryLabel = (cat, sub) => {
+    const sc = subcategoriesFor(cat).find(x => x.id === sub)
+    return sc ? t(sc.labelKey) : ''
+  }
 
   const STEP_LABELS = [t('stepBasic'), t('stepPriceImages'), t('stepConfirm')]
 
@@ -683,8 +690,17 @@ function SellerDashboard() {
       </div>
       <div className="sdv2-form-field">
         <label>{t('category')}</label>
-        <select value={form.category} onChange={e => setForm({ ...form, category: e.target.value })}>
+        <select value={form.category} onChange={e => setForm({ ...form, category: e.target.value, subcategory: '' })}>
           {CATEGORIES.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
+        </select>
+      </div>
+      <div className="sdv2-form-field">
+        <label>{t('subcategory')}</label>
+        <select value={form.subcategory} onChange={e => setForm({ ...form, subcategory: e.target.value })}>
+          <option value="">{t('selectSubcategory')}</option>
+          {subcategoriesFor(form.category).map(sc => (
+            <option key={sc.id} value={sc.id}>{t(sc.labelKey)}</option>
+          ))}
         </select>
       </div>
       <div className="sdv2-form-field">
@@ -919,7 +935,7 @@ function SellerDashboard() {
         <div className="sdv2-confirm-info">
           <span className="sdv2-confirm-brand">{form.brand}</span>
           <h4>{form.name || t('unnamedProduct')}</h4>
-          <span className="sdv2-confirm-category">{categoryLabel(form.category)}</span>
+          <span className="sdv2-confirm-category">{categoryLabel(form.category)}{form.subcategory ? ` · ${subcategoryLabel(form.category, form.subcategory)}` : ''}</span>
           {form.description && <p className="sdv2-confirm-desc">{form.description}</p>}
           {!hasVariants ? (
             <div className="sdv2-confirm-prices">

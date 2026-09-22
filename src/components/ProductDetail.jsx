@@ -12,6 +12,7 @@ import Footer from './Footer'
 import LoginPrompt from './LoginPrompt'
 import ReviewForm from './ReviewForm'
 import StoreMap from './StoreMap'
+import { SUBCATEGORIES } from '../data/subcategories'
 import { REVIEWS_ENABLED } from '../data/flags'
 import NearbyStores from './NearbyStores'
 import '../components_css/productdetail.css'
@@ -164,6 +165,15 @@ function ProductDetail() {
           <span onClick={goHome}>{t('home')}</span>
           <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="9 18 15 12 9 6"/></svg>
           <span>{p.brand}</span>
+          {p.subcategory && (() => {
+            const sc = SUBCATEGORIES[p.category]?.find(s => s.id === p.subcategory)
+            return sc ? (
+              <>
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="9 18 15 12 9 6"/></svg>
+                <span>{t(sc.labelKey)}</span>
+              </>
+            ) : null
+          })()}
           <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="9 18 15 12 9 6"/></svg>
           <span className="active">{p.name}</span>
         </div>

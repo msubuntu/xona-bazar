@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext.jsx'
 import { useSettings } from '../context/SettingsContext.jsx'
 import { useTheme } from '../context/ThemeContext.jsx'
 import { REVIEWS_ENABLED } from '../data/flags'
+import { subcategoriesFor } from '../data/subcategories'
 import { api } from '../services/api'
 import MobileHeader from './MobileHeader.jsx'
 import { PasswordModal, TwoFactorModal } from '../components/SettingsModals.jsx'
@@ -14,7 +15,7 @@ const STATUS_CHIP = {
   delivered: 'mob_chip_green', completed: 'mob_chip_green', cancelled: 'mob_chip_red',
 }
 const STATUS_FLOW = ['pending', 'confirmed', 'completed']
-const INITIAL_FORM = { name: '', brand: '', category: 'flooring', description: '', price: '', oldPrice: '', stock: '' }
+const INITIAL_FORM = { name: '', brand: '', category: 'flooring', subcategory: '', description: '', price: '', oldPrice: '', stock: '' }
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024
 const MAX_VIDEO_SIZE = 100 * 1024 * 1024
 const MIN_IMAGES = 4
@@ -234,6 +235,10 @@ export default function MobileSellerDashboard() {
   )
 
   const categoryLabel = (val) => CATEGORIES.find(c => c.value === val)?.label || val
+  const subcategoryLabel = (cat, sub) => {
+    const sc = subcategoriesFor(cat).find(x => x.id === sub)
+    return sc ? t(sc.labelKey) : ''
+  }
 
   const resetForm = () => {
     setForm(INITIAL_FORM)
@@ -265,6 +270,7 @@ export default function MobileSellerDashboard() {
       name: product.name || '',
       brand: product.brand || '',
       category: product.category || 'flooring',
+      subcategory: product.subcategory || '',
       description: product.description || '',
       price: product.price || '',
       oldPrice: product.oldPrice || '',
@@ -456,6 +462,7 @@ export default function MobileSellerDashboard() {
     fd.append('name', form.name.trim())
     fd.append('brand', form.brand.trim())
     fd.append('category', form.category)
+    fd.append('subcategory', form.subcategory || '')
     fd.append('description', form.description.trim())
     fd.append('price', Number(form.price))
     if (form.oldPrice) fd.append('oldPrice', Number(form.oldPrice))
@@ -659,8 +666,17 @@ export default function MobileSellerDashboard() {
       </div>
       <div className="mob_field">
         <label className="mob_input_label">{t('category')}</label>
-        <select className="mob_input" value={form.category} onChange={e => setForm({ ...form, category: e.target.value })}>
+        <select className="mob_input" value={form.category} onChange={e => setForm({ ...form, category: e.target.value, subcategory: '' })}>
           {CATEGORIES.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
+        </select>
+      </div>
+      <div className="mob_field">
+        <label className="mob_input_label">{t('subcategory')}</label>
+        <select className="mob_input" value={form.subcategory} onChange={e => setForm({ ...form, subcategory: e.target.value })}>
+          <option value="">{t('selectSubcategory')}</option>
+          {subcategoriesFor(form.category).map(sc => (
+            <option key={sc.id} value={sc.id}>{t(sc.labelKey)}</option>
+          ))}
         </select>
       </div>
       <div className="mob_field">
@@ -831,7 +847,7 @@ export default function MobileSellerDashboard() {
         <div className="mob_confirm_info">
           <span className="mob_confirm_brand">{form.brand}</span>
           <h4>{form.name || t('unnamedProduct')}</h4>
-          <span className="mob_confirm_category">{categoryLabel(form.category)}</span>
+          <span className="mob_confirm_category">{categoryLabel(form.category)}{form.subcategory ? ` · ${subcategoryLabel(form.category, form.subcategory)}` : ''}</span>
           {form.description && <p className="mob_confirm_desc">{form.description}</p>}
           {!hasVariants ? (
             <div className="mob_confirm_prices">

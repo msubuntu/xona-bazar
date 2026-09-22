@@ -254,7 +254,7 @@ router.post('/', protect, authorize('seller', 'craftsman'), upload.fields([
   { name: 'video', maxCount: 1 },
 ]), async (req, res) => {
   try {
-    const { name, brand, category, price, oldPrice, description, stock } = req.body
+    const { name, brand, category, subcategory, price, oldPrice, description, stock } = req.body
     const files = req.files || {}
     const imageFiles = (files.images || []).map(f => `/uploads/${f.filename}`)
     const videoFile = (files.video && files.video[0]) ? `/uploads/${files.video[0].filename}` : ''
@@ -277,7 +277,7 @@ router.post('/', protect, authorize('seller', 'craftsman'), upload.fields([
     }
 
     const productData = {
-      name, brand, category,
+      name, brand, category, subcategory: subcategory || '',
       price: Number(price),
       oldPrice: oldPrice ? Number(oldPrice) : undefined,
       description,
@@ -314,10 +314,11 @@ router.put('/:id', protect, authorize('seller', 'craftsman'), upload.fields([
     }
 
     const files = req.files || {}
-    const { name, brand, category, price, oldPrice, description, stock, status, keepImages } = req.body
+    const { name, brand, category, subcategory, price, oldPrice, description, stock, status, keepImages } = req.body
     if (name) product.name = name
     if (brand) product.brand = brand
     if (category) product.category = category
+    if (subcategory !== undefined) product.subcategory = subcategory
     if (price) product.price = Number(price)
     if (oldPrice !== undefined) product.oldPrice = oldPrice ? Number(oldPrice) : undefined
     if (description !== undefined) product.description = description

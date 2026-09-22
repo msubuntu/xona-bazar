@@ -11,6 +11,7 @@ const productSchema = new mongoose.Schema({
   name: { type: String, required: true, trim: true },
   brand: { type: String, required: true, trim: true },
   category: { type: String, required: true },
+  subcategory: { type: String, default: '' },
   price: { type: Number, required: true },
   oldPrice: { type: Number },
   image: { type: String, default: '' },
@@ -52,6 +53,7 @@ productSchema.index(
   { name: 'product_text', weights: { name: 10, brand: 5, description: 3, 'features.label': 2, 'features.desc': 1 } }
 )
 productSchema.index({ category: 1 })
+productSchema.index({ subcategory: 1 })
 productSchema.index({ sellerId: 1 })
 
 export default mongoose.model('Product', productSchema)
