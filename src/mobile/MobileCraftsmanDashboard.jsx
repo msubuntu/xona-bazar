@@ -7,7 +7,7 @@ import { api } from '../services/api'
 import MobileHeader from './MobileHeader.jsx'
 import { SERVICE_TYPES, DISTRICTS } from '../data/craftsmen.js'
 import { REVIEWS_ENABLED } from '../data/flags'
-import { PasswordModal, TwoFactorModal } from '../components/SettingsModals.jsx'
+import { PasswordModal } from '../components/SettingsModals.jsx'
 import TelegramBotLink from '../components/TelegramBotLink'
 
 const TABS = (t) => [
@@ -94,8 +94,6 @@ export default function MobileCraftsmanDashboard() {
   const [profileMsg, setProfileMsg] = useState(null)
   const [profileSaving, setProfileSaving] = useState(false)
   const [showPasswordModal, setShowPasswordModal] = useState(false)
-  const [show2FAModal, setShow2FAModal] = useState(false)
-  const [twoFactor, setTwoFactor] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(null)
 const [cancelTarget, setCancelTarget] = useState(null)
 const [cancelReason, setCancelReason] = useState('')
@@ -185,7 +183,6 @@ const [cancelReason, setCancelReason] = useState('')
         lng: user.lng || null,
         social: user.social || { telegram: '', instagram: '', website: '' },
       })
-      setTwoFactor(user.twoFactor === true)
     }
   }, [isCraftsman, user])
 
@@ -286,15 +283,6 @@ const [cancelReason, setCancelReason] = useState('')
 
   const setSocial = (field, value) => {
     setProfileForm(prev => ({ ...prev, social: { ...prev.social, [field]: value } }))
-  }
-
-  const disableTwoFactor = async () => {
-    try {
-      await api.auth.notifications({ twoFactor: false })
-      setTwoFactor(false)
-    } catch (err) {
-      alert(err?.message || t('error'))
-    }
   }
 
   const saveProfile = async () => {    setProfileSaving(true)
@@ -685,21 +673,12 @@ const [cancelReason, setCancelReason] = useState('')
 
               <div className="mob_section" style={{ marginTop: 16 }}>
                 <div className="mob_page_title" style={{ fontSize: 16, marginBottom: 12 }}>{t('account_security')}</div>
-                <button type="button" className="mob_btn mob_btn_ghost" style={{ width: '100%', marginBottom: 10 }} onClick={() => setShowPasswordModal(true)}>
+                <button type="button" className="mob_btn mob_btn_ghost" style={{ width: '100%' }} onClick={() => setShowPasswordModal(true)}>
                   {t('change_password')}
-                </button>
-                <button
-                  type="button"
-                  className={`mob_btn ${twoFactor ? 'mob_btn_success' : 'mob_btn_ghost'}`}
-                  style={{ width: '100%' }}
-                  onClick={() => { if (!twoFactor) setShow2FAModal(true); else disableTwoFactor() }}
-                >
-                  {twoFactor ? t('two_factor_on') : t('two_factor_enable')}
                 </button>
               </div>
 
               {showPasswordModal && <PasswordModal onClose={() => setShowPasswordModal(false)} />}
-              {show2FAModal && <TwoFactorModal onClose={() => setShow2FAModal(false)} onEnable={() => setTwoFactor(true)} />}
             </div>
           )}
         </>

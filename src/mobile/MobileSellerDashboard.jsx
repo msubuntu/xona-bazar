@@ -8,7 +8,7 @@ import { subcategoriesFor } from '../data/subcategories'
 import { specFieldsFor } from '../data/category-features'
 import { api } from '../services/api'
 import MobileHeader from './MobileHeader.jsx'
-import { PasswordModal, TwoFactorModal } from '../components/SettingsModals.jsx'
+import { PasswordModal } from '../components/SettingsModals.jsx'
 import TelegramBotLink from '../components/TelegramBotLink'
 
 const STATUS_CHIP = {
@@ -113,8 +113,6 @@ export default function MobileSellerDashboard() {
   const [profileSaving, setProfileSaving] = useState(false)
   const [profileMsg, setProfileMsg] = useState(null)
   const [showPasswordModal, setShowPasswordModal] = useState(false)
-  const [show2FAModal, setShow2FAModal] = useState(false)
-  const [twoFactor, setTwoFactor] = useState(false)
 
   const imgInputRef = useRef(null)
   const videoInputRef = useRef(null)
@@ -210,7 +208,6 @@ export default function MobileSellerDashboard() {
         available: user.available !== false,
         social: user.social || { telegram: '', instagram: '', website: '' },
       })
-      setTwoFactor(user.twoFactor === true)
     }
   }, [user])
 
@@ -607,15 +604,6 @@ export default function MobileSellerDashboard() {
 
   const setSocial = (field, value) => {
     setProfileForm(prev => ({ ...prev, social: { ...prev.social, [field]: value } }))
-  }
-
-  const disableTwoFactor = async () => {
-    try {
-      await api.auth.notifications({ twoFactor: false })
-      setTwoFactor(false)
-    } catch (err) {
-      alert(err?.message || t('errorShort'))
-    }
   }
 
   const getNextStatus = (current) => {    const idx = STATUS_FLOW.indexOf(current)
@@ -1200,22 +1188,13 @@ export default function MobileSellerDashboard() {
 
       <div className="mob_page_title" style={{ fontSize: 16, margin: '24px 0 14px' }}>{t('accountSecurity')}</div>
       <div className="mob_setting_form">
-        <button type="button" className="mob_btn mob_btn_ghost" style={{ width: '100%', marginBottom: 10 }} onClick={() => setShowPasswordModal(true)}>
+        <button type="button" className="mob_btn mob_btn_ghost" style={{ width: '100%' }} onClick={() => setShowPasswordModal(true)}>
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: 6 }}><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
           {t('changePassword')}
-        </button>
-        <button
-          type="button"
-          className={`mob_btn ${twoFactor ? 'mob_btn_success' : 'mob_btn_ghost'}`}
-          style={{ width: '100%' }}
-          onClick={() => { if (!twoFactor) setShow2FAModal(true); else disableTwoFactor() }}
-        >
-          {twoFactor ? t('twoFactorOn') : t('enableTwoFactor')}
         </button>
       </div>
 
       {showPasswordModal && <PasswordModal onClose={() => setShowPasswordModal(false)} />}
-      {show2FAModal && <TwoFactorModal onClose={() => setShow2FAModal(false)} onEnable={() => setTwoFactor(true)} />}
     </div>
   )
 

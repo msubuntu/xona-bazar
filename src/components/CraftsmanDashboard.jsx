@@ -11,7 +11,7 @@ import Header from './header'
 import LocationPicker from './LocationPicker'
 import { SERVICE_TYPES, DISTRICTS } from '../data/craftsmen'
 import { REVIEWS_ENABLED } from '../data/flags'
-import { PasswordModal, TwoFactorModal } from './SettingsModals'
+import { PasswordModal } from './SettingsModals'
 import '../components_css/craftsman-dashboard.css'
 
 const SECTIONS = [
@@ -73,8 +73,6 @@ function CraftsmanDashboard() {
   })
   const [profileSaveMsg, setProfileSaveMsg] = useState(null)
   const [showPasswordModal, setShowPasswordModal] = useState(false)
-  const [show2FAModal, setShow2FAModal] = useState(false)
-  const [twoFactor, setTwoFactor] = useState(false)
 
   const [works, setWorks] = useState([])
   const [availableBookings, setAvailableBookings] = useState([])
@@ -213,7 +211,6 @@ function CraftsmanDashboard() {
         description: user.description || '',
         social: user.social || { telegram: '', instagram: '', website: '' },
       })
-      setTwoFactor(user.twoFactor === true)
     }
   }, [user])
 
@@ -299,15 +296,6 @@ function CraftsmanDashboard() {
       setProfileSaveMsg({ type: 'success', text: t('saved') })
     } catch (err) {
       setProfileSaveMsg({ type: 'error', text: err.message || t('error') })
-    }
-  }
-
-  const disableTwoFactor = async () => {
-    try {
-      await api.auth.notifications({ twoFactor: false })
-      setTwoFactor(false)
-    } catch (err) {
-      alert(err?.message || t('error'))
     }
   }
 
@@ -962,15 +950,6 @@ function CraftsmanDashboard() {
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
             {t('changePassword')}
           </button>
-          <button
-            type="button"
-            className={`cd-security-btn ${twoFactor ? 'active' : ''}`}
-            onClick={() => { if (!twoFactor) setShow2FAModal(true); else disableTwoFactor() }}
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-            {twoFactor ? `${t('twoFactor')} (${t('off')})` : t('twoFactor')}
-            {twoFactor && <span className="cd-active-badge">ON</span>}
-          </button>
         </div>
       </div>
 
@@ -998,11 +977,32 @@ function CraftsmanDashboard() {
       </div>
 
       {showPasswordModal && <PasswordModal onClose={() => setShowPasswordModal(false)} />}
-      {show2FAModal && <TwoFactorModal onClose={() => setShow2FAModal(false)} onEnable={() => setTwoFactor(true)} />}
     </div>
   )
 
   const renderContent = () => {
+    if (user?.status === 'pending') {
+      return (
+        <div className="cd-pending-block">
+          <div className="cd-pending-card">
+            <div className="cd-pending-icon">⏳</div>
+            <h3>{t('moderationPendingTitle')}</h3>
+            <p>{t('moderationPendingDesc')}</p>
+          </div>
+        </div>
+      )
+    }
+    if (user?.status === 'rejected') {
+      return (
+        <div className="cd-pending-block">
+          <div className="cd-pending-card">
+            <div className="cd-pending-icon">🚫</div>
+            <h3>{t('moderationRejectedTitle')}</h3>
+            <p>{t('moderationRejectedDesc')}</p>
+          </div>
+        </div>
+      )
+    }
     switch (activeSection) {
       case 'overview': return renderOverview()
       case 'bookings': return renderBookings()

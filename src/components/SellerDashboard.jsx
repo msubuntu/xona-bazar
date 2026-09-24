@@ -12,7 +12,7 @@ import LocationPicker from './LocationPicker'
 import { REVIEWS_ENABLED } from '../data/flags'
 import { subcategoriesFor } from '../data/subcategories'
 import { specFieldsFor } from '../data/category-features'
-import { PasswordModal, TwoFactorModal } from './SettingsModals'
+import { PasswordModal } from './SettingsModals'
 import '../components_css/seller-dashboard-v2.css'
 
 const INITIAL_FORM = { name: '', brand: '', category: 'flooring', subcategory: '', description: '', price: '', oldPrice: '', stock: '' }
@@ -107,8 +107,6 @@ function SellerDashboard() {
   const [profileForm, setProfileForm] = useState({ name: '', shopName: '', location: '', description: '', lat: null, lng: null, workingHours: '09:00 - 18:00', available: true, social: { telegram: '', instagram: '', website: '' } })
   const [profileSaveMsg, setProfileSaveMsg] = useState(null)
   const [showPasswordModal, setShowPasswordModal] = useState(false)
-  const [show2FAModal, setShow2FAModal] = useState(false)
-  const [twoFactor, setTwoFactor] = useState(false)
 
   const loadDashboard = useCallback(async () => {
     setLoading(true)
@@ -190,7 +188,6 @@ function SellerDashboard() {
         available: user.available !== false,
         social: user.social || { telegram: '', instagram: '', website: '' },
       })
-      setTwoFactor(user.twoFactor === true)
     }
   }, [user])
 
@@ -626,15 +623,6 @@ function SellerDashboard() {
     if (address.length < 5) return
     const coords = await geocodeAddress(address)
     if (coords) setProfileForm(prev => ({ ...prev, lat: coords.lat, lng: coords.lng }))
-  }
-
-  const disableTwoFactor = async () => {
-    try {
-      await api.auth.notifications({ twoFactor: false })
-      setTwoFactor(false)
-    } catch (err) {
-      alert(err?.message || t('error'))
-    }
   }
 
   const setSocial = (field, value) => {
@@ -1740,18 +1728,13 @@ const ORDER_STATUS_LABELS = { pending: t('st_pending'), confirmed: t('st_confirm
       <div className="sdv2-settings-card" style={{ marginTop: 20 }}>
         <h3>{t('accountSecurity')}</h3>
         <div className="sdv2-security-row">
-          <button type="button" className="sdv2-security-btn" onClick={() => setShowPasswordModal(true)}>
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
-            {t('changePassword')}
-          </button>
           <button
             type="button"
-            className={`sdv2-security-btn ${twoFactor ? 'active' : ''}`}
-            onClick={() => { if (!twoFactor) setShow2FAModal(true); else disableTwoFactor() }}
+            className="sdv2-security-btn"
+            onClick={() => setShowPasswordModal(true)}
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-            {twoFactor ? t('twoFactorVerificationOn') : t('twoFactorVerification')}
-            {twoFactor && <span className="sdv2-active-badge">ON</span>}
+            {t('changePassword')}
           </button>
         </div>
       </div>
@@ -1780,11 +1763,32 @@ const ORDER_STATUS_LABELS = { pending: t('st_pending'), confirmed: t('st_confirm
       </div>
 
       {showPasswordModal && <PasswordModal onClose={() => setShowPasswordModal(false)} />}
-      {show2FAModal && <TwoFactorModal onClose={() => setShow2FAModal(false)} onEnable={() => setTwoFactor(true)} />}
     </div>
   )
 
   const renderContent = () => {
+    if (user?.status === 'pending') {
+      return (
+        <div className="sdv2-pending-block">
+          <div className="sdv2-pending-card">
+            <div className="sdv2-pending-icon">⏳</div>
+            <h3>{t('moderationPendingTitle')}</h3>
+            <p>{t('moderationPendingDesc')}</p>
+          </div>
+        </div>
+      )
+    }
+    if (user?.status === 'rejected') {
+      return (
+        <div className="sdv2-pending-block">
+          <div className="sdv2-pending-card">
+            <div className="sdv2-pending-icon">🚫</div>
+            <h3>{t('moderationRejectedTitle')}</h3>
+            <p>{t('moderationRejectedDesc')}</p>
+          </div>
+        </div>
+      )
+    }
     switch (activeSection) {
       case 'overview': return renderOverview()
       case 'products': return renderProducts()

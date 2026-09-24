@@ -12,7 +12,7 @@ import Header from './header'
 import Footer from './Footer'
 import CustomSelect from './CustomSelect'
 import LoginPrompt from './LoginPrompt'
-import { PasswordModal, TwoFactorModal, DeleteAccountModal } from './SettingsModals'
+import { PasswordModal, DeleteAccountModal } from './SettingsModals'
 import LocationPicker from './LocationPicker'
 import '../components_css/userpage.css'
 
@@ -61,10 +61,9 @@ function UserPage() {
   const {
     lang, currency,
     notifEmail, notifSms, notifPromo,
-    twoFactor,
     setLang, setCurrency,
     setNotifEmail, setNotifSms, setNotifPromo,
-    setTwoFactor, t, convertPrice,
+    t, convertPrice,
   } = useSettings()
 
   const isSeller = user?.role === 'seller' || user?.role === 'craftsman'
@@ -163,7 +162,6 @@ function UserPage() {
   const [form, setForm] = useState({ name: user?.name || '', email: user?.email || '', phone: user?.phone || '+998 90 123 45 67', birth: '1995-06-15', gender: 'erkak', location: user?.location || '', lat: user?.lat || null, lng: user?.lng || null })
 
   const [showPassword, setShowPassword] = useState(false)
-  const [show2FA, setShow2FA] = useState(false)
   const [showDelete, setShowDelete] = useState(false)
   const [showLoginPrompt, setShowLoginPrompt] = useState(false)
 
@@ -597,11 +595,6 @@ function UserPage() {
                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
                         {t('changePassword')}
                       </button>
-                      <button className={`up_setting_btn ${twoFactor ? 'active-setting' : ''}`} onClick={() => { if (!twoFactor) setShow2FA(true); else setTwoFactor(false); }}>
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                        {twoFactor ? t('twoFactorOn') : t('twoFactor')}
-                        {twoFactor && <span className="up_setting_active_badge">ON</span>}
-                      </button>
                       <button className="up_setting_btn danger" onClick={() => setShowDelete(true)}>
                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
                         {t('deleteAccount')}
@@ -624,7 +617,6 @@ function UserPage() {
       <Footer />
 
       {showPassword && <PasswordModal onClose={() => setShowPassword(false)} />}
-      {show2FA && <TwoFactorModal onClose={() => setShow2FA(false)} onEnable={() => setTwoFactor(true)} />}
       {showDelete && <DeleteAccountModal onClose={() => setShowDelete(false)} onDelete={handleDeleteAccount} />}
       {showLoginPrompt && <LoginPrompt onClose={() => setShowLoginPrompt(false)} />}
     </div>

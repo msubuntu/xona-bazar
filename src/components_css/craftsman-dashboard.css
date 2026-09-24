@@ -338,6 +338,11 @@
 /* ── States ── */
 .cd-empty-state { text-align: center; padding: 48px 20px; color: var(--text-muted, #9ca3af); font-size: 14px; }
 .cd-error-state { text-align: center; padding: 48px 20px; color: var(--text-muted, #9ca3af); display: flex; flex-direction: column; align-items: center; gap: 12px; }
+.cd-pending-block { display: flex; align-items: center; justify-content: center; padding: 48px 20px; min-height: 320px; }
+.cd-pending-card { max-width: 420px; width: 100%; text-align: center; background: var(--bg-card, #fff); border: 1px solid var(--border, #e5e7eb); border-radius: 16px; padding: 36px 28px; }
+.cd-pending-icon { font-size: 42px; margin-bottom: 12px; }
+.cd-pending-card h3 { margin: 0 0 8px; font-size: 18px; }
+.cd-pending-card p { margin: 0; color: var(--text-muted, #9ca3af); font-size: 14px; line-height: 1.6; }
 .cd-skeleton-card { background: var(--bg-card, #fff); border-radius: 14px; border: 1px solid var(--border, #e5e7eb); padding: 18px; display: flex; flex-direction: column; gap: 10px; }
 .cd-skeleton-line { background: var(--bg-secondary, #f3f4f6); border-radius: 6px; animation: cd-pulse 1.5s infinite; }
 @keyframes cd-pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }

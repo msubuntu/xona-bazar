@@ -4,7 +4,7 @@ import crypto from 'crypto'
 import User from '../models/User.js'
 import { generateToken, protect } from '../middleware/auth.js'
 import { rateLimit } from '../middleware/rate-limit.js'
-import { getBotConfig, notifyAdminAboutNewUser } from '../services/telegramBot.js'
+import { getBotConfig, notifyAdminAboutNewUser, sendPasswordResetCode } from '../services/telegramBot.js'
 
 const upload = multer({
   storage: multer.diskStorage({
@@ -33,8 +33,35 @@ router.get('/telegram/config', async (req, res) => {
 })
 
 const loginEmailKey = (req) => {
-  const email = String(req.body?.email || '').trim().toLowerCase()
+  const email = String(req.body?.email || req.body?.login || '').trim().toLowerCase()
   return email || 'no-email'
+}
+
+// ── Telefon raqam normalizatsiyasi ──
+// DB'da telefon lar turli formatda saqlangan bo'lishi mumkin: +998901234567, 998901234567, 901234567, +998 90 123 45 67.
+// Yagona standart: +998 + 9 raqam (masalan +998901234567).
+const phoneDigits = (v) => String(v || '').replace(/\D/g, '')
+
+const normalizePhone = (v) => {
+  const d = phoneDigits(v)
+  if (!d) return v
+  if (d.length === 12 && d.startsWith('998')) return `+${d}`          // +998901234567
+  if (d.length === 9) return `+998${d}`                                // 901234567 -> +998901234567
+  if (d.length === 12) return `+${d}`                                  // boshqa davlat kodi +994...
+  return v
+}
+
+// Login'da user har xil formatda kiritishi mumkin — barcha variantlarni qidiramiz
+const loginVariants = (v) => {
+  const raw = String(v || '').trim().toLowerCase()
+  const d = phoneDigits(raw)
+  const variants = [raw]
+  if (d) {
+    variants.push(d)
+    if (d.length === 9) variants.push(`+998${d}`, `998${d}`)
+    else if (d.length === 12 && d.startsWith('998')) variants.push(`+${d}`)
+  }
+  return [...new Set(variants.filter(Boolean))]
 }
 
 // IP/hisob bo'yicha urinish chegarasi (brute-force/credential-stuffing himoyasi)
@@ -56,11 +83,14 @@ router.post('/register', rateLimit({ windowMs: 60_000, max: 10 }), async (req, r
     const ALLOWED_ROLES = ['buyer', 'seller', 'craftsman']
     const safeRole = ALLOWED_ROLES.includes(role) ? role : 'buyer'
 
-    const userData = { name, email, phone, password, role: safeRole }
+    const userData = { name, email, phone: normalizePhone(phone), password, role: safeRole }
     if (safeRole === 'seller') {
       Object.assign(userData, { shopName, location, lat, lng, description })
     } else if (safeRole === 'craftsman') {
       Object.assign(userData, { services, experience, district, priceRange })
+    }
+    if (safeRole === 'seller' || safeRole === 'craftsman') {
+      userData.status = 'pending'
     }
 
     const user = await User.create(userData)
@@ -77,11 +107,23 @@ router.post('/register', rateLimit({ windowMs: 60_000, max: 10 }), async (req, r
 router.post('/login', loginIpLimit, loginAccountLimit, async (req, res) => {
   try {
     const { email, password } = req.body
-    if (!email || !password) return res.status(400).json({ message: 'Email va parolni kiriting' })
+    const loginValue = String((email || req.body.login || '').trim().toLowerCase())
+    if (!loginValue || !password) return res.status(400).json({ message: 'Telefon va parolni kiriting' })
 
-    const user = await User.findOne({ email })
+    const variants = loginVariants(loginValue)
+    const phoneQuery = variants.map(p => ({ phone: p }))
+    // Email bilan kiritilgan eski foydalanuvchilar ham topiladi
+    const emailQuery = /@/.test(loginValue) ? [{ email: loginValue }] : []
+    const user = await User.findOne({ $or: [...phoneQuery, ...emailQuery] })
     if (!user || !(await user.comparePassword(password))) {
-      return res.status(401).json({ message: 'Email yoki parol xato' })
+      return res.status(401).json({ message: 'Telefon yoki parol xato' })
+    }
+
+    if (user.status === 'pending') {
+      return res.status(403).json({ message: 'Hisobingiz admin tomonidan tasdiqlanishi kutilmoqda. Iltimos, keyinroq urinib ko\'ring.' })
+    }
+    if (user.status === 'rejected') {
+      return res.status(403).json({ message: 'Hisobingiz rad etilgan. Qo\'llab-quvvatlash xizmatiga murojaat qiling.' })
     }
 
     const token = generateToken(user._id)
@@ -106,7 +148,7 @@ router.put('/profile', protect, upload.single('avatar'), async (req, res) => {
       if (emailTaken) return res.status(409).json({ message: 'Bu email allaqachon boshqa foydalanuvchida mavjud' })
       user.email = email
     }
-    if (phone) user.phone = phone
+    if (phone) user.phone = normalizePhone(phone)
     if (shopName !== undefined) user.shopName = shopName
     if (location !== undefined) user.location = location
     if (lat !== undefined && lat !== '') user.lat = Number(lat)
@@ -244,6 +286,9 @@ router.post('/telegram/login', rateLimit({ windowMs: 60_000, max: 30 }), async (
       } else if (safeRole === 'craftsman') {
         Object.assign(userData, { services: services || [], experience: experience || '', district: district || '', priceRange: priceRange || '' })
       }
+      if (safeRole === 'seller' || safeRole === 'craftsman') {
+        userData.status = 'pending'
+      }
       user = await User.create(userData)
       if (safeRole === 'seller' || safeRole === 'craftsman') notifyAdminAboutNewUser(user)
     } else {
@@ -278,6 +323,79 @@ router.put('/change-password', protect, async (req, res) => {
     await user.save()
 
     res.json({ message: 'Parol muvaffaqiyatli o\'zgartirildi. Qaytadan kiring.' })
+  } catch (err) {
+    res.status(400).json({ message: err.message })
+  }
+})
+
+// ── Parolni tiklash: kod so'rash (Telegram orqali) ──
+const validatePassword = (newPassword) => {
+  if (!newPassword || newPassword.length < 6) return 'Yangi parol kamida 6 ta belgi bo\'lishi kerak'
+  if (!/[A-Z]/.test(newPassword)) return 'Parolda kamida 1 ta katta harf bo\'lishi kerak'
+  if (!/[a-z]/.test(newPassword)) return 'Parolda kamida 1 ta kichik harf bo\'lishi kerak'
+  if (!/[0-9]/.test(newPassword)) return 'Parolda kamida 1 ta raqam bo\'lishi kerak'
+  return null
+}
+
+const findUserByLogin = async (loginValue) => {
+  const variants = loginVariants(loginValue)
+  if (!variants.length) return null
+  return User.findOne({ $or: variants.map(p => ({ phone: p })) })
+}
+
+// 1-qadam: email/telefon bo'yicha hisob topib, Telegram orqali kod yuborish
+router.post('/forgot-password', rateLimit({ windowMs: 60_000, max: 5 }), async (req, res) => {
+  try {
+    const { email, login } = req.body
+    const loginValue = email || login
+    if (!loginValue) return res.status(400).json({ message: 'Email yoki telefon raqamini kiriting' })
+
+    const user = await findUserByLogin(loginValue)
+    // Xavfsizlik: hisob mavjudligini oshkor qilmaslik — har doim "yuborildi" javob
+    if (!user) return res.json({ sent: false, message: 'Agar hisob topilsa, kod Telegram orqali yuboriladi' })
+
+    if (!user.telegramChatId) {
+      return res.status(400).json({ sent: false, message: 'Hisobingiz Telegram\'ga bog\'lanmagan. Parolni tiklash uchun avval Telegram\'ni ulash kerak.' })
+    }
+
+    const code = String(Math.floor(100000 + Math.random() * 900000))
+    user.resetCode = code
+    user.resetCodeExpiry = new Date(Date.now() + 10 * 60 * 1000)
+    await user.save()
+
+    const ok = await sendPasswordResetCode(user, code)
+    if (!ok) return res.status(500).json({ sent: false, message: 'Kod yuborilmadi. Telegram bot sozlanmagan bo\'lishi mumkin.' })
+
+    res.json({ sent: true, message: 'Tasdiqlash kodi Telegram orqali yuborildi' })
+  } catch (err) {
+    res.status(400).json({ message: err.message })
+  }
+})
+
+// 2-qadam: kodni tekshirib, yangi parol o'rnatish
+router.post('/reset-password', rateLimit({ windowMs: 60_000, max: 5 }), async (req, res) => {
+  try {
+    const { email, login, code, newPassword } = req.body
+    const loginValue = email || login
+    if (!loginValue || !code) return res.status(400).json({ message: 'Email/telefon va kodni kiriting' })
+
+    const passwordError = validatePassword(newPassword)
+    if (passwordError) return res.status(400).json({ message: passwordError })
+
+    const user = await findUserByLogin(loginValue)
+    if (!user || !user.resetCode || user.resetCode !== String(code).trim()) {
+      return res.status(400).json({ message: 'Kod noto\'g\'ri' })
+    }
+    if (!user.resetCodeExpiry || user.resetCodeExpiry < new Date()) {
+      return res.status(400).json({ message: 'Kod muddati tugagan. Qaytadan so\'rang.' })
+    }
+
+    user.password = newPassword
+    user.resetCode = undefined
+    user.resetCodeExpiry = undefined
+    await user.save()
+
+    res.json({ message: 'Parol muvaffaqiyatli tiklandi. Yangi parol bilan kiring.' })
   } catch (err) {
     res.status(400).json({ message: err.message })
   }

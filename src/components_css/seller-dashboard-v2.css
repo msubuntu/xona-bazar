@@ -610,6 +610,20 @@
 }
 .sdv2-error-state p { color: var(--text-secondary, #6b7280); font-size: 14px; }
 
+/* ── Moderatsiya (pending / rejected) ── */
+.sdv2-pending-block {
+  display: flex; align-items: center; justify-content: center;
+  padding: 48px 20px; min-height: 320px;
+}
+.sdv2-pending-card {
+  max-width: 420px; width: 100%; text-align: center;
+  background: var(--bg-card, #fff); border: 1px solid var(--border, #e5e7eb);
+  border-radius: 16px; padding: 36px 28px;
+}
+.sdv2-pending-icon { font-size: 42px; margin-bottom: 12px; }
+.sdv2-pending-card h3 { margin: 0 0 8px; font-size: 18px; }
+.sdv2-pending-card p { margin: 0; color: var(--text-secondary, #6b7280); font-size: 14px; line-height: 1.6; }
+
 /* ── Orders ── */
 .sdv2-orders-filters { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
 .sdv2-filter-chip {

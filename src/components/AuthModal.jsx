@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext.jsx'
 import { useSettings } from '../context/SettingsContext.jsx'
 import { SERVICE_TYPES, DISTRICTS } from '../data/craftsmen.js'
 import { getGeoErrorMessage } from '../services/geo'
+import { api } from '../services/api'
 import TelegramLoginButton from './TelegramLoginButton.jsx'
 import '../components_css/auth.css'
 
@@ -10,8 +11,14 @@ function AuthModal() {
   const { showAuth, authMode, login, register, switchMode, setShowAuth, loading, error } = useAuth()
   const { t } = useSettings()
   const [showPass, setShowPass] = useState(false)
+  const [forgotStep, setForgotStep] = useState(null)
+  const [forgotLogin, setForgotLogin] = useState('')
+  const [forgotCode, setForgotCode] = useState('')
+  const [forgotNewPass, setForgotNewPass] = useState('')
+  const [forgotMsg, setForgotMsg] = useState({})
+  const [forgotBusy, setForgotBusy] = useState(false)
 
-  const [loginForm, setLoginForm] = useState({ email: '', password: '' })
+  const [loginForm, setLoginForm] = useState({ phone: '', password: '' })
   const [regForm, setRegForm] = useState({
     name: '', email: '', phone: '', password: '', confirm: '',
     role: 'buyer',
@@ -128,13 +135,63 @@ function AuthModal() {
   const handleLogin = (e) => {
     e.preventDefault()
     const errs = {}
-    if (!loginForm.email) errs.email = t('enterEmail')
-    else if (!validateEmail(loginForm.email)) errs.email = t('wrongEmail')
+    const digits = loginForm.phone.replace(/\D/g, '')
+    if (!digits) errs.phone = t('enterPhone')
+    else if (digits.length < 9) errs.phone = t('minDigits9')
     if (!loginForm.password) errs.password = t('enterPassword')
     else if (loginForm.password.length < 6) errs.password = t('minChars6')
 
     if (Object.keys(errs).length) { setErrors(errs); return }
-    login(loginForm.email, loginForm.password)
+    login(loginForm.phone, loginForm.password)
+  }
+
+  const startForgot = () => {
+    setForgotStep('request')
+    setForgotLogin(loginForm.phone || '')
+    setForgotCode('')
+    setForgotNewPass('')
+    setForgotMsg({})
+    setErrors({})
+  }
+
+  const handleForgotRequest = async (e) => {
+    e.preventDefault()
+    setForgotBusy(true)
+    setForgotMsg({})
+    try {
+      const res = await api.auth.forgotPassword({ login: forgotLogin, email: forgotLogin })
+      setForgotMsg({ type: 'success', text: res.message })
+      setForgotStep('reset')
+    } catch (err) {
+      setForgotMsg({ type: 'error', text: err.message })
+    } finally {
+      setForgotBusy(false)
+    }
+  }
+
+  const handleForgotReset = async (e) => {
+    e.preventDefault()
+    setForgotBusy(true)
+    setForgotMsg({})
+    try {
+      const res = await api.auth.resetPassword({ login: forgotLogin, email: forgotLogin, code: forgotCode, newPassword: forgotNewPass })
+      setForgotMsg({ type: 'success', text: res.message })
+      setForgotStep('done')
+      setLoginForm({ phone: forgotLogin, password: '' })
+    } catch (err) {
+      setForgotMsg({ type: 'error', text: err.message })
+    } finally {
+      setForgotBusy(false)
+    }
+  }
+
+  const cancelForgot = () => {
+    setForgotStep(null)
+    setForgotLogin('')
+    setForgotCode('')
+    setForgotNewPass('')
+    setForgotMsg({})
+    setErrors({})
   }
 
   const handleRegister = (e) => {
@@ -257,19 +314,79 @@ function AuthModal() {
 
         {error && <div className="auth_error_global" style={{ color: '#ef4444', textAlign: 'center', fontSize: 13, marginBottom: 8 }}>{error}</div>}
 
-        {authMode === 'login' ? (
+        {authMode === 'login' && forgotStep ? (
+          <div className="auth_forgot_block">
+            {forgotStep === 'request' && (
+              <form className="auth_form" onSubmit={handleForgotRequest}>
+                <div className="auth_forgot_head">
+                  <p>{t('forgotDesc')}</p>
+                </div>
+                <div className="auth_field">
+                  <label>{t('phone')}</label>
+                  <div className="auth_input_wrap">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
+                    <span className="auth_prefix">+998</span>
+                    <input type="tel" inputMode="numeric" placeholder="90 123 45 67"
+                      value={forgotLogin} onChange={e => setForgotLogin(e.target.value.replace(/[^\d\s]/g, '').slice(0, 12))} />
+                  </div>
+                </div>
+                {forgotMsg.type === 'error' && <div className="auth_error_global" style={{ color: '#ef4444', textAlign: 'center', fontSize: 13, marginBottom: 8 }}>{forgotMsg.text}</div>}
+                <button type="submit" className="auth_submit" disabled={forgotBusy}>
+                  {forgotBusy ? '...' : t('forgotSendCode')}
+                </button>
+              </form>
+            )}
+
+            {forgotStep === 'reset' && (
+              <form className="auth_form" onSubmit={handleForgotReset}>
+                <div className="auth_forgot_head">
+                  {forgotMsg.type === 'success' && <div style={{ color: '#2bc32b', textAlign: 'center', fontSize: 13, marginBottom: 8 }}>{forgotMsg.text}</div>}
+                  <p>{t('forgotEnterCode')}</p>
+                </div>
+                <div className="auth_field">
+                  <label>{t('forgotCode')}</label>
+                  <div className="auth_input_wrap">
+                    <input type="text" maxLength={6} value={forgotCode} onChange={e => setForgotCode(e.target.value.replace(/\D/g, ''))} placeholder="000000" />
+                  </div>
+                </div>
+                <div className={`auth_field ${errors.password ? 'error' : ''}`}>
+                  <label>{t('newPassword')}</label>
+                  <div className="auth_input_wrap">
+                    <input type="password" value={forgotNewPass} onChange={e => setForgotNewPass(e.target.value)} placeholder={t('minChars6')} />
+                  </div>
+                </div>
+                {forgotMsg.type === 'error' && <div className="auth_error_global" style={{ color: '#ef4444', textAlign: 'center', fontSize: 13, marginBottom: 8 }}>{forgotMsg.text}</div>}
+                <button type="submit" className="auth_submit" disabled={forgotBusy}>
+                  {forgotBusy ? '...' : t('forgotResetBtn')}
+                </button>
+              </form>
+            )}
+
+            {forgotStep === 'done' && (
+              <div className="auth_forgot_done">
+                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#2bc32b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+                <p>{forgotMsg.type === 'success' ? forgotMsg.text : t('forgotDone')}</p>
+                <button type="button" className="auth_submit" onClick={() => { setForgotStep(null); cancelForgot() }} style={{ marginTop: 12 }}>
+                  {t('loginBtn')}
+                </button>
+              </div>
+            )}
+
+            <button type="button" className="auth_forgot_back" onClick={cancelForgot}>← {t('backToLogin')}</button>
+          </div>
+        ) : authMode === 'login' ? (
           <form className="auth_form" onSubmit={handleLogin}>
-            <div className={`auth_field ${errors.email ? 'error' : ''}`}>
-              <label>{t('email')}</label>
+            <div className={`auth_field ${errors.phone ? 'error' : ''}`}>
+              <label>{t('phone')}</label>
               <div className="auth_input_wrap">
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
-                  <polyline points="22,6 12,13 2,6"/>
+                  <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/>
                 </svg>
-                <input type="email" placeholder="email@example.com"
-                  value={loginForm.email} onChange={e => setLoginForm({...loginForm, email: e.target.value})} />
+                <span className="auth_prefix">+998</span>
+                <input type="tel" inputMode="numeric" inputLength={9} placeholder="90 123 45 67"
+                  value={loginForm.phone} onChange={e => setLoginForm({...loginForm, phone: e.target.value.replace(/[^\d\s]/g, '').slice(0, 12)})} />
               </div>
-              {errors.email && <span className="auth_error">{errors.email}</span>}
+              {errors.phone && <span className="auth_error">{errors.phone}</span>}
             </div>
 
             <div className={`auth_field ${errors.password ? 'error' : ''}`}>
@@ -295,7 +412,7 @@ function AuthModal() {
               <label className="auth_checkbox">
                 <input type="checkbox" /> {t('rememberMe')}
               </label>
-              <a href="#" className="auth_forgot">{t('forgotPassword')}</a>
+              <a href="#" className="auth_forgot" onClick={(e) => { e.preventDefault(); startForgot() }}>{t('forgotPassword')}</a>
             </div>
 
             <button type="submit" className="auth_submit" disabled={loading}>

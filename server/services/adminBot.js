@@ -53,6 +53,9 @@ const COMMANDS = [
   { command: 'status', description: '🖥 Server va foydalanuvchilar holati' },
   { command: 'logs', description: '📋 Oxirgi 5 ta xavfsizlik ogohlantirishi' },
   { command: 'broadcast', description: '📢 Barcha foydalanuvchilarga xabar' },
+  { command: 'moderate', description: '🧑‍💼 Tasdiqlash kutilayotgan seller/ustalar' },
+  { command: 'approve', description: '✅ Seller/ustani tasdiqlash (masalan: /approve email@misol.uz)' },
+  { command: 'reject', description: '❌ Seller/ustani rad etish' },
   { command: 'block', description: '🚫 IP bloklash (masalan: /block 1.2.3.4)' },
   { command: 'unblock', description: '🔓 IP blokdan chiqarish' },
   { command: 'blocked', description: '🚫 Bloklangan IP ro\'yxati' },
@@ -65,13 +68,16 @@ async function handleHelp() {
     [
       '<b>Xona Bazar admin bot</b>',
       '',
-      '/status — server va foydalanuvchilar holati',
-      '/logs — oxirgi 5 ta xavfsizlik ogohlantirishi',
-      '/broadcast <matn> — barcha foydalanuvchilarga xabar',
-      '/block <ip> — IP bloklash',
-      '/unblock <ip> — IP blokdan chiqarish',
-      '/blocked — bloklangan IP ro\'yxati',
-      '/seed-demo — demo foydalanuvchilar va mahsulotlar',
+'/status — server va foydalanuvchilar holati',
+    '/logs — oxirgi 5 ta xavfsizlik ogohlantirishi',
+    '/broadcast <matn> — barcha foydalanuvchilarga xabar',
+    '/moderate — tasdiqlash kutilayotgan seller/ustalar',
+    '/approve <email yoki telefon> — seller/ustani tasdiqlash',
+    '/reject <email yoki telefon> — seller/ustani rad etish',
+    '/block <ip> — IP bloklash',
+    '/unblock <ip> — IP blokdan chiqarish',
+    '/blocked — bloklangan IP ro\'yxati',
+    '/seed-demo — demo foydalanuvchilar va mahsulotlar',
     ].join('\n'),
     menuKeyboard()
   )
@@ -137,6 +143,62 @@ async function handleBroadcast(arg) {
     }
   }
   await sendAdmin(`✅ Xabar yuborildi: <b>${ok}/${users.length}</b> ga`)
+}
+
+async function handleModerate() {
+  const pendingUsers = await User.find({ status: 'pending', role: { $in: ['seller', 'craftsman'] } })
+    .select('name email phone role shopName services createdAt')
+  if (!pendingUsers.length) {
+    await sendAdmin('✅ Tasdiqlash kutilayotganlar yo\'q.')
+    return
+  }
+  const lines = [`<b>🧑‍💼 Tasdiqlash kutilmoqda (${pendingUsers.length})</b>`, '']
+  pendingUsers.forEach((u, i) => {
+    const role = u.role === 'seller' ? '🏪 Sotuvchi' : '🔧 Usta'
+    lines.push(
+      `${i + 1}. ${esc(u.name)}\n`,
+      `   ${role} | ${esc(u.email)}${u.phone ? ' | ' + esc(u.phone) : ''}\n`,
+      u.shopName ? `   do'kon: ${esc(u.shopName)}\n` : '',
+      u.services?.length ? `   xizmatlar: ${esc(u.services.slice(0, 3).join(', '))}\n` : '',
+      `   /approve ${esc(u.email)} | /reject ${esc(u.email)}`
+    )
+  })
+  await sendAdmin(lines.join(''))
+}
+
+async function handleModeration(action, arg) {
+  const query = (arg || '').trim().toLowerCase()
+  if (!query) {
+    await sendAdmin('Email yoki telefon kiriting. Masalan: /approve email@misol.uz')
+    return
+  }
+  const user = await User.findOne({
+    $or: [{ email: query }, { phone: query }],
+    role: { $in: ['seller', 'craftsman'] },
+  })
+  if (!user) {
+    await sendAdmin('Bunday seller/usta topilmadi.')
+    return
+  }
+  if (action === 'approve') {
+    user.status = 'active'
+    await user.save()
+    const roleLabel = user.role === 'seller' ? 'Sotuvchi' : 'Usta'
+    await sendAdmin(`✅ <b>${esc(user.name)}</b> (${roleLabel}) tasdiqlandi.`)
+    const { notifyUser } = await import('./telegramBot.js')
+    if (user.telegramId || user.telegramChatId) {
+      await notifyUser(user._id, [
+        `✅ <b>Hisobingiz tasdiqlandi!</b>`,
+        `Endi Xona Bazar'da ${roleLabel.toLowerCase()} sifatida ishlashingiz mumkin.`,
+      ].join('\n')).catch(() => {})
+    }
+  } else if (action === 'reject') {
+    user.status = 'rejected'
+    await user.save()
+    await sendAdmin(`❌ <b>${esc(user.name)}</b> rad etildi.`)
+  } else {
+    await sendAdmin('Noma\'lum amal. /approve yoki /reject')
+  }
 }
 
 async function handleBlock(arg) {
@@ -246,6 +308,15 @@ async function dispatch(text) {
       break
     case '/blocked':
       await handleBlocked()
+      break
+    case '/moderate':
+      await handleModerate()
+      break
+    case '/approve':
+      await handleModeration('approve', arg)
+      break
+    case '/reject':
+      await handleModeration('reject', arg)
       break
     case '/seed-demo':
       await handleSeedDemo()

@@ -23,10 +23,12 @@ async function request(endpoint, options = {}) {
 export const api = {
   auth: {
     register: (body) => request('/auth/register', { method: 'POST', body: JSON.stringify(body) }),
-    login: (email, password) => request('/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) }),
+    login: (email, password) => request('/auth/login', { method: 'POST', body: JSON.stringify({ login: email, password }) }),
     me: () => request('/auth/me'),
     notifications: (body) => request('/auth/notifications', { method: 'PUT', body: JSON.stringify(body) }),
     changePassword: (body) => request('/auth/change-password', { method: 'PUT', body: JSON.stringify(body) }),
+    forgotPassword: (body) => request('/auth/forgot-password', { method: 'POST', body: JSON.stringify(body) }),
+    resetPassword: (body) => request('/auth/reset-password', { method: 'POST', body: JSON.stringify(body) }),
     updateProfile: (body) => {
       if (body instanceof FormData) return request('/auth/profile', { method: 'PUT', body })
       return request('/auth/profile', { method: 'PUT', body: JSON.stringify(body) })

@@ -676,6 +676,25 @@ export async function notifyUser(userId, text, extra = {}) {
   }
 }
 
+// Parol tiklash kodi yuborish. notifTelegram flag'iga bog'liq emas — har doim yuboriladi.
+export async function sendPasswordResetCode(user, code) {
+  if (!BOT_TOKEN || !user.telegramChatId) return false
+  try {
+    await sendMessage(user.telegramChatId, [
+      `\u{1F511} <b>Parolni tiklash kodi</b>`,
+      '',
+      `Sizning tasdiqlash kodingiz: <b>${code}</b>`,
+      `Kod <b>10 daqiqa</b> davomida amal qiladi.`,
+      '',
+      `Agar siz bu so'rovni yubormagan bo'lsangiz, ushbu xabarga e'tibor bermang.`,
+    ].join('\n'))
+    return true
+  } catch (err) {
+    console.error('Telegram reset code error:', err.message)
+    return false
+  }
+}
+
 function newMessagePreview(rawText, max = 80) {
   const out = String(rawText || '')
     .split('\n').slice(0, 2)
@@ -713,12 +732,14 @@ export async function notifyAdminAboutNewUser(newUser) {
     const roleLabel = newUser.role === 'seller' ? 'Sotuvchi' : newUser.role === 'craftsman' ? 'Usta' : ''
     if (!roleLabel) return
     const text = [
-      `<b>🆕 Yangi ${roleLabel} ro'yxatdan o'tdi</b>`,
+      `<b>🆕 Yangi ${roleLabel} ro'yxatdan o'tdi (tasdiqlash kutilmoqda)</b>`,
       `ism: ${esc(newUser.name)}`,
       `email: ${esc(newUser.email)}`,
       newUser.phone ? `telefon: ${esc(newUser.phone)}` : null,
       newUser.shopName ? `do'kon: ${esc(newUser.shopName)}` : null,
       newUser.services?.length ? `xizmatlar: ${esc(newUser.services.join(', '))}` : null,
+      ``,
+      `Tasdiqlash: /approve ${esc(newUser.email)} | Rad etish: /reject ${esc(newUser.email)}`,
     ].filter(Boolean).join('\n')
     for (const a of admins) notifyUser(a._id, text)
   } catch (err) {

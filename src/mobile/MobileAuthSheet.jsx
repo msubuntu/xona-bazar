@@ -38,7 +38,7 @@ export default function MobileAuthSheet() {
   const [errors, setErrors] = useState({})
   const [showPass, setShowPass] = useState(false)
 
-  const [loginForm, setLoginForm] = useState({ email: '', password: '' })
+  const [loginForm, setLoginForm] = useState({ phone: '', password: '' })
   const [regForm, setRegForm] = useState({
     name: '', email: '', phone: '', password: '', confirm: '', role: 'buyer',
     shopName: '', location: '', description: '',
@@ -57,14 +57,15 @@ export default function MobileAuthSheet() {
 
   const handleLogin = async () => {
     const errs = {}
-    if (!loginForm.email) errs.email = t('enterEmail')
-    else if (!validateEmail(loginForm.email)) errs.email = t('wrongEmail')
+    const digits = loginForm.phone.replace(/\D/g, '')
+    if (!digits) errs.phone = t('enterPhone')
+    else if (digits.length < 9) errs.phone = t('minDigits9')
     if (!loginForm.password) errs.password = t('enterPassword')
     else if (loginForm.password.length < 6) errs.password = t('minChars6')
     setErrors(errs)
     if (Object.keys(errs).length) return
     setLoading(true); setError(null)
-    try { await login(loginForm.email, loginForm.password) }
+    try { await login(loginForm.phone, loginForm.password) }
     catch (e) { setError(e.message) }
     finally { setLoading(false) }
   }
@@ -156,10 +157,13 @@ export default function MobileAuthSheet() {
             <TelegramLoginButton className="mob_tg_block" hintClassName="mob_tg_hint" />
             <div className="mob_tg_divider"><span>yoki</span></div>
             <div className="mob_field">
-              <label className="mob_label">{t('email')}</label>
-              <input className="mob_input" type="email" placeholder="email@misol.uz" value={loginForm.email}
-                onChange={(e) => setLoginForm(f => ({ ...f, email: e.target.value }))} />
-              {errors.email && <div className="mob_field_error">{errors.email}</div>}
+              <label className="mob_label">{t('phone')}</label>
+              <div className="mob_phone_wrap">
+                <span className="mob_prefix">+998</span>
+                <input className="mob_input" type="tel" inputMode="numeric" placeholder="90 123 45 67" value={loginForm.phone}
+                  onChange={(e) => setLoginForm(f => ({ ...f, phone: e.target.value.replace(/[^\d\s]/g, '').slice(0, 12) }))} />
+              </div>
+              {errors.phone && <div className="mob_field_error">{errors.phone}</div>}
             </div>
             <div className="mob_field">
               <label className="mob_label">{t('password')}</label>

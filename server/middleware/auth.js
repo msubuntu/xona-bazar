@@ -1,6 +1,11 @@
 import jwt from 'jsonwebtoken'
 import User from '../models/User.js'
 
+// Pending/rejected seller-ustalar uchun faqat "login/sozlamalar" yo'l qo'yiladi,
+// amaliy endpointlar (mahsulot, buyurtma, booking, chat) bloklanadi.
+const MODERATION_ALLOWED_PREFIXES = ['/auth/']
+const MODERATION_ALLOWED_ENDPOINTS = ['/me', '/profile', '/notifications', '/change-password', '/telegram/status', '/telegram/link-code', '/telegram/unlink']
+
 export const protect = async (req, res, next) => {
   try {
     const token = req.headers.authorization?.split(' ')[1]
@@ -14,6 +19,25 @@ export const protect = async (req, res, next) => {
       const changedTimestamp = Math.floor(user.passwordChangedAt.getTime() / 1000)
       if (decoded.iat < changedTimestamp) {
         return res.status(401).json({ message: 'Parol o\'zgartirilgan. Qaytadan kiring.' })
+      }
+    }
+
+    // Modеratsiya: seller/craftsman pending yoki rejected bo'lsa amaliy ishlarni bloklash
+    if ((user.role === 'seller' || user.role === 'craftsman') &&
+        (user.status === 'pending' || user.status === 'rejected')) {
+      const original = req.originalUrl || req.url || ''
+      const normalized = original.split('?')[0]
+      const isAuth = MODERATION_ALLOWED_PREFIXES.some(p => normalized.includes(p))
+      let allowed = false
+      if (isAuth) {
+        const tail = normalized.split('/auth/')[1] || ''
+        allowed = MODERATION_ALLOWED_ENDPOINTS.some(e => tail.startsWith(e.replace(/^\//, '')))
+      }
+      if (!allowed) {
+        const msg = user.status === 'pending'
+          ? 'Hisob admin tomonidan tasdiqlanishi kutilmoqda'
+          : 'Hisob rad etilgan. Qo\'llab-quvvatlashga murojaat qiling'
+        return res.status(403).json({ message: msg })
       }
     }
 

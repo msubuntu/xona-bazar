@@ -37,6 +37,9 @@ const userSchema = new mongoose.Schema({
   telegramLinkCode: { type: String, trim: true },
   telegramLinkExpiry: { type: Date },
   twoFactor: { type: Boolean, default: false },
+  status: { type: String, enum: ['pending', 'active', 'rejected'], default: 'active' },
+  resetCode: { type: String, trim: true },
+  resetCodeExpiry: { type: Date },
   passwordChangedAt: { type: Date },
   completedWorks: [{
     bookingId: { type: mongoose.Schema.Types.ObjectId, ref: 'Booking' },

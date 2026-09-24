@@ -62,7 +62,7 @@ export default function MobileUserPage() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const { user, openLogin, logout, updateProfile } = useAuth()
-  const { lang, currency, setLang, setCurrency, notifEmail, notifSms, notifPromo, setNotifEmail, setNotifSms, setNotifPromo, twoFactor, setTwoFactor, convertPrice, t } = useSettings()
+  const { lang, currency, setLang, setCurrency, notifEmail, notifSms, notifPromo, setNotifEmail, setNotifSms, setNotifPromo, convertPrice, t } = useSettings()
   const { dark, toggleTheme } = useTheme()
   const { favorites, toggleFavorite } = useFavorites()
   const { addItem } = useCart()
@@ -607,7 +607,6 @@ export default function MobileUserPage() {
           </div>
           <div className="mua_card">
             <div className="mua_set_title">{t('security')}</div>
-            <div className="mua_toggle"><div><strong>{t('twoFactor')}</strong><span>{t('twoFactorDesc')}</span></div><label className="mua_switch"><input type="checkbox" checked={twoFactor} onChange={e => setTwoFactor(e.target.checked)} /><span></span></label></div>
             <button className="mua_li" onClick={() => setPwOpen(!pwOpen)}>{t('changePassword')}</button>
             {pwOpen && (
               <form className="mua_addr_form" onSubmit={handleChangePassword}>
