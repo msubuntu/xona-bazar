@@ -72,8 +72,11 @@ router.post('/register', rateLimit({ windowMs: 60_000, max: 10 }), async (req, r
   try {
     const { name, email, phone, password, role, shopName, location, lat, lng, description, services, experience, district, priceRange } = req.body
 
-    const exists = await User.findOne({ email })
-    if (exists) return res.status(400).json({ message: 'Email allaqachon ro\'yxatdan o\'tgan' })
+    const phoneNorm = normalizePhone(phone)
+    if (!phoneNorm || phoneDigits(phoneNorm).length < 9) return res.status(400).json({ message: "Telefon raqam to'liq kiritilmagan" })
+
+    const phoneExists = await User.findOne({ phone: phoneNorm })
+    if (phoneExists) return res.status(400).json({ message: 'Bu telefon raqam allaqachon ro\'yxatdan o\'tgan' })
 
     if (!password || password.length < 6) return res.status(400).json({ message: 'Parol kamida 6 ta belgi bo\'lishi kerak' })
     if (!/[A-Z]/.test(password)) return res.status(400).json({ message: 'Parolda kamida 1 ta katta harf bo\'lishi kerak' })
@@ -83,7 +86,12 @@ router.post('/register', rateLimit({ windowMs: 60_000, max: 10 }), async (req, r
     const ALLOWED_ROLES = ['buyer', 'seller', 'craftsman']
     const safeRole = ALLOWED_ROLES.includes(role) ? role : 'buyer'
 
-    const userData = { name, email, phone: normalizePhone(phone), password, role: safeRole }
+    // Email endi ixtiyoriy — berilmasa avtomatik yaratiladi (User model talabi tirikligi uchun)
+    const safeEmail = email ? String(email).trim().toLowerCase() : `phone_${phoneDigits(phoneNorm)}@xona.local`
+    const emailExists = await User.findOne({ email: safeEmail })
+    if (emailExists) return res.status(400).json({ message: 'Bu akkaunt allaqachon ro\'yxatdan o\'tgan' })
+
+    const userData = { name, email: safeEmail, phone: phoneNorm, password, role: safeRole }
     if (safeRole === 'seller') {
       Object.assign(userData, { shopName, location, lat, lng, description })
     } else if (safeRole === 'craftsman') {

@@ -13,8 +13,6 @@ export function openRegisterSheet() {
   if (openHandler) openHandler('register')
 }
 
-const validateEmail = (e) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e)
-
 function EyeIcon({ open }) {
   return open ? (
     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -40,7 +38,7 @@ export default function MobileAuthSheet() {
 
   const [loginForm, setLoginForm] = useState({ phone: '', password: '' })
   const [regForm, setRegForm] = useState({
-    name: '', email: '', phone: '', password: '', confirm: '', role: 'buyer',
+    name: '', phone: '', password: '', confirm: '', role: 'buyer',
     shopName: '', location: '', description: '',
     services: [], experience: '', district: '', priceRange: '',
   })
@@ -73,8 +71,6 @@ export default function MobileAuthSheet() {
   const handleRegister = async () => {
     const errs = {}
     if (!regForm.name.trim()) errs.name = t('enterName')
-    if (!regForm.email) errs.email = t('enterEmail')
-    else if (!validateEmail(regForm.email)) errs.email = t('wrongEmail')
     if (!regForm.phone) errs.phone = t('enterPhone')
     else if (regForm.phone.length < 9) errs.phone = t('minDigits9')
     if (!regForm.password) errs.password = t('enterPassword')
@@ -109,7 +105,6 @@ export default function MobileAuthSheet() {
     try {
       await register({
         name: regForm.name.trim(),
-        email: regForm.email,
         phone: regForm.phone,
         password: regForm.password,
         role: regForm.role,
@@ -187,12 +182,6 @@ export default function MobileAuthSheet() {
               <input className="mob_input" placeholder={t('yourNamePlaceholder')} value={regForm.name}
                 onChange={(e) => setField('name')(e)} />
               {errors.name && <div className="mob_field_error">{errors.name}</div>}
-            </div>
-            <div className="mob_field">
-              <label className="mob_label">{t('email')}</label>
-              <input className="mob_input" type="email" placeholder="email@misol.uz" value={regForm.email}
-                onChange={(e) => setField('email')(e)} />
-              {errors.email && <div className="mob_field_error">{errors.email}</div>}
             </div>
             <div className="mob_field">
               <label className="mob_label">{t('phone')}</label>

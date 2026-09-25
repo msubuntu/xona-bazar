@@ -20,7 +20,7 @@ function AuthModal() {
 
   const [loginForm, setLoginForm] = useState({ phone: '', password: '' })
   const [regForm, setRegForm] = useState({
-    name: '', email: '', phone: '', password: '', confirm: '',
+    name: '', phone: '', password: '', confirm: '',
     role: 'buyer',
     shopName: '', location: '', description: '', lat: null, lng: null,
     services: [], experience: '', district: '', priceRange: '',
@@ -130,8 +130,6 @@ function AuthModal() {
 
   if (!showAuth) return null
 
-  const validateEmail = (e) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e)
-
   const handleLogin = (e) => {
     e.preventDefault()
     const errs = {}
@@ -198,8 +196,6 @@ function AuthModal() {
     e.preventDefault()
     const errs = {}
     if (!regForm.name.trim()) errs.name = t('enterName')
-    if (!regForm.email) errs.email = t('enterEmail')
-    else if (!validateEmail(regForm.email)) errs.email = t('wrongEmail')
     if (!regForm.phone) errs.phone = t('enterPhone')
     else if (regForm.phone.length < 9) errs.phone = t('minDigits9')
     if (!regForm.password) errs.password = t('enterPassword')
@@ -235,7 +231,6 @@ function AuthModal() {
 
     register({
       name: regForm.name.trim(),
-      email: regForm.email,
       phone: regForm.phone,
       password: regForm.password,
       role: regForm.role,
@@ -434,19 +429,6 @@ function AuthModal() {
                   value={regForm.name} onChange={e => setRegForm({...regForm, name: e.target.value})} />
               </div>
               {errors.name && <span className="auth_error">{errors.name}</span>}
-            </div>
-
-            <div className={`auth_field ${errors.email ? 'error' : ''}`}>
-              <label>{t('email')}</label>
-              <div className="auth_input_wrap">
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
-                  <polyline points="22,6 12,13 2,6"/>
-                </svg>
-                <input type="email" placeholder="email@example.com"
-                  value={regForm.email} onChange={e => setRegForm({...regForm, email: e.target.value})} />
-              </div>
-              {errors.email && <span className="auth_error">{errors.email}</span>}
             </div>
 
             <div className={`auth_field ${errors.phone ? 'error' : ''}`}>
