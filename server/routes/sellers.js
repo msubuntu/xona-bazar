@@ -8,6 +8,7 @@ import { protect, authorize } from '../middleware/auth.js'
 import { rateLimit } from '../middleware/rate-limit.js'
 import multer from 'multer'
 import { resolve } from 'path'
+import { safeUnlink } from '../utils/fileCleanup.js'
 
 const WORK_ALLOWED_MIME = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
 const WORK_ALLOWED_EXT = ['.jpg', '.jpeg', '.png', '.webp', '.gif']
@@ -271,12 +272,17 @@ router.post('/me/completed-works', protect, authorize('craftsman'), workUpload.a
 
 router.delete('/me/completed-works/:workId', protect, authorize('craftsman'), async (req, res) => {
   try {
-    const user = await User.findByIdAndUpdate(
+    const user = await User.findById(req.user._id)
+    if (!user) return res.status(404).json({ message: 'Foydalanuvchi topilmadi' })
+    const work = (user.completedWorks || []).find(w => String(w._id) === String(req.params.workId))
+    const images = (work && Array.isArray(work.images)) ? work.images : []
+    await User.findByIdAndUpdate(
       req.user._id,
       { $pull: { completedWorks: { _id: req.params.workId } } },
       { new: true }
     ).select('completedWorks')
-    res.json({ works: user.completedWorks })
+    safeUnlink(images)
+    res.json({ works: user.completedWorks.filter(w => String(w._id) !== String(req.params.workId)) })
   } catch (err) {
     res.status(400).json({ message: err.message })
   }

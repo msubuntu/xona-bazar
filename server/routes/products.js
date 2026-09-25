@@ -3,6 +3,7 @@ import Product from '../models/Product.js'
 import { protect, authorize } from '../middleware/auth.js'
 import multer from 'multer'
 import { resolve } from 'path'
+import { safeUnlink, productFileUrls } from '../utils/fileCleanup.js'
 
 const ALLOWED_MIME = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'video/mp4']
 const ALLOWED_EXT = ['.jpg', '.jpeg', '.png', '.webp', '.gif', '.mp4']
@@ -337,6 +338,8 @@ router.put('/:id', protect, authorize('seller', 'craftsman'), upload.fields([
       return res.status(403).json({ message: "Bu mahsulot sizniki emas" })
     }
 
+    const oldFiles = new Set(productFileUrls(product))
+
     const files = req.files || {}
     const { name, brand, category, subcategory, price, oldPrice, description, stock, status, keepImages } = req.body
     if (name) product.name = name
@@ -398,6 +401,8 @@ router.put('/:id', protect, authorize('seller', 'craftsman'), upload.fields([
     }
 
     await product.save()
+    const keptUrls = new Set(productFileUrls(product))
+    safeUnlink([...oldFiles].filter(u => !keptUrls.has(u)))
     res.json({ product })
   } catch (err) {
     res.status(400).json({ message: err.message })
@@ -411,7 +416,9 @@ router.delete('/:id', protect, authorize('seller', 'craftsman'), async (req, res
     if (product.sellerId.toString() !== req.user._id.toString()) {
       return res.status(403).json({ message: "Bu mahsulot sizniki emas" })
     }
+    const oldFiles = productFileUrls(product)
     await product.deleteOne()
+    safeUnlink(oldFiles)
     res.json({ message: 'O\'chirildi' })
   } catch (err) {
     res.status(500).json({ message: err.message })
