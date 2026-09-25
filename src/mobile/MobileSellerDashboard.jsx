@@ -17,6 +17,12 @@ const STATUS_CHIP = {
 }
 const STATUS_FLOW = ['pending', 'confirmed', 'completed']
 const INITIAL_FORM = { name: '', brand: '', category: 'flooring', subcategory: '', description: '', price: '', oldPrice: '', stock: '' }
+const DEFAULT_PRODUCT_FEATURES = [
+  { icon: '🏠', label: 'Do\'kondan oling', desc: 'O\'zingiz qulay vaqtda olib keting' },
+  { icon: '🔄', label: '7 kun qaytarish', desc: 'Mahsulotni qaytarish imkoniyati' },
+  { icon: '🛡️', label: 'Kafolat', desc: 'Sifat va ishonch kafolati' },
+  { icon: '💬', label: 'Maslahat', desc: 'Mutaxassislardan bepul maslahat' },
+]
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024
 const MAX_VIDEO_SIZE = 100 * 1024 * 1024
 const MIN_IMAGES = 4
@@ -99,6 +105,7 @@ export default function MobileSellerDashboard() {
   const [formStep, setFormStep] = useState(1)
   const [formErrors, setFormErrors] = useState({})
   const [specs, setSpecs] = useState({})
+  const [features, setFeatures] = useState([])
   const [imageFiles, setImageFiles] = useState([])
   const [imagePreviews, setImagePreviews] = useState([])
   const [videoFile, setVideoFile] = useState(null)
@@ -244,6 +251,7 @@ export default function MobileSellerDashboard() {
     setFormStep(1)
     setFormErrors({})
     setSpecs({})
+    setFeatures(DEFAULT_PRODUCT_FEATURES)
     imagePreviews.forEach(p => { if (p.startsWith('blob:')) URL.revokeObjectURL(p) })
     setImageFiles([])
     setImagePreviews([])
@@ -277,6 +285,7 @@ export default function MobileSellerDashboard() {
       stock: product.stock || '',
     })
     setSpecs((product.specs && typeof product.specs === 'object') ? Object.fromEntries(Object.entries(product.specs).filter(([, v]) => v != null && String(v).trim() !== '')) : {})
+    setFeatures((product.features && product.features.length > 0) ? product.features.map(f => ({ icon: f.icon || '', label: f.label || '', desc: f.desc || '' })) : DEFAULT_PRODUCT_FEATURES)
     const rawImages = (product.images && product.images.length > 0) ? product.images : (product.image ? [product.image] : [])
     setImagePreviews(rawImages.filter(Boolean))
     setVideoPreview(product.video || '')
@@ -418,12 +427,33 @@ export default function MobileSellerDashboard() {
     }))
   }
 
+  const updateFeature = (idx, key, value) => {
+    setFeatures(prev => prev.map((f, i) => i === idx ? ({ ...f, [key]: value }) : f))
+  }
+
+  const removeFeature = (idx) => {
+    setFeatures(prev => prev.filter((_, i) => i !== idx))
+  }
+
+  const addFeature = () => {
+    setFeatures(prev => [...prev, { icon: '✅', label: '', desc: '' }])
+  }
+
+  const FEATURE_ICONS = ['✅', '🏠', '🔄', '🛡️', '💬', '🚚', '📦', '💰', '⭐', '🔩', '👷', '🎨']
+
   const validateStep = (step) => {
     const errors = {}
     if (step === 1) {
       if (!form.name.trim()) errors.name = t('enterProductName')
       if (!form.brand.trim()) errors.brand = t('enterBrand')
       if (!form.description.trim()) errors.description = t('enterDescription')
+      const validFeatures = features.filter(f => f.label && f.label.trim())
+      if (validFeatures.length < 2) {
+        errors.features = t('minFeatures2')
+      } else {
+        const emptyDesc = validFeatures.find(f => !f.desc || !f.desc.trim())
+        if (emptyDesc) errors.features = t('featureDescRequired')
+      }
     }
     if (step === 2) {
       const specFields = specFieldsFor(form.category)
@@ -473,6 +503,10 @@ export default function MobileSellerDashboard() {
     fd.append('price', Number(form.price))
     if (form.oldPrice) fd.append('oldPrice', Number(form.oldPrice))
     fd.append('specs', JSON.stringify(specs))
+    const cleanedFeatures = features
+      .filter(f => f.label && f.label.trim())
+      .map(f => ({ icon: f.icon || '', label: f.label.trim(), desc: (f.desc || '').trim() }))
+    fd.append('features', JSON.stringify(cleanedFeatures))
     fd.append('stock', Number(form.stock) || 0)
     imageFiles.forEach(f => fd.append('images', f))
     if (editProduct) {
@@ -681,6 +715,37 @@ export default function MobileSellerDashboard() {
         <label className="mob_input_label">{t('shortDescriptionRequired')}</label>
         <textarea className="mob_input mob_textarea" rows={3} value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} placeholder={t('shortDescPlaceholder')} />
         {formErrors.description && <span className="mob_field_error">{formErrors.description}</span>}
+      </div>
+      <div className="mob_pform_section">
+        <div className="mob_pform_section_title">
+          <span>{t('productFeatures')} <span style={{ color: '#ef4444' }}>*</span></span>
+          <small>{t('minFeatures2')}</small>
+        </div>
+        <div className="mob_features_list">
+          {features.map((f, idx) => (
+            <div className="mob_features_row" key={idx}>
+              <div className="mob_features_icon">
+                <input type="text" className="mob_input" value={f.icon} maxLength={4}
+                  onChange={e => updateFeature(idx, 'icon', e.target.value)}
+                  placeholder="🎁" />
+              </div>
+              <div className="mob_features_inputs">
+                <input type="text" className="mob_input" value={f.label} placeholder="Masalan: Do\'kondan oling"
+                  onChange={e => updateFeature(idx, 'label', e.target.value)} />
+                <input type="text" className="mob_input" value={f.desc} placeholder="Qisqa tushuntirish"
+                  onChange={e => updateFeature(idx, 'desc', e.target.value)} />
+              </div>
+              <button type="button" className="mob_features_remove" onClick={() => removeFeature(idx)} title={t('delete')}>
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </button>
+            </div>
+          ))}
+        </div>
+        <button type="button" className="mob_features_add" onClick={addFeature}>
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          {t('addFeature')}
+        </button>
+        {formErrors.features && <span className="mob_field_error" style={{ display: 'block' }}>{formErrors.features}</span>}
       </div>
     </div>
   )
