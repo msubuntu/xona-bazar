@@ -17,7 +17,7 @@ const storage = multer.diskStorage({
 })
 const upload = multer({
   storage,
-  limits: { fileSize: 30 * 1024 * 1024 },
+  limits: { fileSize: 100 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
     const ext = (file.originalname.match(/\.\w+$/)?.[0] || '').toLowerCase()
     if (ALLOWED_MIME.includes(file.mimetype) && ALLOWED_EXT.includes(ext)) cb(null, true)
