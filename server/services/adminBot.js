@@ -88,7 +88,7 @@ const COMMANDS = [
   { command: 'unblock', description: '🔓 IP blokdan chiqarish' },
   { command: 'blocked', description: '🚫 Bloklangan IP ro\'yxati' },
   { command: 'javob', description: '💬 Foydalanuvchi murojaatiga javob — /javob <ID> <matn>' },
-  { command: 'seed-demo', description: '🧪 Demo foydalanuvchilar va mahsulotlar' },
+  { command: 'seed_demo', description: '🧪 Demo foydalanuvchilar va mahsulotlar' },
   { command: 'yordam', description: '❓ Yordam' },
 ]
 
@@ -99,26 +99,26 @@ async function handleHelp() {
         '',
         '👤 <b>Foydalanuvchilar</b>',
         '/users — ro\'yxat (yoki /users seller)',
-        '/user <id | telefon | email> — tafsilot + tugmalar',
-        '/user_name <id> <yangi ism>',
-        '/user_del <id> — o\'chirish (tasdiq bilan)',
+        '/user &lt;id | telefon | email&gt; — tafsilot + tugmalar',
+        '/user_name &lt;id&gt; &lt;yangi ism&gt;',
+        '/user_del &lt;id&gt; — o\'chirish (tasdiq bilan)',
         '',
         '📦 <b>Mahsulotlar</b>',
         '/products — ro\'yxat',
-        '/product <id | nom> — tafsilot + tugmalar',
-        '/product_price <id> <narx>',
-        '/product_del <id> — o\'chirish (tasdiq bilan)',
+        '/product &lt;id | nom&gt; — tafsilot + tugmalar',
+        '/product_price &lt;id&gt; &lt;narx&gt;',
+        '/product_del &lt;id&gt; — o\'chirish (tasdiq bilan)',
         '',
         '🖥 <b>Boshqa</b>',
         '/status — server holati',
         '/logs — xavfsizlik ogohlantirishlari',
-        '/broadcast <matn> — barchaga xabar',
+        '/broadcast &lt;matn&gt; — barchaga xabar',
         '/moderate — tasdiqlash kutilayotganlar',
-        '/approve <email yoki telefon>',
-        '/reject <email yoki telefon>',
-        '/block <ip> / /unblock <ip> / /blocked',
-        '/javob <ID> <matn> — murojaatga javob',
-        '/seed-demo — demo ma\'lumotlar',
+        '/approve &lt;email yoki telefon&gt;',
+        '/reject &lt;email yoki telefon&gt;',
+        '/block &lt;ip&gt; / /unblock &lt;ip&gt; / /blocked',
+        '/javob &lt;ID&gt; &lt;matn&gt; — murojaatga javob',
+        '/seed_demo — demo ma\'lumotlar',
       ].join('\n'),
       menuKeyboard()
     )
@@ -423,7 +423,7 @@ async function handleUsers(arg) {
       `   /user ${u._id}`
     )
   })
-  lines.push('', 'Batafsil: /user <id | telefon | email>')
+  lines.push('', 'Batafsil: /user &lt;id | telefon | email&gt;')
   await sendAdmin(lines.join('\n'))
 }
 
@@ -440,7 +440,7 @@ async function handleUser(arg) {
 async function handleUserName(arg) {
   const m = (arg || '').trim().match(/^(\S+)\s+(.+)$/)
   if (!m) {
-    await sendAdmin('Ishlatish: /user_name <id> <yangi ism>')
+    await sendAdmin('Ishlatish: /user_name &lt;id&gt; &lt;yangi ism&gt;')
     return
   }
   const u = await findUserByQuery(m[1])
@@ -507,7 +507,7 @@ async function handleProducts(arg) {
       `   /product ${p._id}`
     )
   })
-  lines.push('', 'Batafsil: /product <id | nom | brend>')
+  lines.push('', 'Batafsil: /product &lt;id | nom | brend&gt;')
   await sendAdmin(lines.join('\n'))
 }
 
@@ -537,7 +537,7 @@ async function handleProduct(arg) {
 async function handleProductPrice(arg) {
   const m = (arg || '').trim().match(/^(\S+)\s+(\d+(?:[.,]\d+)?)$/)
   if (!m) {
-    await sendAdmin('Ishlatish: /product_price <id> <yangi narx>')
+    await sendAdmin('Ishlatish: /product_price &lt;id&gt; &lt;yangi narx&gt;')
     return
   }
   const p = await findProductByQuery(m[1])
@@ -708,7 +708,7 @@ async function handleReply(arg) {
   const id = parts[0] || ''
   const text = parts.slice(1).join(' ').trim()
   if (!id || !text) {
-    await sendAdmin("Ishlatish: /javob <ID> <matn>\nID murojaat xabarida ko'rsatilgan (masalan: /javob abc123 Raxmat, hal qilamiz!)")
+    await sendAdmin("Ishlatish: /javob &lt;ID&gt; &lt;matn&gt;\nID murojaat xabarida ko'rsatilgan (masalan: /javob abc123 Raxmat, hal qilamiz!)")
     return
   }
   if (text.length > 3500) {
@@ -767,6 +767,7 @@ async function dispatch(text) {
       await handleModeration('reject', arg)
       break
     case '/seed-demo':
+    case '/seed_demo':
       await handleSeedDemo()
       break
     case '/users':
