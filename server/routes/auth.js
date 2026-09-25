@@ -4,7 +4,8 @@ import crypto from 'crypto'
 import User from '../models/User.js'
 import { generateToken, protect } from '../middleware/auth.js'
 import { rateLimit } from '../middleware/rate-limit.js'
-import { getBotConfig, notifyAdminAboutNewUser, sendPasswordResetCode } from '../services/telegramBot.js'
+import { getBotConfig, sendPasswordResetCode } from '../services/telegramBot.js'
+import { notifyNewUserReg } from '../services/adminBot.js'
 
 const upload = multer({
   storage: multer.diskStorage({
@@ -104,7 +105,7 @@ router.post('/register', rateLimit({ windowMs: 60_000, max: 10 }), async (req, r
     const user = await User.create(userData)
     const token = generateToken(user._id)
 
-    if (safeRole === 'seller' || safeRole === 'craftsman') notifyAdminAboutNewUser(user)
+    if (safeRole === 'seller' || safeRole === 'craftsman') notifyNewUserReg(user)
 
     res.status(201).json({ user, token })
   } catch (err) {
@@ -298,7 +299,7 @@ router.post('/telegram/login', rateLimit({ windowMs: 60_000, max: 30 }), async (
         userData.status = 'pending'
       }
       user = await User.create(userData)
-      if (safeRole === 'seller' || safeRole === 'craftsman') notifyAdminAboutNewUser(user)
+      if (safeRole === 'seller' || safeRole === 'craftsman') notifyNewUserReg(user)
     } else {
       user.telegramChatId = telegramId
       if (first_name && !user.name?.startsWith('Telegram')) user.name = user.name || first_name

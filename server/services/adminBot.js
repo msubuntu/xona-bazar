@@ -210,11 +210,13 @@ async function handleModerate() {
 async function handleModeration(action, arg) {
   const query = (arg || '').trim().toLowerCase()
   if (!query) {
-    await sendAdmin('Email yoki telefon kiriting. Masalan: /approve email@misol.uz')
+    await sendAdmin('Email, telefon yoki ID kiriting. Masalan: /approve email@misol.uz')
     return
   }
+  const orConditions = [{ email: query }, { phone: query }]
+  if (/^[0-9a-f]{24}$/i.test(query)) orConditions.push({ _id: query })
   const user = await User.findOne({
-    $or: [{ email: query }, { phone: query }],
+    $or: orConditions,
     role: { $in: ['seller', 'craftsman'] },
   })
   if (!user) {
@@ -659,6 +661,9 @@ async function handleCallback(cq) {
       await answerCallback(cq.id)
     } else if (action === 'nop') {
       await answerCallback(cq.id, 'Bekor qilindi')
+    } else if (action === 'approve' || action === 'reject') {
+      await handleModeration(action, String(id))
+      await answerCallback(cq.id, action === 'approve' ? '✅ Tasdiqlandi' : '❌ Rad etildi')
     }
   } catch (err) {
     console.error('[adminBot] callback:', err)
@@ -668,6 +673,32 @@ async function handleCallback(cq) {
 
 async function answerCallback(id, text = '') {
   await tgCall('answerCallbackQuery', text ? { callback_query_id: id, text } : { callback_query_id: id })
+}
+
+export async function notifyNewUserReg(newUser) {
+  const roleLabel = newUser.role === 'seller' ? 'Sotuvchi' : newUser.role === 'craftsman' ? 'Usta' : ''
+  if (!roleLabel || !ADMIN_TOKEN || !ADMIN_CHAT_ID) return
+  const text = [
+    `<b>🆕 Yangi ${roleLabel} ro'yxatdan o'tdi</b>`,
+    `ID: <code>${newUser._id}</code>`,
+    `ism: ${esc(newUser.name) || '—'}`,
+    `telefon: ${newUser.phone ? esc(newUser.phone) : '—'}`,
+    `email: ${esc(newUser.email)}`,
+    newUser.shopName ? `do'kon: ${esc(newUser.shopName)}` : null,
+    newUser.services?.length ? `xizmatlar: ${esc(newUser.services.join(', '))}` : null,
+    ``,
+    `Komanda: /approve ${newUser._id} | /reject ${newUser._id}`,
+  ].filter(Boolean).join('\n')
+  await sendAdmin(text, {
+    reply_markup: {
+      inline_keyboard: [
+        [
+          { text: '✅ Tasdiqlash', callback_data: `approve|${newUser._id}` },
+          { text: '❌ Rad etish', callback_data: `reject|${newUser._id}` },
+        ],
+      ],
+    },
+  })
 }
 
 async function replyToAppeal(appeal, text) {
