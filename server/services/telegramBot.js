@@ -3,9 +3,12 @@ import User from '../models/User.js'
 import Product from '../models/Product.js'
 import Order from '../models/Order.js'
 import Booking from '../models/Booking.js'
+import { setAppeal } from './appealStore.js'
 
 const BOT_TOKEN = process.env.BOT_TOKEN || ''
 const BOT_USERNAME = process.env.BOT_USERNAME || ''
+const ADMIN_TOKEN = process.env.ADMIN_BOT_TOKEN || ''
+const ADMIN_CHAT_ID = (process.env.ADMIN_CHAT_ID || '').trim()
 const API = `https://api.telegram.org/bot${BOT_TOKEN}`
 
 let pollOffset = 0
@@ -36,12 +39,15 @@ const menu = {
     ['📊 Holat'],
     ['📦 Mening mahsulotlarim', '🛒 Buyurtmalar'],
     ['🖼 Ishlarim', '❓ Yordam'],
+    ['🆘 Qo\'llab-quvvatlash'],
   ],
   resize_keyboard: true,
 }
 
 const PAGE_SIZE = 20
 export const STOCK_LOW_WARNING = 5
+
+const pendingAppeal = new Map()
 
 async function tgCall(method, payload = {}) {
   const res = await fetch(`${API}/${method}`, {
@@ -101,6 +107,7 @@ const HELP_TEXT = [
   '<b>🔗 /link KOD</b> — panel sozlamalaridan olingan kod bilan ulash',
   '<b>📢 /broadcast matn</b> — barcha ulanganlarga xabar (admin)',
   '<b>🚫 /unlink</b> — ulanishni bekor qilish',
+  '<b>🆘 /support</b> — murojaat yuborish (shikoyat, taklif, savol)',
 ].join('\n')
 
 function productLine(p, i) {
@@ -322,6 +329,73 @@ async function handleUnlink(chatId) {
   }
   await User.updateMany({ telegramChatId: chatId }, { $set: { telegramChatId: '' } })
   await sendMessage(chatId, "🚫 Ulanish bekor qilindi. Qayta ulash uchun sayt sozlamalaridan yangi kod oling.")
+}
+
+async function handleSupportStart(chatId, msg) {
+  const from = msg?.from || {}
+  const tgName = [from.first_name, from.last_name].filter(Boolean).join(' ') || 'Foydalanuvchi'
+  pendingAppeal.set(chatId, { name: tgName })
+  await sendMessage(chatId, [
+    `🆘 <b>Qo'llab-quvvatlash</b>`,
+    '',
+    `Xush kelibsiz, ${esc(tgName)}!`,
+    'Murojaatingizni (shikoyat, taklif yoki savol) bitta xabar sifatida yozing.',
+    'Admin javobini shu suhbatda olasiz. Bekor qilish uchun /cancel yozing.',
+  ].join('\n'))
+}
+
+async function submitAppeal(chatId, msg, rawText) {
+  pendingAppeal.delete(chatId)
+  const text = String(rawText || '').trim()
+  if (!text) {
+    await sendMessage(chatId, "Murojaat matni bo'sh bo'lishi mumkin emas. /support yozib qayta urining.")
+    return
+  }
+  if (text.length > 3500) {
+    await sendMessage(chatId, 'Murojaat juda uzun (maksimum 3500 belgi).')
+    return
+  }
+  if (!ADMIN_TOKEN || !ADMIN_CHAT_ID) {
+    console.error('[support] ADMIN_BOT_TOKEN yoki ADMIN_CHAT_ID sozlanmagan')
+    await sendMessage(chatId, "❌ Murojaat qabul qilinmadi. Texnik sozlash hali tugallanmagan, keyinroq qayta urining.")
+    return
+  }
+  const from = msg?.from || {}
+  const tgName = [from.first_name, from.last_name].filter(Boolean).join(' ') || 'Foydalanuvchi'
+  const user = await findUserByChatId(chatId)
+  const token = Math.random().toString(36).slice(2, 8)
+  const lines = [
+    `💬 <b>Yangi murojaat (#${token})</b>`,
+    '',
+    `ism: ${esc(tgName)}`,
+    from.username ? `telegram: @${esc(from.username)}` : null,
+    user ? `akkaunt: ${esc(user.name)}` : null,
+    user?.phone ? `telefon: ${esc(user.phone)}` : null,
+    user?.email ? `email: ${esc(user.email)}` : null,
+    user ? `rol: ${esc(user.role || '')}` : 'rol: (paneldan ulanmagan)',
+    '',
+    `murojaat: ${esc(text)}`,
+    '',
+    `Javob: shu xabarga reply bering yoki /javob ${token} <matn>`,
+  ].filter(Boolean).join('\n')
+  try {
+    const res = await fetch(`https://api.telegram.org/bot${ADMIN_TOKEN}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chat_id: ADMIN_CHAT_ID, text: lines, parse_mode: 'HTML' }),
+    })
+    const body = await res.json()
+    if (body && body.ok && body.result?.message_id) {
+      setAppeal(body.result.message_id, { userChatId: chatId, userName: tgName, token })
+      await sendMessage(chatId, "✅ Murojaatingiz qabul qilindi. Admin javobini shu suhbatda olasiz.")
+    } else {
+      console.error('[support] admin bot:', res.status, body?.description || '')
+      await sendMessage(chatId, '❌ Murojaat yuborilmadi. Texnik xatolik yuz berdi, keyinroq qayta urining.')
+    }
+  } catch (err) {
+    console.error('[support] xato:', err.message)
+    await sendMessage(chatId, '❌ Murojaat yuborilmadi. Texnik xatolik yuz berdi, keyinroq qayta urining.')
+  }
 }
 
 async function handleStatus(chatId, user) {
@@ -559,12 +633,33 @@ async function dispatchMessage(chatId, msg) {
     return
   }
 
+  if (pendingAppeal.has(chatId)) {
+    const lower = text.toLowerCase()
+    const isSupportTrigger = lower === '/support' || lower === '/qollab-quvvatlash' || lower === "/qo'llab-quvvatlash" || lower === "🆘 qo'llab-quvvatlash"
+    if (isSupportTrigger) {
+      await sendMessage(chatId, 'Siz allaqachon murojaat yozish rejimidasiz. Murojaat matnini yozing yoki /cancel bilan bekor qiling.')
+      return
+    }
+    if (text === '/cancel') {
+      pendingAppeal.delete(chatId)
+      await sendMessage(chatId, '❌ Murojaat bekor qilindi.')
+      return
+    }
+    if (text.startsWith('/')) {
+      pendingAppeal.delete(chatId)
+    } else {
+      await submitAppeal(chatId, msg, text)
+      return
+    }
+  }
+
   const aliasMap = {
     '📊 holat': '/holat',
     "📦 mening mahsulotlarim": '/productlar',
     '🛒 buyurtmalar': '/buyurtmalar',
     '🖼 ishlarim': '/ishlar',
     '❓ yordam': '/yordam',
+    "🆘 qo'llab-quvvatlash": '/support',
   }
   const normalized = aliasMap[text.toLowerCase()] || text
 
@@ -581,6 +676,10 @@ async function dispatchMessage(chatId, msg) {
   if (parsed) {
     if (parsed.cmd === '/link') {
       await handleLink(chatId, parsed.arg, firstName)
+      return
+    }
+    if (parsed.cmd === '/support' || parsed.cmd === '/qollab-quvvatlash' || parsed.cmd === "/qo'llab-quvvatlash") {
+      await handleSupportStart(chatId, msg)
       return
     }
     const user = await findUserByChatId(chatId)

@@ -740,6 +740,11 @@ function SellerDashboard() {
 
   const renderFormStep2 = () => (
     <div className="sdv2-step-fields">
+      <div className="sdv2-upload-limits">
+        <div className="sdv2-upload-limits-title">📋 {t('mediaLimitsTitle')}</div>
+        <div className="sdv2-upload-limits-row">🖼 {t('mediaLimitsImageSize')} · {MIN_IMAGES}–{MAX_IMAGES} {t('images')}</div>
+        <div className="sdv2-upload-limits-row">🎥 {t('mediaLimitsVideoSize')}</div>
+      </div>
       <div className="sdv2-specs-section">
         <div className="sdv2-specs-title">
           <span>{t('specSectionTitle')}</span>
