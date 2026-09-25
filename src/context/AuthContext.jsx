@@ -23,6 +23,17 @@ export function AuthProvider({ children }) {
     }
   }, [user])
 
+  useEffect(() => {
+    if (!user || user.status !== 'pending') return
+    const timer = setInterval(async () => {
+      try {
+        const { user: fresh } = await api.auth.me()
+        if (fresh && fresh.status && fresh.status !== 'pending') setUser(fresh)
+      } catch {}
+    }, 20000)
+    return () => clearInterval(timer)
+  }, [user])
+
   const login = useCallback(async (email, password) => {
     setLoading(true)
     setError(null)
